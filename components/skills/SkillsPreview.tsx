@@ -3,7 +3,11 @@
 import { useMemo, useState } from "react";
 import { Section } from "@/components/ui/Section";
 import { Badge } from "@/components/ui/Badge";
-import { getActiveSkillCategories, getSkillsByCategory } from "@/data/skills";
+import {
+  coreStrengths,
+  getActiveSkillCategories,
+  getSkillsByCategory,
+} from "@/data/skills";
 import { cn } from "@/lib/utils";
 import type { SkillCategory } from "@/types";
 
@@ -17,7 +21,7 @@ export function SkillsPreview() {
       id="skills"
       eyebrow="Stack"
       title="Skills"
-      description="Grouped by how I actually use them. No percentage bars — those would be invented."
+      description="From the CV. No proficiency percentages."
       className="bg-surface/40"
     >
       <div
@@ -46,6 +50,14 @@ export function SkillsPreview() {
           );
         })}
       </div>
+
+      <ul className="mt-6 flex flex-wrap gap-2" aria-label="Core strengths">
+        {coreStrengths.map((item) => (
+          <li key={item}>
+            <Badge>{item}</Badge>
+          </li>
+        ))}
+      </ul>
 
       <ul
         role="tabpanel"

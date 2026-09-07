@@ -27,8 +27,8 @@ export function Hero() {
             {siteConfig.displayName}
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted reveal reveal-delay-2">
-            I build with Next.js, React, and Flutter, and I bring a QA
-            background to frontend and full-stack work. Browse{" "}
+            Full-stack developer in {siteConfig.location}, focused on{" "}
+            {siteConfig.specialization}. Browse{" "}
             <Link href="/about" className="text-foreground underline-offset-4 hover:underline">
               about
             </Link>
@@ -36,9 +36,9 @@ export function Hero() {
             <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
               projects
             </Link>
-            , and{" "}
-            <Link href="/contact" className="text-foreground underline-offset-4 hover:underline">
-              contact
+            , or ask the{" "}
+            <Link href="/#avatar" className="text-foreground underline-offset-4 hover:underline">
+              portfolio assistant
             </Link>
             .
           </p>

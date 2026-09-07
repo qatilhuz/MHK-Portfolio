@@ -1,6 +1,6 @@
 import { AboutPreview } from "@/components/about/AboutPreview";
 import { ArcadePlaceholder } from "@/components/arcade/ArcadePlaceholder";
-import { AvatarPlaceholder } from "@/components/avatar/AvatarPlaceholder";
+import { AvatarSection } from "@/components/avatar/AvatarSection";
 import { ContactPreview } from "@/components/contact/ContactPreview";
 import { ExperiencePreview } from "@/components/experience/ExperiencePreview";
 import { Hero } from "@/components/hero/Hero";
@@ -21,7 +21,7 @@ export default function Home() {
       <QaPlaceholder />
       <ArcadePlaceholder />
       <TerminalPlaceholder />
-      <AvatarPlaceholder />
+      <AvatarSection />
       <ResumePreview />
       <ContactPreview />
     </>

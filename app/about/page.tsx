@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "About",
   description:
-    "About Huzaifa Khan — full stack developer and QA practitioner working with Next.js, React, Flutter, and software testing.",
+    "About Muhammad Huzaifa Khan, a full-stack developer in Karachi specializing in Next.js, React, and .NET.",
   path: "/about",
 });
 

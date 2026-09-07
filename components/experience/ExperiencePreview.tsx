@@ -1,76 +1,51 @@
 import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
 import { experience } from "@/data/experience";
-
-const focus = [
-  {
-    title: "Software development",
-    body: "Frontend and full-stack work with Next.js, React, PHP, Laravel, .NET Core, and Flutter.",
-  },
-  {
-    title: "QA and testing",
-    body: "Software quality assurance, manual testing, functional testing, test cases, and bug reporting.",
-  },
-];
 
 export function ExperiencePreview() {
   return (
     <Section
       id="experience"
-      eyebrow="Focus"
+      eyebrow="Career"
       title="Experience"
-      description="Verified employer names and dates are not listed yet. This is a focus summary, not a fabricated timeline."
+      description="Roles from Huzaifa’s CV. No extra employers or invented dates."
     >
-      {experience.length === 0 ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {focus.map((item) => (
-            <Card key={item.title}>
-              <h3>{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">
-                {item.body}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {item.title.startsWith("QA") ? (
-                  <>
-                    <Badge>QA</Badge>
-                    <Badge>Testing</Badge>
-                  </>
-                ) : (
-                  <>
-                    <Badge>Next.js</Badge>
-                    <Badge>Frontend</Badge>
-                  </>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <ol className="relative border-l border-border pl-6">
-          {experience.map((item) => (
-            <li key={item.id} className="relative mb-10 last:mb-0">
-              <span
-                className="absolute -left-[1.54rem] top-1.5 h-3 w-3 rounded-full border border-accent bg-background"
-                aria-hidden="true"
-              />
-              <p className="label">
-                {item.startDate} — {item.endDate ?? "Present"}
-              </p>
-              <h3 className="mt-2">
-                {item.role}
-                {item.company ? ` · ${item.company}` : ""}
-              </h3>
-              {item.description ? (
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-                  {item.description}
-                </p>
-              ) : null}
-            </li>
-          ))}
-        </ol>
-      )}
+      <ol className="relative border-l border-border pl-6">
+        {experience.map((item) => (
+          <li key={item.id} className="relative mb-10 last:mb-0">
+            <span
+              className="absolute -left-[1.54rem] top-1.5 h-3 w-3 rounded-full border border-accent bg-background"
+              aria-hidden="true"
+            />
+            <p className="label">
+              {item.startDate} — {item.endDate ?? "Present"} · {item.location}
+            </p>
+            <h3 className="mt-2">
+              {item.role} · {item.company}
+            </h3>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+              {item.description}
+            </p>
+            {item.responsibilities.length > 0 ? (
+              <ul className="mt-3 max-w-2xl list-disc space-y-1 pl-5 text-sm text-muted">
+                {item.responsibilities.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : null}
+            {item.technologies.length > 0 ? (
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {item.technologies.map((tech) => (
+                  <li key={tech}>
+                    <Badge>{tech}</Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </li>
+        ))}
+      </ol>
       <p className="mt-8 text-sm text-muted">
         <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
           Projects
@@ -78,8 +53,8 @@ export function ExperiencePreview() {
         and{" "}
         <Link href="/contact" className="text-foreground underline-offset-4 hover:underline">
           contact
-        </Link>{" "}
-        are the next stops.
+        </Link>
+        .
       </p>
     </Section>
   );

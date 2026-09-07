@@ -1,16 +1,17 @@
 import type { NavItem } from "@/types";
 
-/**
- * Central site identity. Only values confirmed from project context.
- */
 export const siteConfig = {
+  legalName: "Muhammad Huzaifa Khan",
   name: "Huzaifa Khan",
   displayName: "Huzaifa Khan",
   shortName: "HK",
-  role: "Full Stack Developer & QA",
-  tagline: "Building web and mobile software with a testing mindset.",
+  role: "Full-Stack Developer",
+  specialization: "Next.js, React & .NET",
+  location: "Karachi, Pakistan",
+  spokenLanguages: ["Urdu", "English"] as const,
+  tagline: "Full-stack development with Next.js, React, and .NET.",
   description:
-    "Portfolio of Huzaifa Khan, a full stack developer and QA practitioner working with Next.js, React, Flutter, and modern web development.",
+    "Portfolio of Huzaifa Khan, a full-stack developer in Karachi specializing in Next.js, React, and .NET.",
   email: "",
   resumePath: "/resume/huzaifa-resume.pdf",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "",

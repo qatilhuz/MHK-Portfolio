@@ -35,7 +35,7 @@ export interface Project {
 }
 
 export type SkillCategory =
-  | "Development"
+  | "Languages"
   | "Frontend"
   | "Backend"
   | "Mobile"
@@ -52,11 +52,46 @@ export interface Experience {
   id: string;
   company: string;
   role: string;
+  location: string;
   startDate: string;
   endDate: string | null;
   description: string;
+  responsibilities: string[];
   technologies: string[];
   achievements: string[];
+}
+
+export interface Education {
+  id: string;
+  credential: string;
+  institution: string;
+  startYear: string;
+  endYear: string;
+}
+
+export type AssistantStatus =
+  | "idle"
+  | "listening"
+  | "thinking"
+  | "speaking"
+  | "error"
+  | "unavailable";
+
+export interface AssistantLink {
+  href: string;
+  label: string;
+}
+
+export interface AssistantMessage {
+  id: string;
+  role: "visitor" | "assistant";
+  text: string;
+  links?: AssistantLink[];
+}
+
+export interface AssistantReply {
+  text: string;
+  links?: AssistantLink[];
 }
 
 export type SocialPlatform =

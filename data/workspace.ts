@@ -70,7 +70,7 @@ export const workspaceObjects: WorkspaceObjectConfig[] = [
     id: "avatar",
     label: "Avatar",
     caption: "About",
-    href: "/about",
+    href: "/#avatar",
     position: [-1.55, 0.35, -0.45],
     rotation: [0, 0.5, 0],
     showOnMobile: false,

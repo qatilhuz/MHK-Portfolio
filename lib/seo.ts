@@ -49,8 +49,14 @@ export function personJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: siteConfig.displayName,
+    name: siteConfig.legalName,
+    alternateName: siteConfig.displayName,
     jobTitle: siteConfig.role,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Karachi",
+      addressCountry: "PK",
+    },
     ...(url ? { url } : {}),
     ...(sameAs.length ? { sameAs } : {}),
   };

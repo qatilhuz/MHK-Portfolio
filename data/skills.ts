@@ -1,25 +1,37 @@
 import type { Skill, SkillCategory } from "@/types";
 
 export const skills: Skill[] = [
-  { id: "html", name: "HTML", category: "Frontend" },
-  { id: "css", name: "CSS", category: "Frontend" },
-  { id: "javascript", name: "JavaScript", category: "Frontend" },
-  { id: "typescript", name: "TypeScript", category: "Frontend" },
+  { id: "javascript", name: "JavaScript", category: "Languages" },
+  { id: "typescript", name: "TypeScript", category: "Languages" },
+  { id: "csharp", name: "C#", category: "Languages" },
+  { id: "php", name: "PHP", category: "Languages" },
+  { id: "dart", name: "Dart", category: "Languages" },
+  { id: "html", name: "HTML", category: "Languages" },
+  { id: "css", name: "CSS", category: "Languages" },
+  { id: "sqlserver", name: "SQL Server", category: "Languages" },
+  { id: "mysql", name: "MySQL", category: "Languages" },
   { id: "react", name: "React", category: "Frontend" },
   { id: "nextjs", name: "Next.js", category: "Frontend" },
-  { id: "php", name: "PHP", category: "Backend" },
-  { id: "laravel", name: "Laravel", category: "Backend" },
-  { id: "dotnet", name: ".NET Core", category: "Backend" },
+  { id: "angular", name: "Angular", category: "Frontend" },
+  { id: "gsap", name: "GSAP", category: "Frontend" },
+  { id: "dotnet", name: ".NET", category: "Backend" },
   { id: "flutter", name: "Flutter", category: "Mobile" },
-  { id: "sqa", name: "Software Quality Assurance", category: "QA" },
-  { id: "manual-testing", name: "Manual Testing", category: "QA" },
-  { id: "test-cases", name: "Test Cases", category: "QA" },
-  { id: "bug-reporting", name: "Bug Reporting", category: "QA" },
-  { id: "functional-testing", name: "Functional Testing", category: "QA" },
+  { id: "git", name: "Git", category: "Tools" },
+  { id: "vscode", name: "VS Code", category: "Tools" },
+  { id: "visual-studio", name: "Visual Studio", category: "Tools" },
+  { id: "rest", name: "REST APIs", category: "Tools" },
 ];
 
+export const coreStrengths = [
+  "Full-Stack Web Development",
+  "Responsive UI/UX Implementation",
+  "API Integration",
+  "Cross-Browser Optimization",
+  "Team Collaboration",
+] as const;
+
 export const skillCategories: SkillCategory[] = [
-  "Development",
+  "Languages",
   "Frontend",
   "Backend",
   "Mobile",

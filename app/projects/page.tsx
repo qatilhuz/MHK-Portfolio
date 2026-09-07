@@ -5,7 +5,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Projects",
   description:
-    "Web, Flutter, and PHP project presentations by Huzaifa Khan. Demo entries are labelled placeholders until verified work is added.",
+    "Projects by Huzaifa Khan: PHP e-commerce, Flutter laptop shop, weather SPA, and a gaming showcase site.",
   path: "/projects",
 });
 
@@ -20,7 +20,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     <Section
       eyebrow="Work"
       title="Projects"
-      description="Interactive web, Flutter, and PHP presentations share one typed model. Entries marked Demo are UI placeholders, not client work."
+      description="Verified CV projects. Media files can be added later without changing the data model."
     >
       <ProjectGrid initialFilter={filter} />
     </Section>

@@ -2,20 +2,21 @@ import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { education } from "@/data/education";
 import { siteConfig } from "@/data/site";
 
 const focusAreas = [
   {
     title: "Frontend",
-    body: "Interfaces with HTML, CSS, JavaScript, TypeScript, React, and Next.js.",
+    body: "Next.js, React, Angular, HTML, CSS, JavaScript, TypeScript, and GSAP.",
   },
   {
     title: "Full stack",
-    body: "Backend work with PHP, Laravel, and .NET Core, plus Flutter for mobile.",
+    body: ".NET and C# at Techcose Solutions; PHP and Flutter on selected projects.",
   },
   {
-    title: "QA",
-    body: "Software quality assurance, manual and functional testing, test cases, and bug reporting.",
+    title: "Delivery",
+    body: "Responsive UI, API integration, cross-browser work, and team collaboration.",
   },
 ];
 
@@ -25,30 +26,29 @@ export function AboutPreview() {
       id="about"
       eyebrow="About"
       title={`I’m ${siteConfig.displayName}.`}
-      description="Full stack developer and QA practitioner. Building software and checking how it fails are two sides of the same job."
+      description={`${siteConfig.role} in ${siteConfig.location}, specializing in ${siteConfig.specialization}.`}
     >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <div className="space-y-4">
           <p className="max-w-2xl leading-relaxed text-muted">
-            I work across frontend development, full-stack web applications,
-            and Flutter. Time in software testing changes how I approach
-            Next.js and React work: I care about what users can actually do,
-            not only what a demo looks like.
+            {siteConfig.legalName} builds web and mobile software across
+            frontend and backend. Current work is .NET development; previous
+            work was Next.js and React.
           </p>
           <p className="max-w-2xl leading-relaxed text-muted">
-            See{" "}
-            <Link href="/#skills" className="text-foreground underline-offset-4 hover:underline">
-              skills
-            </Link>
-            ,{" "}
+            Languages spoken: {siteConfig.spokenLanguages.join(" and ")}. See{" "}
             <Link href="/experience" className="text-foreground underline-offset-4 hover:underline">
               experience
             </Link>
-            , and{" "}
+            ,{" "}
             <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
               projects
             </Link>
-            {" "}for the rest of the picture.
+            , and the{" "}
+            <Link href="/#avatar" className="text-foreground underline-offset-4 hover:underline">
+              assistant
+            </Link>
+            .
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
             {focusAreas.map((item) => (
@@ -59,6 +59,17 @@ export function AboutPreview() {
                 </p>
               </Card>
             ))}
+          </div>
+          <div>
+            <h3 className="text-sm">Education</h3>
+            <ul className="mt-3 space-y-1 text-sm text-muted">
+              {education.map((item) => (
+                <li key={item.id}>
+                  {item.credential} — {item.institution} ({item.startYear}
+                  {item.endYear !== item.startYear ? `–${item.endYear}` : ""})
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
@@ -74,20 +85,20 @@ export function AboutPreview() {
           <dl className="mt-5 space-y-3 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Name</dt>
-              <dd>{siteConfig.displayName}</dd>
+              <dd>{siteConfig.legalName}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Role</dt>
               <dd>{siteConfig.role}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-muted">Focus</dt>
-              <dd>Frontend · Full stack · QA</dd>
+              <dt className="text-muted">Location</dt>
+              <dd>{siteConfig.location}</dd>
             </div>
           </dl>
           <div className="mt-5 flex flex-wrap gap-2">
-            <Badge>Verified copy only</Badge>
-            <Badge>Avatar later</Badge>
+            <Badge>CV-backed</Badge>
+            <Badge>Likeness later</Badge>
           </div>
         </aside>
       </div>

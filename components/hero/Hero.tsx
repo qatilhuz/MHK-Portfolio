@@ -3,7 +3,7 @@ import { siteConfig } from "@/data/site";
 import { getActiveSocialLinks } from "@/data/social";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { Badge } from "@/components/ui/Badge";
+import { HeroWorkspace } from "@/components/three/HeroWorkspace";
 
 export function Hero() {
   const socials = getActiveSocialLinks();
@@ -58,30 +58,10 @@ export function Hero() {
         </div>
 
         <div
-          className="scene-slot relative flex items-end justify-center overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface"
+          className="scene-slot relative overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface"
           data-scene-slot="hero-workspace"
         >
-          <div className="absolute inset-4 rounded-[calc(var(--radius-lg)-0.5rem)] border border-dashed border-border/80" />
-          <div className="relative z-10 m-6 w-full max-w-sm rounded-[var(--radius-md)] border border-border bg-surface-secondary p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-border" />
-              <span className="h-2.5 w-2.5 rounded-full bg-border" />
-              <span className="h-2.5 w-2.5 rounded-full bg-accent/70" />
-              <span className="ml-2 font-mono text-xs text-muted">workspace.glb</span>
-            </div>
-            <p className="font-mono text-xs leading-relaxed text-muted">
-              {"// 3D digital workspace reserved"}
-              <br />
-              monitor → projects
-              <br />
-              laptop → skills
-              <br />
-              phone → flutter
-            </p>
-            <div className="mt-4">
-              <Badge>Scene pending</Badge>
-            </div>
-          </div>
+          <HeroWorkspace />
         </div>
       </Container>
     </section>

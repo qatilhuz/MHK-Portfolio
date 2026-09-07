@@ -3,15 +3,19 @@
 import { useMemo, useState } from "react";
 import { projects } from "@/data/projects";
 import {
+  isProjectFilterId,
   matchesProjectFilter,
   projectFilters,
   type ProjectFilterId,
 } from "@/lib/projects";
 import { cn } from "@/lib/utils";
 import { ProjectCard } from "./ProjectCard";
+import { ProjectEmptyState } from "./ProjectEmptyState";
 
-export function ProjectGrid() {
-  const [filter, setFilter] = useState<ProjectFilterId>("all");
+export function ProjectGrid({ initialFilter }: { initialFilter?: string }) {
+  const [filter, setFilter] = useState<ProjectFilterId>(
+    initialFilter && isProjectFilterId(initialFilter) ? initialFilter : "all",
+  );
 
   const available = useMemo(
     () =>
@@ -29,12 +33,7 @@ export function ProjectGrid() {
   );
 
   if (projects.length === 0) {
-    return (
-      <p className="text-sm text-muted">
-        Project cards will appear here from data/projects.ts. No sample work is
-        shown as if it were shipped.
-      </p>
-    );
+    return <ProjectEmptyState />;
   }
 
   return (

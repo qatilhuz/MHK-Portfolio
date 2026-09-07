@@ -7,14 +7,20 @@ export const metadata: Metadata = {
   description: "Selected development work by Huzaifa.",
 };
 
-export default function ProjectsPage() {
+interface PageProps {
+  searchParams: Promise<{ filter?: string }>;
+}
+
+export default async function ProjectsPage({ searchParams }: PageProps) {
+  const { filter } = await searchParams;
+
   return (
     <Section
       eyebrow="Work"
       title="Projects"
-      description="Each entry is driven by typed data and can later use browser, phone, or video previews."
+      description="Interactive web, Flutter, video demos, and case studies share one typed model. Only verified entries are listed."
     >
-      <ProjectGrid />
+      <ProjectGrid initialFilter={filter} />
     </Section>
   );
 }

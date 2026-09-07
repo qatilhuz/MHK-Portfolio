@@ -6,6 +6,11 @@ export type ProjectType =
 
 export type PreviewMode = "iframe" | "video" | "gallery" | "none";
 
+export interface ProjectMedia {
+  src: string;
+  alt: string;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -16,10 +21,13 @@ export interface Project {
   technologies: string[];
   projectType: ProjectType;
   thumbnail: string;
-  images: string[];
+  thumbnailAlt: string;
+  screenshots: ProjectMedia[];
   video?: string;
+  videoPoster?: string;
   githubUrl?: string;
   liveUrl?: string;
+  localPreviewPath?: string;
   features: string[];
   role: string;
   previewMode: PreviewMode;

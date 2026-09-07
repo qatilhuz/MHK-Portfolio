@@ -24,6 +24,8 @@ const META_ALLOW: Record<AnalyticsEventName, string[]> = {
   assistant_open: [],
   assistant_question_category: ["category"],
   contact_start: [],
+  contact_submit_success: [],
+  contact_submit_error: [],
 };
 
 export function parseAnalyticsBatch(input: unknown): AnalyticsBatch | null {

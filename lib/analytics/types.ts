@@ -15,6 +15,8 @@ export const ANALYTICS_EVENT_NAMES = [
   "assistant_open",
   "assistant_question_category",
   "contact_start",
+  "contact_submit_success",
+  "contact_submit_error",
 ] as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENT_NAMES)[number];

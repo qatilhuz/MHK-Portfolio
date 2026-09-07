@@ -62,6 +62,27 @@ export function personJsonLd() {
   };
 }
 
+export function projectJsonLd(project: {
+  title: string;
+  shortDescription: string;
+  slug: string;
+  technologies: string[];
+}) {
+  const url = absoluteUrl(`/projects/${project.slug}`);
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: project.title,
+    description: project.shortDescription,
+    author: {
+      "@type": "Person",
+      name: siteConfig.legalName,
+    },
+    keywords: project.technologies.join(", "),
+    ...(url ? { url } : {}),
+  };
+}
+
 export function websiteJsonLd() {
   const url = getSiteUrl() || undefined;
   return {

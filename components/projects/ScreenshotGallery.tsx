@@ -8,11 +8,23 @@ export function ScreenshotGallery({ images }: { images: ProjectMedia[] }) {
   const [active, setActive] = useState<number | null>(null);
 
   const close = useCallback(() => setActive(null), []);
+  const prev = useCallback(() => {
+    setActive((index) =>
+      index === null ? index : (index + images.length - 1) % images.length,
+    );
+  }, [images.length]);
+  const next = useCallback(() => {
+    setActive((index) =>
+      index === null ? index : (index + 1) % images.length,
+    );
+  }, [images.length]);
 
   useEffect(() => {
     if (active === null) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") close();
+      if (event.key === "ArrowLeft") prev();
+      if (event.key === "ArrowRight") next();
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -20,7 +32,7 @@ export function ScreenshotGallery({ images }: { images: ProjectMedia[] }) {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
     };
-  }, [active, close]);
+  }, [active, close, next, prev]);
 
   if (images.length === 0) return null;
 
@@ -53,7 +65,6 @@ export function ScreenshotGallery({ images }: { images: ProjectMedia[] }) {
           aria-modal="true"
           aria-label={images[active].alt}
           className="fixed inset-0 z-[70] flex items-center justify-center bg-background/90 p-4"
-          onClick={close}
         >
           <button
             type="button"
@@ -62,13 +73,31 @@ export function ScreenshotGallery({ images }: { images: ProjectMedia[] }) {
           >
             Close
           </button>
+          {images.length > 1 ? (
+            <>
+              <button
+                type="button"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted hover:text-foreground"
+                onClick={prev}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted hover:text-foreground"
+                onClick={next}
+              >
+                Next
+              </button>
+            </>
+          ) : null}
           <Image
             src={images[active].src}
             alt={images[active].alt}
             width={1600}
             height={900}
             className="max-h-[90vh] w-auto max-w-full"
-            onClick={(event) => event.stopPropagation()}
+            priority
           />
         </div>
       ) : null}

@@ -22,7 +22,7 @@ export function PhonePreview({ project }: { project: Project }) {
           ) : (
             <MediaPending
               label="Device preview"
-              note="Flutter screenshots will appear in this phone frame."
+              note="Project media coming soon"
             />
           )}
         </div>

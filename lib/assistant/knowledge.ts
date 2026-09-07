@@ -98,9 +98,27 @@ export function replyFromKnowledge(question: string): AssistantReply {
     }
   }
 
+  if (
+    q.includes("live demo") ||
+    q.includes("live url") ||
+    (q.includes("demo") && q.includes("live"))
+  ) {
+    const live = projects.filter((item) => item.liveUrl);
+    if (live.length === 0) {
+      return {
+        text: "No public live demo URLs are listed for Huzaifa’s projects on this site.",
+        links: [{ href: "/projects", label: "Projects" }],
+      };
+    }
+    return {
+      text: `Live demos listed: ${live.map((item) => item.title).join("; ")}.`,
+      links: [{ href: "/projects", label: "Projects" }],
+    };
+  }
+
   if (q.includes("project")) {
     return {
-      text: `Verified projects: ${projects.map((item) => item.title).join("; ")}.`,
+      text: `Verified projects: ${projects.filter((item) => !item.isDemo).map((item) => item.title).join("; ")}.`,
       links: [{ href: "/projects", label: "Explore projects" }],
     };
   }

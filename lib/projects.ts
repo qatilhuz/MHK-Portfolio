@@ -1,13 +1,13 @@
 import type { Project, ProjectType } from "@/types";
 
-export type ProjectFilterId = "all" | "web" | "mobile" | "video" | "case-study";
+export type ProjectFilterId = "all" | "web" | "mobile" | "php" | "featured";
 
 export const projectFilters: { id: ProjectFilterId; label: string }[] = [
   { id: "all", label: "All" },
+  { id: "featured", label: "Featured" },
   { id: "web", label: "Web" },
   { id: "mobile", label: "Mobile" },
-  { id: "video", label: "Video" },
-  { id: "case-study", label: "Case Study" },
+  { id: "php", label: "PHP" },
 ];
 
 export function isProjectFilterId(value: string): value is ProjectFilterId {
@@ -19,10 +19,19 @@ export function matchesProjectFilter(
   filter: ProjectFilterId,
 ): boolean {
   if (filter === "all") return true;
-  if (filter === "web") return project.projectType === "interactive-web";
+  if (filter === "featured") return Boolean(project.featured);
   if (filter === "mobile") return project.projectType === "mobile";
-  if (filter === "video") return project.projectType === "video";
-  return project.projectType === "case-study";
+  if (filter === "php") {
+    return (
+      project.category === "PHP" ||
+      project.technologies.some((tech) => tech.toLowerCase() === "php")
+    );
+  }
+  return (
+    project.category === "Web" ||
+    project.category === "JavaScript" ||
+    project.projectType === "interactive-web"
+  );
 }
 
 export function previewLabel(type: ProjectType): string {
@@ -49,4 +58,17 @@ export function primaryActionLabel(project: Project): string {
     default:
       return "View Case Study";
   }
+}
+
+export function hasRunnablePreview(project: Project): boolean {
+  return Boolean(project.liveUrl || project.localPreviewPath);
+}
+
+export function hasProjectMedia(project: Project): boolean {
+  return (
+    Boolean(project.thumbnail) ||
+    project.screenshots.length > 0 ||
+    Boolean(project.video) ||
+    hasRunnablePreview(project)
+  );
 }

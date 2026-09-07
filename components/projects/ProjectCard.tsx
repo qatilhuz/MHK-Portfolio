@@ -21,18 +21,19 @@ export function ProjectCard({ project }: { project: Project }) {
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-1 px-4 text-center">
               <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted">
-                {project.isDemo ? "Demo Preview" : previewLabel(project.projectType)}
+                {project.isDemo
+                  ? "Demo Preview"
+                  : project.mediaStatus === "coming-soon"
+                    ? "Project media coming soon"
+                    : previewLabel(project.projectType)}
               </p>
-              {project.isDemo ? (
-                <p className="text-xs text-muted">Replace with project media</p>
-              ) : null}
             </div>
           )}
         </div>
         <div className="flex flex-1 flex-col p-5">
           <div className="flex flex-wrap gap-2">
             {project.isDemo ? <Badge>Demo</Badge> : <Badge>{project.category}</Badge>}
-            <Badge>{previewLabel(project.projectType)}</Badge>
+            {project.featured ? <Badge>Featured</Badge> : null}
           </div>
           <h3 className="mt-4">
             <Link href={`/projects/${project.slug}`} className="hover:text-accent">

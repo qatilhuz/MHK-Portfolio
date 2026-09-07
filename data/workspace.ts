@@ -1,5 +1,4 @@
 import type { WorkspaceObjectConfig } from "@/types/workspace";
-import { siteConfig } from "./site";
 
 /**
  * Semantic map for the hero workspace.
@@ -60,7 +59,7 @@ export const workspaceObjects: WorkspaceObjectConfig[] = [
     id: "folder",
     label: "Folder",
     caption: "Resume",
-    href: siteConfig.resumePath,
+    href: "/#resume",
     position: [0.55, 0.04, 0.55],
     rotation: [0, 0.2, 0],
     showOnMobile: true,

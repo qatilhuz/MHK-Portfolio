@@ -47,7 +47,10 @@ export function Hero() {
               Explore My Work
               <ArrowUpRight size={16} aria-hidden="true" />
             </Button>
-            <Button href={siteConfig.resumePath} variant="secondary">
+            <Button
+              href={siteConfig.resumeAvailable ? siteConfig.resumePath : "/#resume"}
+              variant="secondary"
+            >
               View Resume
             </Button>
           </div>

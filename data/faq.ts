@@ -120,6 +120,14 @@ export const faq: FAQ[] = [
     relatedSection: "/#skills",
   },
   {
+    id: "live-demo",
+    question: "Does he have a live demo?",
+    answer:
+      "No public live demo URLs are listed for these projects on the portfolio.",
+    category: "projects",
+    relatedSection: "/projects",
+  },
+  {
     id: "view-projects",
     question: "Can I view Huzaifa's projects?",
     answer: "Yes. Open the projects section of this portfolio.",

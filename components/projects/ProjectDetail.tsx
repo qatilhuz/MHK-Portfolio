@@ -28,7 +28,10 @@ export function ProjectDetail({ project }: { project: Project }) {
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
         {project.isDemo ? <Badge>Demo</Badge> : <Badge>{project.category}</Badge>}
-        <Badge>{project.projectType}</Badge>
+        {project.featured ? <Badge>Featured</Badge> : null}
+        {project.technologies.map((tech) => (
+          <Badge key={tech}>{tech}</Badge>
+        ))}
       </div>
 
       <div className="mt-10">
@@ -58,19 +61,6 @@ export function ProjectDetail({ project }: { project: Project }) {
         </div>
       ) : null}
 
-      {project.technologies.length > 0 ? (
-        <div className="mt-10">
-          <h2>Technologies</h2>
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {project.technologies.map((tech) => (
-              <li key={tech}>
-                <Badge>{tech}</Badge>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
       {project.screenshots.length > 0 ? (
         <div className="mt-10">
           <h2>Screenshots</h2>
@@ -80,7 +70,7 @@ export function ProjectDetail({ project }: { project: Project }) {
         </div>
       ) : null}
 
-      {project.video && project.projectType !== "video" ? (
+      {project.video ? (
         <div className="mt-10">
           <h2>Demo video</h2>
           <div className="mt-4">
@@ -89,9 +79,16 @@ export function ProjectDetail({ project }: { project: Project }) {
         </div>
       ) : null}
 
-      <div className="mt-10">
-        <ProjectActions project={project} />
-      </div>
+      {project.githubUrl || project.liveUrl ? (
+        <div className="mt-10">
+          <ProjectActions project={project} />
+        </div>
+      ) : (
+        <p className="mt-10 text-sm text-muted">
+          GitHub and live URLs are not publicly listed for this project.
+        </p>
+      )}
+
       <p className="mt-8 text-sm text-muted">
         <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
           All projects

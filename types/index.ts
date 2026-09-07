@@ -32,6 +32,8 @@ export interface Project {
   role: string;
   previewMode: PreviewMode;
   isDemo: boolean;
+  mediaStatus: "available" | "coming-soon";
+  featured?: boolean;
 }
 
 export type SkillCategory =

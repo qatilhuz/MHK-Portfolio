@@ -8,7 +8,7 @@ export function ProjectsPreview() {
       id="projects"
       eyebrow="Work"
       title="Projects"
-      description="Interactive web, PHP case studies, and Flutter apps share one data model. Previews stay honest: only real links and real files."
+      description="CV-backed work: PHP e-commerce, a Flutter laptop shop, a weather SPA, and a gaming showcase site. Media is added when files exist."
       className="bg-surface/40"
     >
       <ProjectGrid />

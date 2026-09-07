@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProjectDetail } from "@/components/projects/ProjectDetail";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getProjectBySlug, projects } from "@/data/projects";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, projectJsonLd } from "@/lib/seo";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -39,5 +40,10 @@ export default async function ProjectPage({ params }: PageProps) {
     notFound();
   }
 
-  return <ProjectDetail project={project} />;
+  return (
+    <>
+      {!project.isDemo ? <JsonLd data={projectJsonLd(project)} /> : null}
+      <ProjectDetail project={project} />
+    </>
+  );
 }

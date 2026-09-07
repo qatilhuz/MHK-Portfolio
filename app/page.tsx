@@ -8,7 +8,7 @@ import { ProjectsPreview } from "@/components/projects/ProjectsPreview";
 import { QaSection } from "@/components/qa/QaSection";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { SkillsPreview } from "@/components/skills/SkillsPreview";
-import { TerminalPlaceholder } from "@/components/terminal/TerminalPlaceholder";
+import { TerminalSection } from "@/components/terminal/TerminalSection";
 
 export default function Home() {
   return (
@@ -20,7 +20,7 @@ export default function Home() {
       <ProjectsPreview />
       <QaSection />
       <ArcadeSection />
-      <TerminalPlaceholder />
+      <TerminalSection />
       <AvatarSection />
       <ResumePreview />
       <ContactPreview />

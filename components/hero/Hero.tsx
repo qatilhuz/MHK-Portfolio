@@ -44,6 +44,10 @@ export function Hero() {
             <Link href="/#qa" className="text-foreground underline-offset-4 hover:underline">
               QA Bug Hunt
             </Link>
+            , or the{" "}
+            <Link href="/#terminal" className="text-foreground underline-offset-4 hover:underline">
+              terminal
+            </Link>
             . Ask the{" "}
             <Link href="/#avatar" className="text-foreground underline-offset-4 hover:underline">
               portfolio assistant

@@ -19,6 +19,7 @@ export const suggestedQuestions = [
   "What is his tech stack?",
   "What is the Dev Arcade?",
   "What is QA Bug Hunt?",
+  "Do you have a terminal?",
 ];
 
 export function normalize(text: string): string {
@@ -79,6 +80,17 @@ export function replyFromKnowledge(question: string): AssistantReply {
     return {
       text: "Dev Arcade is an interactive portfolio section with Rock Paper Scissors, Snake, Memory Game, and a Reaction Speed Test. They demonstrate browser interaction, not commercial games.",
       links: [{ href: "/#arcade", label: "Dev Arcade" }],
+    };
+  }
+
+  if (
+    q.includes("terminal") ||
+    q.includes("command") ||
+    q.includes("cli")
+  ) {
+    return {
+      text: "The Developer Terminal is a simulated command UI on this site. Try help, about, skills, projects, experience, education, arcade, qa, assistant, resume, contact, and clear. It cannot run real shell commands.",
+      links: [{ href: "/#terminal", label: "Developer Terminal" }],
     };
   }
 

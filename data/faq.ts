@@ -151,6 +151,14 @@ export const faq: FAQ[] = [
     relatedSection: "/#qa",
   },
   {
+    id: "terminal",
+    question: "Do you have a terminal?",
+    answer:
+      "Yes. The Developer Terminal is a simulated portfolio CLI. Type help for commands. It is not a real system shell.",
+    category: "about",
+    relatedSection: "/#terminal",
+  },
+  {
     id: "contact",
     question: "How can I contact Huzaifa?",
     answer:

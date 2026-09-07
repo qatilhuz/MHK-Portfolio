@@ -36,7 +36,15 @@ export function Hero() {
             <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
               projects
             </Link>
-            , or ask the{" "}
+            , or try the{" "}
+            <Link href="/#arcade" className="text-foreground underline-offset-4 hover:underline">
+              Dev Arcade
+            </Link>{" "}
+            and{" "}
+            <Link href="/#qa" className="text-foreground underline-offset-4 hover:underline">
+              QA Bug Hunt
+            </Link>
+            . Ask the{" "}
             <Link href="/#avatar" className="text-foreground underline-offset-4 hover:underline">
               portfolio assistant
             </Link>

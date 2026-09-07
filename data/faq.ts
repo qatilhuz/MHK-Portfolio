@@ -135,6 +135,22 @@ export const faq: FAQ[] = [
     relatedSection: "/projects",
   },
   {
+    id: "arcade",
+    question: "What is the Dev Arcade?",
+    answer:
+      "An interactive portfolio section with Rock Paper Scissors, Snake, Memory Game, and a Reaction Speed Test. They are coding demonstrations, not commercial games.",
+    category: "about",
+    relatedSection: "/#arcade",
+  },
+  {
+    id: "qa-hunt",
+    question: "What is QA Bug Hunt?",
+    answer:
+      "An interactive demonstration of QA concepts. Visitors inspect deliberately buggy UI, classify the issue, and see expected vs actual results. It is not a client project.",
+    category: "qa",
+    relatedSection: "/#qa",
+  },
+  {
     id: "contact",
     question: "How can I contact Huzaifa?",
     answer:

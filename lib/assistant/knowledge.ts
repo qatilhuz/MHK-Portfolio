@@ -17,7 +17,8 @@ export const suggestedQuestions = [
   "Tell me about his experience",
   "What projects has he built?",
   "What is his tech stack?",
-  "How can I contact him?",
+  "What is the Dev Arcade?",
+  "What is QA Bug Hunt?",
 ];
 
 export function normalize(text: string): string {
@@ -66,6 +67,26 @@ export function replyFromKnowledge(question: string): AssistantReply {
         links: [{ href: `/projects/${project.slug}`, label: "Laptop app" }],
       };
     }
+  }
+
+  if (
+    q.includes("arcade") ||
+    q.includes("snake") ||
+    q.includes("rock paper") ||
+    q.includes("memory game") ||
+    q.includes("reaction")
+  ) {
+    return {
+      text: "Dev Arcade is an interactive portfolio section with Rock Paper Scissors, Snake, Memory Game, and a Reaction Speed Test. They demonstrate browser interaction, not commercial games.",
+      links: [{ href: "/#arcade", label: "Dev Arcade" }],
+    };
+  }
+
+  if (q.includes("bug hunt") || (q.includes("qa") && q.includes("bug"))) {
+    return {
+      text: "QA Bug Hunt is a teaching demo where visitors find deliberately introduced bugs and classify them. It is not a client defect log.",
+      links: [{ href: "/#qa", label: "QA Bug Hunt" }],
+    };
   }
 
   if (q.includes("weather")) {

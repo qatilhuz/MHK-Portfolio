@@ -1,11 +1,12 @@
-import type { Metadata } from "next";
 import { AboutPreview } from "@/components/about/AboutPreview";
-import { siteConfig } from "@/data/site";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "About",
-  description: `About ${siteConfig.displayName}, developer with web, backend, mobile, and QA experience.`,
-};
+  description:
+    "About Huzaifa Khan — full stack developer and QA practitioner working with Next.js, React, Flutter, and software testing.",
+  path: "/about",
+});
 
 export default function AboutPage() {
   return <AboutPreview />;

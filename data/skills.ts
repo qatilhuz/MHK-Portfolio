@@ -1,23 +1,21 @@
 import type { Skill, SkillCategory } from "@/types";
 
 export const skills: Skill[] = [
-  { id: "nextjs", name: "Next.js", category: "Development" },
-  { id: "react", name: "React", category: "Development" },
-  { id: "javascript", name: "JavaScript", category: "Development" },
-  { id: "typescript", name: "TypeScript", category: "Development" },
   { id: "html", name: "HTML", category: "Frontend" },
   { id: "css", name: "CSS", category: "Frontend" },
-  { id: "tailwind", name: "Tailwind CSS", category: "Frontend" },
+  { id: "javascript", name: "JavaScript", category: "Frontend" },
+  { id: "typescript", name: "TypeScript", category: "Frontend" },
+  { id: "react", name: "React", category: "Frontend" },
+  { id: "nextjs", name: "Next.js", category: "Frontend" },
   { id: "php", name: "PHP", category: "Backend" },
   { id: "laravel", name: "Laravel", category: "Backend" },
   { id: "dotnet", name: ".NET Core", category: "Backend" },
-  { id: "mysql", name: "MySQL", category: "Backend" },
   { id: "flutter", name: "Flutter", category: "Mobile" },
+  { id: "sqa", name: "Software Quality Assurance", category: "QA" },
   { id: "manual-testing", name: "Manual Testing", category: "QA" },
-  { id: "functional-testing", name: "Functional Testing", category: "QA" },
   { id: "test-cases", name: "Test Cases", category: "QA" },
   { id: "bug-reporting", name: "Bug Reporting", category: "QA" },
-  { id: "sqa", name: "Software Quality Assurance", category: "QA" },
+  { id: "functional-testing", name: "Functional Testing", category: "QA" },
 ];
 
 export const skillCategories: SkillCategory[] = [

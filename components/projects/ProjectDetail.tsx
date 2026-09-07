@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Section } from "@/components/ui/Section";
 import { getRelatedProjects } from "@/data/projects";
@@ -13,12 +14,20 @@ export function ProjectDetail({ project }: { project: Project }) {
   const related = getRelatedProjects(project.slug);
 
   return (
-    <Section eyebrow={previewLabel(project.projectType)} title={project.title}>
+    <Section
+      eyebrow={project.isDemo ? "Placeholder" : previewLabel(project.projectType)}
+      title={project.title}
+    >
+      {project.isDemo ? (
+        <p className="mb-4 text-sm text-muted">
+          This page is a UI demonstration, not a real portfolio case study.
+        </p>
+      ) : null}
       <p className="max-w-2xl text-lg leading-relaxed text-muted">
         {project.shortDescription}
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
-        <Badge>{project.category}</Badge>
+        {project.isDemo ? <Badge>Demo</Badge> : <Badge>{project.category}</Badge>}
         <Badge>{project.projectType}</Badge>
       </div>
 
@@ -83,6 +92,15 @@ export function ProjectDetail({ project }: { project: Project }) {
       <div className="mt-10">
         <ProjectActions project={project} />
       </div>
+      <p className="mt-8 text-sm text-muted">
+        <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
+          All projects
+        </Link>
+        {" · "}
+        <Link href="/contact" className="text-foreground underline-offset-4 hover:underline">
+          Contact
+        </Link>
+      </p>
 
       {related.length > 0 ? (
         <div className="mt-16">

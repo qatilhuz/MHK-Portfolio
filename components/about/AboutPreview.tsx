@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -5,16 +6,16 @@ import { siteConfig } from "@/data/site";
 
 const focusAreas = [
   {
-    title: "Development",
-    body: "Web with Next.js and React, backend with PHP, Laravel, and .NET Core, mobile with Flutter.",
+    title: "Frontend",
+    body: "Interfaces with HTML, CSS, JavaScript, TypeScript, React, and Next.js.",
   },
   {
-    title: "Quality",
-    body: "Manual and functional testing, test cases, and bug reporting sit alongside the build work.",
+    title: "Full stack",
+    body: "Backend work with PHP, Laravel, and .NET Core, plus Flutter for mobile.",
   },
   {
-    title: "Direction",
-    body: "Clear interfaces, honest presentation of work, and software that can be inspected — not just demoed.",
+    title: "QA",
+    body: "Software quality assurance, manual and functional testing, test cases, and bug reporting.",
   },
 ];
 
@@ -24,15 +25,30 @@ export function AboutPreview() {
       id="about"
       eyebrow="About"
       title={`I’m ${siteConfig.displayName}.`}
-      description="Developer with a QA streak: I write software across the stack and I also look for the ways it can fail."
+      description="Full stack developer and QA practitioner. Building software and checking how it fails are two sides of the same job."
     >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <div className="space-y-4">
           <p className="max-w-2xl leading-relaxed text-muted">
-            This site is both a professional record and a workspace. Later it
-            will include a 3D environment, an AI avatar that only answers from
-            approved data, and interactive experiments. The written content
-            stays available without any of that.
+            I work across frontend development, full-stack web applications,
+            and Flutter. Time in software testing changes how I approach
+            Next.js and React work: I care about what users can actually do,
+            not only what a demo looks like.
+          </p>
+          <p className="max-w-2xl leading-relaxed text-muted">
+            See{" "}
+            <Link href="/#skills" className="text-foreground underline-offset-4 hover:underline">
+              skills
+            </Link>
+            ,{" "}
+            <Link href="/experience" className="text-foreground underline-offset-4 hover:underline">
+              experience
+            </Link>
+            , and{" "}
+            <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
+              projects
+            </Link>
+            {" "}for the rest of the picture.
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
             {focusAreas.map((item) => (
@@ -66,7 +82,7 @@ export function AboutPreview() {
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Focus</dt>
-              <dd>Web · Backend · Mobile · QA</dd>
+              <dd>Frontend · Full stack · QA</dd>
             </div>
           </dl>
           <div className="mt-5 flex flex-wrap gap-2">

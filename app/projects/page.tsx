@@ -1,11 +1,13 @@
-import type { Metadata } from "next";
 import { Section } from "@/components/ui/Section";
 import { ProjectGrid } from "@/components/projects/ProjectGrid";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Projects",
-  description: "Selected development work by Huzaifa.",
-};
+  description:
+    "Web, Flutter, and PHP project presentations by Huzaifa Khan. Demo entries are labelled placeholders until verified work is added.",
+  path: "/projects",
+});
 
 interface PageProps {
   searchParams: Promise<{ filter?: string }>;
@@ -18,7 +20,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     <Section
       eyebrow="Work"
       title="Projects"
-      description="Interactive web, Flutter, video demos, and case studies share one typed model. Only verified entries are listed."
+      description="Interactive web, Flutter, and PHP presentations share one typed model. Entries marked Demo are UI placeholders, not client work."
     >
       <ProjectGrid initialFilter={filter} />
     </Section>

@@ -19,16 +19,19 @@ export function ProjectCard({ project }: { project: Project }) {
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <p className="font-mono text-xs text-muted">
-                {previewLabel(project.projectType)}
+            <div className="flex h-full flex-col items-center justify-center gap-1 px-4 text-center">
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted">
+                {project.isDemo ? "Demo Preview" : previewLabel(project.projectType)}
               </p>
+              {project.isDemo ? (
+                <p className="text-xs text-muted">Replace with project media</p>
+              ) : null}
             </div>
           )}
         </div>
         <div className="flex flex-1 flex-col p-5">
           <div className="flex flex-wrap gap-2">
-            <Badge>{project.category}</Badge>
+            {project.isDemo ? <Badge>Demo</Badge> : <Badge>{project.category}</Badge>}
             <Badge>{previewLabel(project.projectType)}</Badge>
           </div>
           <h3 className="mt-4">

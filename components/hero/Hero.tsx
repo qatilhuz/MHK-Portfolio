@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import { siteConfig } from "@/data/site";
 import { getActiveSocialLinks } from "@/data/social";
 import { Button } from "@/components/ui/Button";
@@ -21,14 +22,25 @@ export function Hero() {
       />
       <Container className="relative grid items-center gap-12 py-20 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:py-28">
         <div>
-          <p className="label reveal">Developer · QA-minded</p>
+          <p className="label reveal">{siteConfig.role}</p>
           <h1 className="display mt-5 reveal reveal-delay-1">
             {siteConfig.displayName}
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted reveal reveal-delay-2">
-            I build web, backend, and mobile software — and I care about
-            whether it actually holds up. Explore the work, the stack, and the
-            testing side of how I operate.
+            I build with Next.js, React, and Flutter, and I bring a QA
+            background to frontend and full-stack work. Browse{" "}
+            <Link href="/about" className="text-foreground underline-offset-4 hover:underline">
+              about
+            </Link>
+            ,{" "}
+            <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
+              projects
+            </Link>
+            , and{" "}
+            <Link href="/contact" className="text-foreground underline-offset-4 hover:underline">
+              contact
+            </Link>
+            .
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button href="/projects">

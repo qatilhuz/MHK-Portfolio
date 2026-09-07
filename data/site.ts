@@ -2,19 +2,18 @@ import type { NavItem } from "@/types";
 
 /**
  * Central site identity. Only values confirmed from project context.
- * Do not invent companies, emails, or achievements here.
  */
 export const siteConfig = {
-  name: "Huzaifa",
-  displayName: "Huzaifa",
-  shortName: "MHK",
-  role: "Developer",
-  tagline: "Building software and checking that it actually works.",
+  name: "Huzaifa Khan",
+  displayName: "Huzaifa Khan",
+  shortName: "HK",
+  role: "Full Stack Developer & QA",
+  tagline: "Building web and mobile software with a testing mindset.",
   description:
-    "Huzaifa is a developer working across web, backend, and mobile, with practical QA and testing experience.",
+    "Portfolio of Huzaifa Khan, a full stack developer and QA practitioner working with Next.js, React, Flutter, and modern web development.",
   email: "",
   resumePath: "/resume/huzaifa-resume.pdf",
-  url: "",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "",
 } as const;
 
 export const navigation: NavItem[] = [

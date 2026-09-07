@@ -1,10 +1,12 @@
-import type { Metadata } from "next";
 import { ExperiencePreview } from "@/components/experience/ExperiencePreview";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Experience",
-  description: "Professional development and QA experience.",
-};
+  description:
+    "Development and QA focus of Huzaifa Khan: frontend, Next.js, and software testing — without an invented employment timeline.",
+  path: "/experience",
+});
 
 export default function ExperiencePage() {
   return <ExperiencePreview />;

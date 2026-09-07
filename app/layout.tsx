@@ -1,20 +1,26 @@
 import type { Metadata, Viewport } from "next";
 import { SiteShell } from "@/components/layout/SiteShell";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { siteConfig } from "@/data/site";
+import { getSiteUrl, personJsonLd, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
 
+const metadataBase = getSiteUrl() ? new URL(getSiteUrl()) : undefined;
+
 export const metadata: Metadata = {
+  metadataBase,
   title: {
-    default: `${siteConfig.displayName} · ${siteConfig.role}`,
-    template: `%s · ${siteConfig.displayName}`,
+    default: `${siteConfig.displayName} — ${siteConfig.role}`,
+    template: `%s | ${siteConfig.displayName}`,
   },
   description: siteConfig.description,
   applicationName: siteConfig.shortName,
   authors: [{ name: siteConfig.displayName }],
   openGraph: {
-    title: `${siteConfig.displayName} · Developer`,
+    title: `${siteConfig.displayName} — ${siteConfig.role}`,
     description: siteConfig.description,
     type: "website",
+    siteName: siteConfig.displayName,
     locale: "en_US",
   },
   robots: {
@@ -37,9 +43,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body
-        className="bg-background font-sans text-foreground antialiased"
-      >
+      <body className="bg-background font-sans text-foreground antialiased">
+        <JsonLd data={personJsonLd()} />
+        <JsonLd data={websiteJsonLd()} />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-[var(--radius-md)] focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-foreground"

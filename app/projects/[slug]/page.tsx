@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProjectDetail } from "@/components/projects/ProjectDetail";
 import { getProjectBySlug, projects } from "@/data/projects";
+import { pageMetadata } from "@/lib/seo";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -19,10 +20,16 @@ export async function generateMetadata({
   if (!project) {
     return { title: "Project not found" };
   }
-  return {
-    title: project.title,
-    description: project.shortDescription,
-  };
+  const title = project.isDemo ? `${project.title} (Demo)` : project.title;
+  const description = project.isDemo
+    ? `Placeholder demonstration page: ${project.shortDescription}`
+    : project.shortDescription;
+  return pageMetadata({
+    title,
+    description,
+    path: `/projects/${project.slug}`,
+    noIndex: project.isDemo,
+  });
 }
 
 export default async function ProjectPage({ params }: PageProps) {

@@ -10,7 +10,7 @@ export function MediaPending({ label, note }: MediaPendingProps) {
         {label}
       </p>
       <p className="text-sm text-muted">
-        {note ?? "Demo media coming soon."}
+        {note ?? "Replace with project media"}
       </p>
     </div>
   );

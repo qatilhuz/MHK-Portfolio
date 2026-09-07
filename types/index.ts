@@ -31,6 +31,7 @@ export interface Project {
   features: string[];
   role: string;
   previewMode: PreviewMode;
+  isDemo: boolean;
 }
 
 export type SkillCategory =

@@ -1,35 +1,52 @@
+import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { experience } from "@/data/experience";
+
+const focus = [
+  {
+    title: "Software development",
+    body: "Frontend and full-stack work with Next.js, React, PHP, Laravel, .NET Core, and Flutter.",
+  },
+  {
+    title: "QA and testing",
+    body: "Software quality assurance, manual testing, functional testing, test cases, and bug reporting.",
+  },
+];
 
 export function ExperiencePreview() {
   return (
     <Section
       id="experience"
-      eyebrow="Timeline"
+      eyebrow="Focus"
       title="Experience"
-      description="Roles render from data/experience.ts. Nothing is invented while that list is empty."
+      description="Verified employer names and dates are not listed yet. This is a focus summary, not a fabricated timeline."
     >
       {experience.length === 0 ? (
-        <ol className="relative border-l border-border pl-6">
-          <li className="relative pb-2">
-            <span
-              className="absolute -left-[1.54rem] top-1.5 h-3 w-3 rounded-full border border-accent bg-background"
-              aria-hidden="true"
-            />
-            <p className="label">Pending verified details</p>
-            <h3 className="mt-2">Employment history</h3>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-              Company, role, dates, description, and technologies will appear
-              here. QA work will be listed alongside development when those
-              facts are provided — not before.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Badge>Development</Badge>
-              <Badge>QA / Testing</Badge>
-            </div>
-          </li>
-        </ol>
+        <div className="grid gap-4 md:grid-cols-2">
+          {focus.map((item) => (
+            <Card key={item.title}>
+              <h3>{item.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                {item.body}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {item.title.startsWith("QA") ? (
+                  <>
+                    <Badge>QA</Badge>
+                    <Badge>Testing</Badge>
+                  </>
+                ) : (
+                  <>
+                    <Badge>Next.js</Badge>
+                    <Badge>Frontend</Badge>
+                  </>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
       ) : (
         <ol className="relative border-l border-border pl-6">
           {experience.map((item) => (
@@ -50,19 +67,20 @@ export function ExperiencePreview() {
                   {item.description}
                 </p>
               ) : null}
-              {item.technologies.length > 0 ? (
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {item.technologies.map((tech) => (
-                    <li key={tech}>
-                      <Badge>{tech}</Badge>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
             </li>
           ))}
         </ol>
       )}
+      <p className="mt-8 text-sm text-muted">
+        <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
+          Projects
+        </Link>{" "}
+        and{" "}
+        <Link href="/contact" className="text-foreground underline-offset-4 hover:underline">
+          contact
+        </Link>{" "}
+        are the next stops.
+      </p>
     </Section>
   );
 }

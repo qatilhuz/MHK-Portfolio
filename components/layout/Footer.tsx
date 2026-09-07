@@ -31,6 +31,7 @@ export function Footer() {
         <div className="grid gap-10 md:grid-cols-3">
           <div>
             <p className="font-medium text-foreground">{siteConfig.displayName}</p>
+            <p className="mt-1 text-sm text-muted">{siteConfig.legalName}</p>
             <p className="mt-2 text-sm text-muted">{siteConfig.role}</p>
           </div>
 

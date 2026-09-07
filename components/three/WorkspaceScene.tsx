@@ -4,6 +4,7 @@ import { ContactShadows } from "@react-three/drei";
 import type { WorkspaceBreakpoint } from "@/types/workspace";
 import { WorkspaceCamera } from "./WorkspaceCamera";
 import { WorkspaceLights } from "./WorkspaceLights";
+import { materials } from "./materials";
 import { WorkspaceObjects } from "./WorkspaceObjects";
 
 interface WorkspaceSceneProps {
@@ -17,7 +18,7 @@ export function WorkspaceScene({
 }: WorkspaceSceneProps) {
   return (
     <>
-      <color attach="background" args={["#0c0c10"]} />
+      <color attach="background" args={[materials.sceneBg]} />
       <WorkspaceCamera breakpoint={breakpoint} reducedMotion={reducedMotion} />
       <WorkspaceLights />
       <WorkspaceObjects

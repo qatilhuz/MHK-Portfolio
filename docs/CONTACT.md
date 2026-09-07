@@ -27,7 +27,7 @@ Verify the sending domain in Resend before production. Unverified `from` address
 1. Create a Resend account and API key.
 2. Verify a domain (or use Resend’s onboarding sender for tests if they still allow it).
 3. Set the three variables on the host.
-4. Without them, `POST /api/contact` returns **503** and the UI says the service is temporarily unavailable. Nothing is faked as sent.
+4. Without them, `POST /api/contact` returns **503** and the UI says the service is temporarily unavailable. Nothing is faked as sent. **Email delivery is not verified** until these variables and a verified Resend domain exist.
 
 ## Rate limit
 

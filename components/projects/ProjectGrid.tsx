@@ -30,12 +30,12 @@ export function ProjectGrid({
           item.id === "all" ||
           projects.some((project) => matchesProjectFilter(project, item.id)),
       ),
-    [],
+    [projects],
   );
 
   const filtered = useMemo(
     () => projects.filter((project) => matchesProjectFilter(project, filter)),
-    [filter],
+    [filter, projects],
   );
 
   if (projects.length === 0) {

@@ -31,6 +31,12 @@ Browser (after consent) → `POST /api/analytics` (whitelisted JSON) → Postgre
 
 Without `DATABASE_URL`, the API still accepts valid payloads and returns `{ persisted: false }`. The UI does not fail.
 
+## Events (allowlist)
+
+page_view, section_view, project_view, project_demo_open, project_github_click, project_media_open, resume_view, resume_download, arcade_open, arcade_game_start, arcade_game_complete, qa_open, qa_bug_found, terminal_command_used, assistant_open, assistant_question_category, contact_start, contact_submit_success, contact_submit_error.
+
+Writes are skipped when `DATABASE_URL` is unset (`persisted: false`). Delivery to Postgres is not verified without credentials.
+
 ## Not collected
 
 Passwords, payments, message text, IPs, precise location, mic/camera, clipboard, raw terminal input, assistant questions/answers.

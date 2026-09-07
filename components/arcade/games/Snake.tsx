@@ -107,23 +107,52 @@ export function Snake({ onBack }: { onBack: () => void }) {
           />
         ))}
       </div>
+      {!game.running && !game.over ? (
+        <div className="mt-4 flex justify-center">
+          <Button type="button" onClick={game.start}>
+            Start game
+          </Button>
+        </div>
+      ) : null}
       <div className="mt-4 grid grid-cols-3 gap-2 sm:hidden">
         <span />
-        <Button type="button" onClick={() => game.turn("up")}>
+        <Button
+          type="button"
+          onClick={() => {
+            if (!game.running) game.start();
+            game.turn("up");
+          }}
+        >
           Up
         </Button>
         <span />
-        <Button type="button" onClick={() => game.turn("left")}>
+        <Button
+          type="button"
+          onClick={() => {
+            if (!game.running) game.start();
+            game.turn("left");
+          }}
+        >
           Left
         </Button>
-        <Button type="button" onClick={game.start} variant="secondary">
-          Start
-        </Button>
-        <Button type="button" onClick={() => game.turn("right")}>
+        <span />
+        <Button
+          type="button"
+          onClick={() => {
+            if (!game.running) game.start();
+            game.turn("right");
+          }}
+        >
           Right
         </Button>
         <span />
-        <Button type="button" onClick={() => game.turn("down")}>
+        <Button
+          type="button"
+          onClick={() => {
+            if (!game.running) game.start();
+            game.turn("down");
+          }}
+        >
           Down
         </Button>
       </div>

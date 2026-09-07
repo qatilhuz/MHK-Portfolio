@@ -2,6 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
+import { materials } from "@/components/three/materials";
 import type { AssistantStatus } from "@/types";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { AvatarController } from "./AvatarController";
@@ -17,7 +18,7 @@ export function AvatarScene({ status }: { status: AssistantStatus }) {
       className="h-full w-full"
       aria-label="Portfolio assistant avatar placeholder"
     >
-      <color attach="background" args={["#0c0c10"]} />
+      <color attach="background" args={[materials.sceneBg]} />
       <ambientLight intensity={0.4} />
       <directionalLight position={[2, 3, 2]} intensity={0.9} />
       <AvatarController status={status} reducedMotion={reducedMotion} />

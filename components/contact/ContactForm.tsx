@@ -38,6 +38,7 @@ export function ContactForm() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (status === "sending") return;
     const payload = {
       name: values.name.trim(),
       email: values.email.trim(),
@@ -91,7 +92,7 @@ export function ContactForm() {
     "w-full rounded-[var(--radius-md)] border bg-surface px-3 py-2 text-sm";
 
   return (
-    <form className="max-w-lg space-y-4" onSubmit={submit} noValidate>
+    <form className="relative max-w-lg space-y-4" onSubmit={submit} noValidate>
       <div>
         <label htmlFor={`${formId}-name`} className="mb-1 block text-sm">
           Name
@@ -156,7 +157,7 @@ export function ContactForm() {
         />
       </div>
 
-      <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden>
+      <div className="sr-only" aria-hidden="true">
         <label htmlFor={`${formId}-website`}>Website</label>
         <input
           id={`${formId}-website`}

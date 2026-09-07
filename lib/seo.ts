@@ -37,6 +37,11 @@ export function pageMetadata({
       url,
       locale: "en_US",
     },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
     robots: noIndex
       ? { index: false, follow: false }
       : { index: true, follow: true },
@@ -88,7 +93,8 @@ export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: `${siteConfig.displayName} — ${siteConfig.role}`,
+    name: `${siteConfig.legalName} — ${siteConfig.role}`,
+    alternateName: siteConfig.displayName,
     url,
     description: siteConfig.description,
   };

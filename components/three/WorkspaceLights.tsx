@@ -1,5 +1,7 @@
 "use client";
 
+import { materials } from "./materials";
+
 export function WorkspaceLights() {
   return (
     <>
@@ -7,7 +9,7 @@ export function WorkspaceLights() {
       <directionalLight
         position={[2.4, 4.2, 2.2]}
         intensity={1.05}
-        color="#f4f4f5"
+        color={materials.light}
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
@@ -21,12 +23,12 @@ export function WorkspaceLights() {
       <directionalLight
         position={[-2.5, 1.5, 1]}
         intensity={0.22}
-        color="#93c5fd"
+        color={materials.fill}
       />
       <pointLight
         position={[0.2, 1.4, -0.2]}
         intensity={0.45}
-        color="#3b82f6"
+        color={materials.accent}
         distance={4}
       />
     </>

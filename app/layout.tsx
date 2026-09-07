@@ -16,13 +16,18 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   applicationName: siteConfig.shortName,
-  authors: [{ name: siteConfig.displayName }],
+  authors: [{ name: siteConfig.legalName }],
   openGraph: {
     title: `${siteConfig.displayName} — ${siteConfig.role}`,
     description: siteConfig.description,
     type: "website",
     siteName: siteConfig.displayName,
     locale: "en_US",
+  },
+  twitter: {
+    card: "summary",
+    title: `${siteConfig.displayName} — ${siteConfig.role}`,
+    description: siteConfig.description,
   },
   robots: {
     index: true,

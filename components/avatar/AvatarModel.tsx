@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
+import { materials } from "@/components/three/materials";
 import type { AssistantStatus } from "@/types";
 
 export const AVATAR_GLB = "/models/avatar.glb";
@@ -31,17 +32,17 @@ export function AvatarModel({
     <group ref={group}>
       <mesh position={[0, 0.85, 0]} castShadow>
         <sphereGeometry args={[0.22, 16, 16]} />
-        <meshStandardMaterial color="#27272a" roughness={0.65} />
+        <meshStandardMaterial color={materials.figure} roughness={0.65} />
       </mesh>
       <mesh position={[0, 0.28, 0]} castShadow>
         <capsuleGeometry args={[0.2, 0.42, 4, 10]} />
-        <meshStandardMaterial color="#18181b" roughness={0.7} />
+        <meshStandardMaterial color={materials.plastic} roughness={0.7} />
       </mesh>
       <mesh position={[0, 1.02, 0.18]}>
         <boxGeometry args={[0.12, 0.03, 0.04]} />
         <meshStandardMaterial
-          color="#3b82f6"
-          emissive="#3b82f6"
+          color={materials.accent}
+          emissive={materials.accent}
           emissiveIntensity={status === "speaking" ? 0.6 : 0.15}
         />
       </mesh>

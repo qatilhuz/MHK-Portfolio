@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { classifyAssistantQuestion } from "@/lib/analytics/classify";
+import { trackEvent } from "@/lib/analytics/client";
 import { getAssistantProvider } from "@/lib/assistant/provider";
 import { unknownReply } from "@/lib/assistant/knowledge";
 import type { AssistantMessage, AssistantStatus } from "@/types";
@@ -28,6 +30,9 @@ export function useAssistant() {
     setMessages((prev) => [...prev, visitor]);
     setStatus("thinking");
     setError(null);
+    trackEvent("assistant_question_category", {
+      category: classifyAssistantQuestion(trimmed),
+    });
 
     try {
       const provider = getAssistantProvider();

@@ -1,7 +1,7 @@
 import { Section } from "@/components/ui/Section";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { siteConfig } from "@/data/site";
+import { ResumeActions } from "./ResumeActions";
 
 export function ResumePreview() {
   return (
@@ -12,14 +12,7 @@ export function ResumePreview() {
       description="The résumé matches the experience, skills, education, and projects on this site."
     >
       {siteConfig.resumeAvailable ? (
-        <div className="flex flex-wrap gap-3">
-          <Button href={siteConfig.resumePath} external>
-            View Resume
-          </Button>
-          <Button href={siteConfig.resumePath} variant="secondary" external>
-            Download Resume
-          </Button>
-        </div>
+        <ResumeActions />
       ) : (
         <Card className="border-dashed">
           <p className="label">Pending file</p>

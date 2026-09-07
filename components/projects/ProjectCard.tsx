@@ -2,8 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
-import { previewLabel, primaryActionLabel } from "@/lib/projects";
+import { previewLabel } from "@/lib/projects";
 import type { Project } from "@/types";
+import { ProjectLinks } from "./ProjectLinks";
 
 export function ProjectCard({ project }: { project: Project }) {
   return (
@@ -52,39 +53,7 @@ export function ProjectCard({ project }: { project: Project }) {
               ))}
             </ul>
           ) : null}
-          <div className="mt-5 flex flex-wrap gap-4 text-sm">
-            <Link href={`/projects/${project.slug}`} className="text-accent">
-              {primaryActionLabel(project)}
-            </Link>
-            {project.githubUrl ? (
-              <a
-                href={project.githubUrl}
-                className="text-muted hover:text-foreground"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                GitHub
-              </a>
-            ) : null}
-            {project.liveUrl ? (
-              <a
-                href={project.liveUrl}
-                className="text-muted hover:text-foreground"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Live Demo
-              </a>
-            ) : null}
-            {project.video && !project.liveUrl ? (
-              <Link
-                href={`/projects/${project.slug}`}
-                className="text-muted hover:text-foreground"
-              >
-                Watch Demo
-              </Link>
-            ) : null}
-          </div>
+          <ProjectLinks project={project} />
         </div>
       </Card>
     </article>

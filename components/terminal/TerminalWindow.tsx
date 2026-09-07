@@ -2,6 +2,8 @@
 
 import { FormEvent, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { identifyTerminalCommand } from "@/lib/analytics/classify";
+import { trackEvent } from "@/lib/analytics/client";
 import { runTerminalCommand } from "@/lib/terminal/registry";
 import type { TerminalOutput } from "@/lib/terminal/types";
 import { TerminalOutputView } from "./TerminalOutputView";
@@ -29,6 +31,9 @@ export function TerminalWindow() {
   const execute = (command: string) => {
     const trimmed = command.trim();
     if (!trimmed) return;
+    trackEvent("terminal_command_used", {
+      commandId: identifyTerminalCommand(trimmed),
+    });
     const result = runTerminalCommand(trimmed);
     if (result === "clear") {
       setLines([]);

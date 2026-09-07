@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ProjectViewTracker } from "@/components/analytics/ProjectViewTracker";
 import { ProjectDetail } from "@/components/projects/ProjectDetail";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getProjectBySlug, projects } from "@/data/projects";
@@ -43,6 +44,7 @@ export default async function ProjectPage({ params }: PageProps) {
   return (
     <>
       {!project.isDemo ? <JsonLd data={projectJsonLd(project)} /> : null}
+      <ProjectViewTracker slug={project.slug} projectType={project.projectType} />
       <ProjectDetail project={project} />
     </>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ArcadeShell } from "../ArcadeShell";
+import { trackEvent } from "@/lib/analytics/client";
 import { useReactionTest } from "@/hooks/useReactionTest";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,12 @@ export function ReactionTest({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     setBest(test.best);
   }, [test.best]);
+
+  useEffect(() => {
+    if (test.phase === "result") {
+      trackEvent("arcade_game_complete", { game: "reaction" });
+    }
+  }, [test.phase]);
 
   const label =
     test.phase === "idle"

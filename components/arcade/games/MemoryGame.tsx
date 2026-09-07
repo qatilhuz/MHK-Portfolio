@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics/client";
 import { ArcadeShell } from "../ArcadeShell";
 import { shuffle } from "@/lib/arcade/gameUtils";
 import { minScore } from "@/lib/arcade/storage";
@@ -31,6 +32,12 @@ export function MemoryGame({ onBack }: { onBack: () => void }) {
     typeof window === "undefined" ? 0 : minScore("memory-best", Number.POSITIVE_INFINITY),
   );
   const complete = cards.every((card) => card.matched);
+
+  useEffect(() => {
+    if (complete && moves > 0) {
+      trackEvent("arcade_game_complete", { game: "memory" });
+    }
+  }, [complete, moves]);
 
   const status = useMemo(() => {
     if (complete) {

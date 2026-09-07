@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { siteConfig } from "@/data/site";
@@ -52,7 +53,10 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <SiteShell>{children}</SiteShell>
+        <SiteShell>
+          <AnalyticsProvider />
+          {children}
+        </SiteShell>
       </body>
     </html>
   );

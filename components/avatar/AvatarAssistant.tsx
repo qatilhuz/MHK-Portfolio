@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { trackEvent } from "@/lib/analytics/client";
 import { useAssistant } from "@/hooks/useAssistant";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
@@ -28,6 +29,10 @@ export function AvatarAssistant() {
   const webgl = useWebGLSupport();
   const { messages, status, setStatus, error, ask, reset } = useAssistant();
   const [input, setInput] = useState("");
+
+  useEffect(() => {
+    trackEvent("assistant_open", undefined, { onceKey: "assistant_open" });
+  }, []);
   const speech = useSpeechSynthesis();
 
   const handleAnswer = useCallback(

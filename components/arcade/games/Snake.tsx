@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { ArcadeShell } from "../ArcadeShell";
+import { trackEvent } from "@/lib/analytics/client";
 import { useSnakeGame, type Dir } from "@/hooks/useSnakeGame";
 
 export function Snake({ onBack }: { onBack: () => void }) {
@@ -33,6 +34,12 @@ export function Snake({ onBack }: { onBack: () => void }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [start, turn]);
+
+  useEffect(() => {
+    if (game.over) {
+      trackEvent("arcade_game_complete", { game: "snake" });
+    }
+  }, [game.over]);
 
   const onTouchStart = (event: React.TouchEvent) => {
     const point = event.changedTouches[0];

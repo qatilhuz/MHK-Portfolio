@@ -1,3 +1,4 @@
+import { ContactStart } from "@/components/analytics/ContactStart";
 import { getActiveSocialLinks } from "@/data/social";
 import { Button } from "@/components/ui/Button";
 import { Section } from "@/components/ui/Section";
@@ -14,6 +15,8 @@ export default function ContactPage() {
   const socials = getActiveSocialLinks();
 
   return (
+    <>
+    <ContactStart />
     <Section
       eyebrow="Contact"
       title="Contact Huzaifa Khan"
@@ -85,5 +88,6 @@ export default function ContactPage() {
         </Button>
       </form>
     </Section>
+    </>
   );
 }

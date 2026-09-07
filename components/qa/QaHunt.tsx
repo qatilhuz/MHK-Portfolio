@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics/client";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -135,10 +136,22 @@ export function QaHunt() {
     return option;
   }, [choice, scenario]);
 
+  useEffect(() => {
+    trackEvent("qa_open", undefined, { onceKey: "qa_open" });
+  }, []);
+
   const submit = () => {
     if (!choice) return;
     const option = scenario.options.find((item) => item.id === choice);
-    setFound((prev) => ({ ...prev, [scenario.id]: Boolean(option?.correct) }));
+    const correct = Boolean(option?.correct);
+    setFound((prev) => ({ ...prev, [scenario.id]: correct }));
+    if (correct) {
+      trackEvent("qa_bug_found", {
+        scenario: scenario.id,
+        type: scenario.type,
+        severity: scenario.severity,
+      });
+    }
   };
 
   return (

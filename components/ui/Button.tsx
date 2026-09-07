@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +52,7 @@ export function Button({
           className={classes}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={props.onClick as unknown as React.MouseEventHandler<HTMLAnchorElement>}
         >
           {children}
         </a>
@@ -59,7 +60,7 @@ export function Button({
     }
 
     return (
-      <Link href={href} className={classes}>
+      <Link href={href} className={classes} onClick={props.onClick as unknown as MouseEventHandler<HTMLAnchorElement>}>
         {children}
       </Link>
     );

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Section } from "@/components/ui/Section";
-import { getRelatedProjects } from "@/data/projects";
 import { previewLabel } from "@/lib/projects";
 import type { Project } from "@/types";
 import { ProjectActions } from "./ProjectActions";
@@ -10,8 +9,13 @@ import { ProjectPreview } from "./ProjectPreview";
 import { ScreenshotGallery } from "./ScreenshotGallery";
 import { VideoPreview } from "./VideoPreview";
 
-export function ProjectDetail({ project }: { project: Project }) {
-  const related = getRelatedProjects(project.slug);
+export function ProjectDetail({
+  project,
+  related,
+}: {
+  project: Project;
+  related: Project[];
+}) {
 
   return (
     <Section
@@ -65,7 +69,7 @@ export function ProjectDetail({ project }: { project: Project }) {
         <div className="mt-10">
           <h2>Screenshots</h2>
           <div className="mt-4">
-            <ScreenshotGallery images={project.screenshots} />
+            <ScreenshotGallery images={project.screenshots} slug={project.slug} />
           </div>
         </div>
       ) : null}

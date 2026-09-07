@@ -24,6 +24,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: Size;
   href?: string;
   external?: boolean;
+  download?: string | boolean;
   children?: ReactNode;
 }
 
@@ -33,6 +34,7 @@ export function Button({
   size = "md",
   href,
   external,
+  download,
   children,
   type = "button",
   ...props
@@ -50,8 +52,9 @@ export function Button({
         <a
           href={href}
           className={classes}
-          target="_blank"
+          target={download ? undefined : "_blank"}
           rel="noopener noreferrer"
+          download={download}
           onClick={props.onClick as unknown as React.MouseEventHandler<HTMLAnchorElement>}
         >
           {children}

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { ProjectViewTracker } from "@/components/analytics/ProjectViewTracker";
 import { ProjectDetail } from "@/components/projects/ProjectDetail";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { getProjectBySlug, projects } from "@/data/projects";
+import { getProjectBySlug, getRelatedProjects, projects } from "@/data/projects";
+import { hydrateProject, hydrateProjects } from "@/lib/assets";
 import { pageMetadata, projectJsonLd } from "@/lib/seo";
 
 interface PageProps {
@@ -45,7 +46,10 @@ export default async function ProjectPage({ params }: PageProps) {
     <>
       {!project.isDemo ? <JsonLd data={projectJsonLd(project)} /> : null}
       <ProjectViewTracker slug={project.slug} projectType={project.projectType} />
-      <ProjectDetail project={project} />
+      <ProjectDetail
+        project={hydrateProject(project)}
+        related={hydrateProjects(getRelatedProjects(project.slug))}
+      />
     </>
   );
 }

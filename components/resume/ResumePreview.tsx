@@ -1,26 +1,27 @@
 import { Section } from "@/components/ui/Section";
 import { Card } from "@/components/ui/Card";
-import { siteConfig } from "@/data/site";
+import { resumePdfExists } from "@/lib/assets";
 import { ResumeActions } from "./ResumeActions";
 
 export function ResumePreview() {
+  const available = resumePdfExists();
+
   return (
     <Section
       id="resume"
       eyebrow="CV"
       title="Resume"
-      description="The résumé matches the experience, skills, education, and projects on this site."
+      description="Full-stack developer résumé covering Next.js, React, .NET, and the projects on this site."
     >
-      {siteConfig.resumeAvailable ? (
+      {available ? (
         <ResumeActions />
       ) : (
         <Card className="border-dashed">
-          <p className="label">Pending file</p>
-          <h3 className="mt-3">PDF not in the repository yet</h3>
+          <p className="label">Coming soon</p>
+          <h3 className="mt-3">Resume PDF coming soon</h3>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-            Place the CV at public/resume/huzaifa-resume.pdf and set
-            resumeAvailable in data/site.ts. View and download actions are
-            ready; no placeholder PDF is served.
+            View and download will appear here once the file is added at
+            public/resume/huzaifa-resume.pdf. Nothing is served until then.
           </p>
         </Card>
       )}

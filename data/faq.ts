@@ -159,6 +159,23 @@ export const faq: FAQ[] = [
     relatedSection: "/#terminal",
   },
   {
+    id: "resume",
+    question: "Can I download Huzaifa's resume?",
+    answer: siteConfig.resumeAvailable
+      ? "Yes. View or download the PDF from the resume section."
+      : "The resume section is on the site, but the PDF is not in the repository yet, so download is unavailable.",
+    category: "about",
+    relatedSection: "/#resume",
+  },
+  {
+    id: "project-media",
+    question: "Are there screenshots or live demos?",
+    answer:
+      "No public live demo URLs are listed. Project screenshots and videos appear when files are added under public/projects; until then pages say media is coming soon.",
+    category: "projects",
+    relatedSection: "/projects",
+  },
+  {
     id: "contact",
     question: "How can I contact Huzaifa?",
     answer:

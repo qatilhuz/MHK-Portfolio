@@ -14,6 +14,7 @@ export const siteConfig = {
     "Portfolio of Huzaifa Khan, a full-stack developer in Karachi specializing in Next.js, React, and .NET.",
   email: "",
   resumePath: "/resume/huzaifa-resume.pdf",
+  /** Keep in sync with public/resume/huzaifa-resume.pdf. Server UI also checks disk. */
   resumeAvailable: false,
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "",
 } as const;

@@ -28,7 +28,7 @@ export const workspaceObjects: WorkspaceObjectConfig[] = [
   {
     id: "phone",
     label: "Phone",
-    caption: "Flutter",
+    caption: "Mobile",
     href: "/projects?filter=mobile",
     position: [1.05, 0.05, 0.45],
     rotation: [0, -0.25, 0],

@@ -8,12 +8,16 @@ export const projects: Project[] = [
     shortDescription:
       "PHP and MySQL storefront with product browsing, orders, reviews, and a role-based admin dashboard.",
     description:
-      "An e-commerce web application with a PHP backend and MySQL database. Visitors can browse products, track orders, and leave reviews. Administrators manage categories, banners, and products through a role-based dashboard. PHP is not executed inside this Next.js site; the case study is presented with media when available.",
+      "An e-commerce web application with a PHP backend and MySQL database. Visitors can browse products, track orders, and leave reviews. Administrators manage categories, banners, and products through a role-based dashboard. PHP is not executed inside this Next.js site; the case study is presented with screenshots or video when those files are in the repository.",
     category: "PHP",
     technologies: ["PHP", "MySQL"],
     projectType: "case-study",
     thumbnail: "",
-    thumbnailAlt: "E-commerce web application media pending",
+    thumbnailAlt: "E-commerce web application interface",
+    mediaFolder: "ecommerce",
+    seoTitle: "E-Commerce Web Application with Admin Dashboard",
+    seoDescription:
+      "PHP and MySQL e-commerce case study by Huzaifa Khan: catalog, orders, reviews, and a role-based admin dashboard.",
     screenshots: [],
     features: [
       "Product browsing",
@@ -37,12 +41,16 @@ export const projects: Project[] = [
     shortDescription:
       "Flutter app with a .NET backend and SQL Server covering products, cart, orders, authentication, and checkout.",
     description:
-      "A laptop e-commerce mobile application. The frontend is Flutter, the backend is .NET, and data is stored in SQL Server. It covers product browsing, cart, orders, authentication, checkout, and end-to-end frontend, backend, and database integration. No public store or live URL is listed.",
+      "A laptop e-commerce mobile application. The frontend is Flutter, the backend is .NET, and data is stored in SQL Server. It covers product browsing, cart, orders, authentication, checkout, and end-to-end frontend, backend, and database integration. No public store listing or live URL is published. Previews use the phone frame when screenshots exist.",
     category: "Mobile",
     technologies: ["Flutter", ".NET", "SQL Server"],
     projectType: "mobile",
     thumbnail: "",
-    thumbnailAlt: "Laptop e-commerce mobile app media pending",
+    thumbnailAlt: "Laptop e-commerce mobile app on a phone",
+    mediaFolder: "laptop-ecommerce",
+    seoTitle: "Laptop E-Commerce Mobile App",
+    seoDescription:
+      "Flutter, .NET, and SQL Server laptop shop app by Huzaifa Khan: catalog, cart, auth, and checkout.",
     screenshots: [],
     features: [
       "Product browsing",
@@ -65,12 +73,16 @@ export const projects: Project[] = [
     shortDescription:
       "Single-page weather app with live conditions, a 7-day forecast, atmospheric metrics, and °C/°F switching.",
     description:
-      "A weather forecasting web application built as a single-page app using HTML, CSS, and JavaScript. It shows real-time weather conditions, 7-day forecasts, atmospheric metrics, and Celsius/Fahrenheit switching. No public deployment URL is listed, and no local preview is in this repository yet.",
+      "A weather forecasting web application built as a single-page app using HTML, CSS, and JavaScript. It shows real-time weather conditions, 7-day forecasts, atmospheric metrics, and Celsius/Fahrenheit switching. No public deployment URL is listed, and no local preview source is in this repository yet.",
     category: "JavaScript",
     technologies: ["HTML", "CSS", "JavaScript"],
     projectType: "interactive-web",
     thumbnail: "",
-    thumbnailAlt: "Weather forecasting web app media pending",
+    thumbnailAlt: "Weather forecasting web app interface",
+    mediaFolder: "weather",
+    seoTitle: "Weather Forecasting Web App",
+    seoDescription:
+      "HTML, CSS, and JavaScript weather SPA by Huzaifa Khan with live conditions, a 7-day forecast, and unit switching.",
     screenshots: [],
     features: [
       "Real-time weather conditions",
@@ -95,7 +107,11 @@ export const projects: Project[] = [
     technologies: ["HTML", "CSS"],
     projectType: "interactive-web",
     thumbnail: "",
-    thumbnailAlt: "Gaming showcase website media pending",
+    thumbnailAlt: "Gaming showcase website layout",
+    mediaFolder: "gaming",
+    seoTitle: "Gaming Showcase Website",
+    seoDescription:
+      "Static multi-page gaming UI showcase by Huzaifa Khan. Design practice only; no third-party game ownership.",
     screenshots: [],
     features: [
       "Multi-page static website",
@@ -126,9 +142,7 @@ export function getRelatedProjects(slug: string, limit = 3): Project[] {
       (project) =>
         project.projectType === current.projectType ||
         project.category === current.category ||
-        project.technologies.some((tech) =>
-          current.technologies.includes(tech),
-        ),
+        project.technologies.some((tech) => current.technologies.includes(tech)),
     )
     .slice(0, limit);
 }

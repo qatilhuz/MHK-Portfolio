@@ -2,9 +2,16 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { trackEvent } from "@/lib/analytics/client";
 import type { ProjectMedia } from "@/types";
 
-export function ScreenshotGallery({ images }: { images: ProjectMedia[] }) {
+export function ScreenshotGallery({
+  images,
+  slug,
+}: {
+  images: ProjectMedia[];
+  slug?: string;
+}) {
   const [active, setActive] = useState<number | null>(null);
 
   const close = useCallback(() => setActive(null), []);
@@ -44,7 +51,10 @@ export function ScreenshotGallery({ images }: { images: ProjectMedia[] }) {
             <button
               type="button"
               className="block w-full overflow-hidden rounded-[var(--radius-md)] border border-border text-left"
-              onClick={() => setActive(index)}
+              onClick={() => {
+                setActive(index);
+                if (slug) trackEvent("project_media_open", { slug, kind: "screenshot" });
+              }}
             >
               <Image
                 src={image.src}

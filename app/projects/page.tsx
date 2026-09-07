@@ -1,5 +1,7 @@
 import { Section } from "@/components/ui/Section";
 import { ProjectGrid } from "@/components/projects/ProjectGrid";
+import { projects } from "@/data/projects";
+import { hydrateProjects } from "@/lib/assets";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -15,6 +17,7 @@ interface PageProps {
 
 export default async function ProjectsPage({ searchParams }: PageProps) {
   const { filter } = await searchParams;
+  const items = hydrateProjects(projects);
 
   return (
     <Section
@@ -22,7 +25,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
       title="Projects"
       description="Verified CV projects. Media files can be added later without changing the data model."
     >
-      <ProjectGrid initialFilter={filter} />
+      <ProjectGrid projects={items} initialFilter={filter} />
     </Section>
   );
 }

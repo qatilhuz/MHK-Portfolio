@@ -22,6 +22,9 @@ export interface Project {
   projectType: ProjectType;
   thumbnail: string;
   thumbnailAlt: string;
+  mediaFolder: string;
+  seoTitle: string;
+  seoDescription: string;
   screenshots: ProjectMedia[];
   video?: string;
   videoPoster?: string;

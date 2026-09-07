@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { projects } from "@/data/projects";
+import type { Project } from "@/types";
 import {
   isProjectFilterId,
   matchesProjectFilter,
@@ -12,7 +12,13 @@ import { cn } from "@/lib/utils";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectEmptyState } from "./ProjectEmptyState";
 
-export function ProjectGrid({ initialFilter }: { initialFilter?: string }) {
+export function ProjectGrid({
+  projects,
+  initialFilter,
+}: {
+  projects: Project[];
+  initialFilter?: string;
+}) {
   const [filter, setFilter] = useState<ProjectFilterId>(
     initialFilter && isProjectFilterId(initialFilter) ? initialFilter : "all",
   );

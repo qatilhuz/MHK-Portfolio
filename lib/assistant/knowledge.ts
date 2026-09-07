@@ -185,6 +185,26 @@ export function replyFromKnowledge(question: string): AssistantReply {
     };
   }
 
+  if (q.includes("resume") || q.includes("cv") || q.includes("pdf")) {
+    return {
+      text: siteConfig.resumeAvailable
+        ? "A PDF resume is available in the resume section."
+        : "The resume section is on the site, but the PDF is not available yet.",
+      links: [{ href: "/#resume", label: "Resume" }],
+    };
+  }
+
+  if (q.includes("screenshot") || q.includes("media") || q.includes("video demo")) {
+    const pending = projects.filter((item) => !item.isDemo && item.mediaStatus !== "available");
+    return {
+      text:
+        pending.length === projects.filter((item) => !item.isDemo).length
+          ? "Project screenshots and videos are coming soon. Case-study text is on each project page. No live demo URLs are listed."
+          : "Some project media is available on the project pages. Missing files are labelled coming soon. No live demo URLs are listed.",
+      links: [{ href: "/projects", label: "Projects" }],
+    };
+  }
+
   if (q.includes("contact") || q.includes("github") || q.includes("email")) {
     const github = getActiveSocialLinks()
       .map((link) => `${link.label}: ${link.url}`)

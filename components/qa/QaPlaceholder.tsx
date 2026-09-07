@@ -6,7 +6,7 @@ export function QaPlaceholder() {
     <Section id="qa" eyebrow="QA" title="QA Bug Hunt">
       <PlaceholderPanel
         title="Interactive bug hunt"
-        note="Visitors will inspect a deliberately buggy UI and log findings. Implementation is reserved for a later batch."
+        note="A later batch will add a deliberately buggy UI so visitors can log defects — title, type, severity, expected vs actual. This is the QA demonstration, not a game clone of the arcade."
       />
     </Section>
   );

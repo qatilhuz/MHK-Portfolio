@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   applicationName: siteConfig.shortName,
   authors: [{ name: siteConfig.displayName }],
   openGraph: {
-    title: `${siteConfig.displayName} · ${siteConfig.role}`,
+    title: `${siteConfig.displayName} · Developer`,
     description: siteConfig.description,
     type: "website",
     locale: "en_US",

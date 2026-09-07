@@ -9,9 +9,9 @@ export const siteConfig = {
   displayName: "Huzaifa",
   shortName: "MHK",
   role: "Developer",
-  tagline: "Personal developer portfolio",
+  tagline: "Building software and checking that it actually works.",
   description:
-    "Premium personal developer portfolio combining professional work, interactive experience, and a QA-minded approach to building software.",
+    "Huzaifa is a developer working across web, backend, and mobile, with practical QA and testing experience.",
   email: "",
   resumePath: "/resume/huzaifa-resume.pdf",
   url: "",

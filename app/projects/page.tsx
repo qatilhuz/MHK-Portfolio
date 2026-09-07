@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Section } from "@/components/ui/Section";
-import { projects } from "@/data/projects";
+import { ProjectGrid } from "@/components/projects/ProjectGrid";
 
 export const metadata: Metadata = {
   title: "Projects",
-  description: "Selected development work.",
+  description: "Selected development work by Huzaifa.",
 };
 
 export default function ProjectsPage() {
@@ -12,13 +12,9 @@ export default function ProjectsPage() {
     <Section
       eyebrow="Work"
       title="Projects"
-      description="Each project will have its own page at /projects/[slug] with a type-aware presentation."
+      description="Each entry is driven by typed data and can later use browser, phone, or video previews."
     >
-      {projects.length === 0 ? (
-        <p className="text-muted">
-          Project data is empty until real case studies are added.
-        </p>
-      ) : null}
+      <ProjectGrid />
     </Section>
   );
 }

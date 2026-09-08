@@ -9,5 +9,5 @@ export const metadata = pageMetadata({
 });
 
 export default function AboutPage() {
-  return <AboutPreview />;
+  return <AboutPreview headingLevel="h1" />;
 }

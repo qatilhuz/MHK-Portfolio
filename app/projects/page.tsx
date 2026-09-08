@@ -22,6 +22,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
   return (
     <Section
       eyebrow="Work"
+      headingLevel="h1"
       title="Projects"
       description="Verified CV projects. Media files can be added later without changing the data model."
     >

@@ -25,12 +25,25 @@ function cleanMultiline(value: unknown, max: number): string {
   return value.replace(/\r\n/g, "\n").trim().slice(0, max);
 }
 
+function overLimit(value: unknown, max: number): boolean {
+  return typeof value === "string" && value.length > max;
+}
+
 export function parseContactBody(input: unknown): ContactInput | null {
   if (!input || typeof input !== "object") return null;
   const data = input as Record<string, unknown>;
   const allowed = ["name", "email", "subject", "message", "website"];
   for (const key of Object.keys(data)) {
     if (!allowed.includes(key)) return null;
+  }
+  if (
+    overLimit(data.name, 80) ||
+    overLimit(data.email, 120) ||
+    overLimit(data.subject, 120) ||
+    overLimit(data.message, 4000) ||
+    overLimit(data.website, 200)
+  ) {
+    return null;
   }
   return {
     name: clean(data.name, 80),

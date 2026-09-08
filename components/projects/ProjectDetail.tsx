@@ -20,6 +20,7 @@ export function ProjectDetail({
   return (
     <Section
       eyebrow={project.isDemo ? "Placeholder" : previewLabel(project.projectType)}
+      headingLevel="h1"
       title={project.title}
     >
       {project.isDemo ? (

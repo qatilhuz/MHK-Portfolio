@@ -3,11 +3,16 @@ import { Section } from "@/components/ui/Section";
 import { Badge } from "@/components/ui/Badge";
 import { experience } from "@/data/experience";
 
-export function ExperiencePreview() {
+export function ExperiencePreview({
+  headingLevel = "h2",
+}: {
+  headingLevel?: "h1" | "h2";
+}) {
   return (
     <Section
       id="experience"
       eyebrow="Career"
+      headingLevel={headingLevel}
       title="Experience"
       description="Roles from Huzaifa’s CV. No extra employers or invented dates."
     >

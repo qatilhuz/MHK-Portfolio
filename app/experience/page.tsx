@@ -9,5 +9,5 @@ export const metadata = pageMetadata({
 });
 
 export default function ExperiencePage() {
-  return <ExperiencePreview />;
+  return <ExperiencePreview headingLevel="h1" />;
 }

@@ -16,6 +16,7 @@ export function PrivacyNotice() {
   return (
     <div
       role="dialog"
+      aria-modal="true"
       aria-label="Anonymous analytics notice"
       className="fixed bottom-4 left-4 right-4 z-[80] mx-auto max-w-lg rounded-[var(--radius-lg)] border border-border bg-surface p-4 shadow-[var(--shadow)]"
     >

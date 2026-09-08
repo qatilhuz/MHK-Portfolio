@@ -7,8 +7,8 @@ export const runtime = "nodejs";
 const MAX_BYTES = 8_192;
 
 export async function POST(request: Request) {
-  const length = Number(request.headers.get("content-length") ?? 0);
-  if (length > MAX_BYTES) {
+  const declared = Number(request.headers.get("content-length") ?? 0);
+  if (declared > MAX_BYTES) {
     return NextResponse.json({ ok: false }, { status: 413 });
   }
 
@@ -18,7 +18,11 @@ export async function POST(request: Request) {
 
   let json: unknown;
   try {
-    json = await request.json();
+    const raw = await request.text();
+    if (raw.length > MAX_BYTES) {
+      return NextResponse.json({ ok: false }, { status: 413 });
+    }
+    json = JSON.parse(raw) as unknown;
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }

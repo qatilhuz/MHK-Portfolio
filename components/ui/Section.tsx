@@ -7,6 +7,7 @@ interface SectionProps {
   eyebrow?: string;
   title?: string;
   description?: string;
+  headingLevel?: "h1" | "h2";
   children?: React.ReactNode;
   className?: string;
 }
@@ -16,16 +17,18 @@ export function Section({
   eyebrow,
   title,
   description,
+  headingLevel = "h2",
   children,
   className,
 }: SectionProps) {
+  const Heading = headingLevel;
   return (
     <section id={id} className={cn(SECTION_CLASS, className)}>
       <Container>
         {(eyebrow || title || description) && (
           <header className="mb-10 max-w-2xl">
             {eyebrow ? <p className="label mb-3">{eyebrow}</p> : null}
-            {title ? <h2 className="text-foreground">{title}</h2> : null}
+            {title ? <Heading className="text-foreground">{title}</Heading> : null}
             {description ? (
               <p className="mt-3 text-muted leading-relaxed">{description}</p>
             ) : null}

@@ -20,11 +20,12 @@ const focusAreas = [
   },
 ];
 
-export function AboutPreview() {
+export function AboutPreview({ headingLevel = "h2" }: { headingLevel?: "h1" | "h2" }) {
   return (
     <Section
       id="about"
       eyebrow="About"
+      headingLevel={headingLevel}
       title={`I’m ${siteConfig.displayName}.`}
       description={`${siteConfig.role} in ${siteConfig.location}, specializing in ${siteConfig.specialization}.`}
     >

@@ -16,6 +16,7 @@ export default function ContactPage() {
   return (
     <Section
       eyebrow="Contact"
+      headingLevel="h1"
       title="Contact Huzaifa Khan"
       description="Send a short message. GitHub is also listed. Email and LinkedIn stay omitted until they are public."
     >

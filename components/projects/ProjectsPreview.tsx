@@ -1,3 +1,4 @@
+import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import { Section } from "@/components/ui/Section";
 import { Button } from "@/components/ui/Button";
 import { projects } from "@/data/projects";
@@ -8,12 +9,14 @@ export function ProjectsPreview() {
   const items = hydrateProjects(projects);
 
   return (
+    <div className="relative">
+      <AmbientBackground variant="projects" />
     <Section
       id="projects"
       eyebrow="Work"
       title="Projects"
       description="CV-backed work: PHP e-commerce, a Flutter laptop shop, a weather SPA, and a gaming showcase site. Media is added when files exist."
-      className="bg-surface/40"
+      className="relative bg-surface/40"
     >
       <ProjectGrid projects={items} />
       <div className="mt-8">
@@ -22,5 +25,6 @@ export function ProjectsPreview() {
         </Button>
       </div>
     </Section>
+    </div>
   );
 }

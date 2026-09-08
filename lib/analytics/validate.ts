@@ -27,6 +27,9 @@ const META_ALLOW: Record<AnalyticsEventName, string[]> = {
   contact_submit_success: [],
   contact_submit_error: [],
   project_media_open: ["slug", "kind"],
+  guided_intro_start: [],
+  guided_intro_skip: [],
+  guided_intro_complete: [],
 };
 
 export function parseAnalyticsBatch(input: unknown): AnalyticsBatch | null {

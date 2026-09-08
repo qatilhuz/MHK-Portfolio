@@ -18,6 +18,9 @@ export const ANALYTICS_EVENT_NAMES = [
   "contact_submit_success",
   "contact_submit_error",
   "project_media_open",
+  "guided_intro_start",
+  "guided_intro_skip",
+  "guided_intro_complete",
 ] as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENT_NAMES)[number];

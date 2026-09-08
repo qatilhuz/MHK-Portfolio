@@ -6,5 +6,7 @@ Drop optimized GLB files here when they are ready:
 - phone.glb
 - arcade.glb
 - avatar.glb
+- portfolio-guide.glb  (optional guided narrator; licensed assets only)
 
-The scene currently uses procedural low-poly meshes. Paths are defined in `data/workspace.ts`.
+The workspace currently uses procedural meshes (`data/workspace.ts`).
+The guided narrator uses a procedural humanoid until `portfolio-guide.glb` exists.

@@ -33,7 +33,7 @@ Without `DATABASE_URL`, the API still accepts valid payloads and returns `{ pers
 
 ## Events (allowlist)
 
-page_view, section_view, project_view, project_demo_open, project_github_click, project_media_open, resume_view, resume_download, arcade_open, arcade_game_start, arcade_game_complete, qa_open, qa_bug_found, terminal_command_used, assistant_open, assistant_question_category, contact_start, contact_submit_success, contact_submit_error.
+page_view, section_view, project_view, project_demo_open, project_github_click, project_media_open, resume_view, resume_download, arcade_open, arcade_game_start, arcade_game_complete, qa_open, qa_bug_found, terminal_command_used, assistant_open, assistant_question_category, contact_start, contact_submit_success, contact_submit_error, guided_intro_start, guided_intro_skip, guided_intro_complete.
 
 Writes are skipped when `DATABASE_URL` is unset (`persisted: false`). Delivery to Postgres is not verified without credentials.
 

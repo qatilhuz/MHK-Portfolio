@@ -52,6 +52,7 @@ export function InteractiveObject({
 
   const onClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
+    window.dispatchEvent(new Event("mhk-guide-skip"));
     router.push(config.href);
   };
 

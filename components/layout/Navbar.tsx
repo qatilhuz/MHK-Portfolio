@@ -6,10 +6,16 @@ import { Menu, X } from "lucide-react";
 import { navigation, siteConfig } from "@/data/site";
 import { Container } from "@/components/ui/Container";
 import { IconButton } from "@/components/ui/IconButton";
+import { useGuide } from "@/lib/guide/context";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const guide = useGuide();
+  const onNav = () => {
+    guide?.skip();
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -29,7 +35,11 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
       <Container className="flex h-16 items-center justify-between">
-        <Link href="/" className="font-medium tracking-tight text-foreground">
+        <Link
+          href="/"
+          className="font-medium tracking-tight text-foreground"
+          onClick={() => guide?.skip()}
+        >
           {siteConfig.displayName}
         </Link>
 
@@ -39,6 +49,7 @@ export function Navbar() {
               key={item.href + item.label}
               href={item.href}
               className="text-sm text-muted transition-colors duration-[var(--motion-micro)] hover:text-foreground"
+              onClick={onNav}
             >
               {item.label}
             </Link>
@@ -73,7 +84,7 @@ export function Navbar() {
               key={item.href + item.label}
               href={item.href}
               className="py-3 text-foreground"
-              onClick={() => setOpen(false)}
+              onClick={onNav}
             >
               {item.label}
             </Link>

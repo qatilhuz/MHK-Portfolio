@@ -12,22 +12,29 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { guidedSections } from "@/data/guide";
+import { hitReactions, poseClip, sectionClip, type CharacterClip } from "@/data/character";
 import { trackEvent } from "@/lib/analytics/client";
 import type { GuidePhase, GuidePose } from "./types";
 import { cancelGuideSpeech, guideSpeechSupported, speakGuideText } from "./speak";
 import { guideAlreadyFinished, markGuideFinished } from "./storage";
 
 interface GuideContextValue {
-  active: boolean;
+  visible: boolean;
+  guided: boolean;
   phase: GuidePhase;
   index: number;
   pose: GuidePose;
+  clip: CharacterClip;
+  look: { x: number; y: number };
   message: string;
+  reaction: string | null;
   muted: boolean;
   voiceSupported: boolean;
   voiceBlocked: boolean;
   enableVoice: () => void;
   setMuted: (value: boolean) => void;
+  setLook: (x: number, y: number) => void;
+  react: (region: "head" | "hand" | "body") => void;
   skip: () => void;
 }
 
@@ -41,12 +48,6 @@ function sectionEl(id: string) {
   return document.getElementById(id);
 }
 
-function sectionTop(id: string) {
-  const node = sectionEl(id);
-  if (!node) return 0;
-  return node.getBoundingClientRect().top + window.scrollY;
-}
-
 function readingDelay(ms: number, reduced: boolean) {
   return reduced ? Math.min(ms, 2200) : ms;
 }
@@ -58,6 +59,9 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const [index, setIndex] = useState(0);
   const [muted, setMutedState] = useState(false);
   const [voiceBlocked, setVoiceBlocked] = useState(false);
+  const [look, setLookState] = useState({ x: 0, y: 0 });
+  const [reaction, setReaction] = useState<string | null>(null);
+  const [reactionClip, setReactionClip] = useState<CharacterClip | null>(null);
   const [voiceSupported] = useState(() =>
     typeof window === "undefined" ? false : guideSpeechSupported(),
   );
@@ -146,6 +150,20 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     mutedRef.current = false;
     speakCurrent(indexRef.current);
   }, [speakCurrent]);
+
+  const setLook = useCallback((x: number, y: number) => {
+    setLookState({ x, y });
+  }, []);
+
+  const react = useCallback((region: "head" | "hand" | "body") => {
+    const next = hitReactions[region];
+    setReaction(next.message);
+    setReactionClip(next.clip);
+    window.setTimeout(() => {
+      setReaction(null);
+      setReactionClip(null);
+    }, 1600);
+  }, []);
 
   const setMuted = useCallback(
     (value: boolean) => {
@@ -294,32 +312,50 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     return () => observers.forEach((item) => item.disconnect());
   }, [home, phase, speakCurrent]);
 
-  const active =
+  const guided =
     home && phase !== "idle" && phase !== "skipped" && phase !== "complete";
   const section = guidedSections[index];
+  const clip: CharacterClip = reactionClip
+    ? reactionClip
+    : phase === "transitioning"
+      ? "Walk"
+      : sectionClip[section?.id ?? ""] ?? poseClip[section?.pose ?? "idle"];
 
   const value = useMemo<GuideContextValue>(
     () => ({
-      active,
+      visible: home,
+      guided,
       phase,
       index,
       pose: section?.pose ?? "idle",
-      message: active ? section?.message ?? "" : "",
+      clip,
+      look,
+      message: guided ? section?.message ?? "" : "",
+      reaction,
       muted,
       voiceSupported,
       voiceBlocked,
       enableVoice,
       setMuted,
+      setLook,
+      react,
       skip,
     }),
     [
-      active,
+      clip,
       enableVoice,
+      guided,
+      home,
       index,
+      look,
       muted,
       phase,
+      react,
+      reaction,
+      section?.id,
       section?.message,
       section?.pose,
+      setLook,
       setMuted,
       skip,
       voiceBlocked,

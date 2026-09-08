@@ -9,4 +9,4 @@ Drop optimized GLB files here when they are ready:
 - portfolio-guide.glb  (optional guided narrator; licensed assets only)
 
 The workspace currently uses procedural meshes (`data/workspace.ts`).
-The guided narrator uses a procedural humanoid until `portfolio-guide.glb` exists.
+The host loads `portfolio-guide.glb` when present (rigged clips: Idle, Greet, Wave, Nod, Point, Talk, Think, Walk). Until then a local mixer-driven fallback humanoid is used — not a likeness.

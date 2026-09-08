@@ -1,31 +1,38 @@
-# Guided 3D narrator
+# Guided 3D host
 
-A homepage-only companion that greets visitors and walks section by section.
+Homepage companion: greets, narrates sections, then stays interactive after Skip.
 
-It does **not** replace the Developer Workspace or the Q&A assistant.
+Not a likeness of Muhammad Huzaifa Khan. Not the Q&A assistant.
 
-## Character
+## Model slot
 
-No approved likeness is in the repository.
+Drop a **rigged, licensed** GLB at:
 
-- Drop a GLB at `public/models/portfolio-guide.glb` to replace the stylized humanoid.
-- Until that file exists, a local procedural figure is used (not a portrait of Muhammad Huzaifa Khan).
-- Do not load unlicensed third-party models.
+`public/models/portfolio-guide.glb`
 
-## Behaviour
+Preferred clip names (aliases accepted): Idle, Greet, Wave, Nod, Point, Talk, Think, Walk.
 
-1. Hero greeting (text + SpeechSynthesis when the browser allows it).
-2. After each line finishes, scroll to the next unlocked section.
-3. **Skip Intro** (or Escape when the mobile menu is closed) restores free scrolling.
-4. Navbar links skip the guide, then navigate.
-5. `sessionStorage` key `mhk-guide-skipped` (`skipped` | `complete`) prevents trapping on refresh.
+Until that file exists, a local **AnimationMixer** humanoid (original, no third-party mesh) is used. It is a fallback host, not a photoreal person.
+
+Do not hotlink unlicensed models.
+
+## Interaction
+
+- Hover/pointer: limited head look-at
+- Head click: nod
+- Hand click: wave
+- Body click: short acknowledgment
+- Keyboard: focus the host stage, Enter/Space waves
+- Reactions do **not** skip or restart narration
+
+## Tour (unchanged rules)
+
+Hero → About → Skills → Experience → Projects → QA → Arcade → Terminal → Assistant → Resume → Contact.
+
+Skip Intro / Escape / navbar / workspace click restores free scroll. Host remains.
+
+`sessionStorage` `mhk-guide-skipped`.
 
 ## Voice
 
-Browser `speechSynthesis` only. No paid API.
-
-Autoplay may be blocked. Text still runs; **Enable Voice** appears after a failed autoplay attempt. Mute completes the section on the reading timer so the tour cannot stall.
-
-## Analytics
-
-Optional events: `guided_intro_start`, `guided_intro_skip`, `guided_intro_complete`. No transcripts.
+`speechSynthesis` only. Autoplay may be blocked.

@@ -4,27 +4,41 @@ import { Canvas } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { materials } from "@/components/three/materials";
-import type { GuidePose } from "@/lib/guide/types";
-import { GuideModel } from "./GuideModel";
+import { useGuide } from "@/lib/guide/context";
+import { CharacterHost } from "./CharacterHost";
 
-export function GuideCanvas({ pose }: { pose: GuidePose }) {
+export function GuideCanvas() {
+  const guide = useGuide();
   const reducedMotion = useReducedMotion();
+  if (!guide) return null;
 
   return (
     <Canvas
       dpr={[1, 1.4]}
-      camera={{ position: [0.55, 1.05, 2.35], fov: 38 }}
+      camera={{ position: [0.7, 1.15, 2.5], fov: 36 }}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-      className="h-full w-full"
-      aria-hidden
+      className="h-full w-full touch-none"
+      aria-label="Interactive portfolio host"
+      onPointerMove={(event) => {
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+        const y = ((event.clientY - bounds.top) / bounds.height) * 2 - 1;
+        guide.setLook(x, y);
+      }}
+      onPointerLeave={() => guide.setLook(0, 0)}
     >
       <color attach="background" args={[materials.sceneBg]} />
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[2, 3, 2]} intensity={0.95} color={materials.light} />
-      <pointLight position={[0, 1.2, 1]} intensity={0.35} color={materials.accent} />
-      <GuideModel pose={pose} reducedMotion={reducedMotion} />
+      <ambientLight intensity={0.42} />
+      <directionalLight position={[2.2, 3.2, 2]} intensity={1} color={materials.light} />
+      <pointLight position={[0.2, 1.3, 1]} intensity={0.3} color={materials.accent} />
+      <CharacterHost
+        clip={guide.clip}
+        look={guide.look}
+        reducedMotion={reducedMotion}
+        onHit={guide.react}
+      />
       {!reducedMotion ? (
-        <ContactShadows position={[0, -0.88, 0]} opacity={0.32} scale={3.4} blur={2.1} />
+        <ContactShadows position={[0, -0.95, 0]} opacity={0.3} scale={3.2} blur={2} />
       ) : null}
     </Canvas>
   );

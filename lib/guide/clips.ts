@@ -44,5 +44,21 @@ export function createHostClips(): AnimationClip[] {
       new NumberKeyframeTrack("RightUpLeg.rotation[x]", [0, 0.2, 0.4, 0.6, 0.8], [-0.4, 0, 0.4, 0, -0.4]),
       new NumberKeyframeTrack("Hips.position[y]", [0, 0.2, 0.4, 0.6, 0.8], [0, 0.03, 0, 0.03, 0]),
     ]),
+    loop("LookAround", 2.4, [
+      new NumberKeyframeTrack("Head.rotation[y]", [0, 0.6, 1.2, 1.8, 2.4], [0, 0.55, -0.5, 0.2, 0]),
+      new NumberKeyframeTrack("Chest.rotation[y]", [0, 1.2, 2.4], [0, 0.12, 0]),
+    ]),
+    loop("Surprise", 0.7, [
+      new NumberKeyframeTrack("Head.rotation[x]", [0, 0.15, 0.7], [0, -0.35, 0.1]),
+      new NumberKeyframeTrack("Spine.position[y]", [0, 0.15, 0.7], [0, 0.04, 0]),
+    ]),
+    loop("Fall", 0.85, [
+      new NumberKeyframeTrack("Hips.rotation[z]", [0, 0.35, 0.85], [0, 1.1, 1.45]),
+      new NumberKeyframeTrack("Hips.position[y]", [0, 0.35, 0.85], [0, -0.15, -0.42]),
+    ]),
+    loop("GetUp", 1.1, [
+      new NumberKeyframeTrack("Hips.rotation[z]", [0, 0.45, 1.1], [1.45, 0.4, 0]),
+      new NumberKeyframeTrack("Hips.position[y]", [0, 0.45, 1.1], [-0.42, -0.1, 0]),
+    ]),
   ];
 }

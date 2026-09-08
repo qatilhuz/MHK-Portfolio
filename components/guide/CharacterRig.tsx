@@ -19,7 +19,7 @@ export function CharacterRig({
   onHit,
 }: {
   clip: CharacterClip;
-  look: { x: number; y: number };
+  look: { x: number; y: number } | { current: { x: number; y: number } };
   reducedMotion: boolean;
   onHit: (region: CharacterHit) => void;
 }) {
@@ -62,8 +62,9 @@ export function CharacterRig({
   useFrame((_, delta) => {
     if (!reducedMotion) mixer.current?.update(delta);
     if (!head.current || reducedMotion) return;
-    head.current.rotation.y += (look.x * 0.35 - head.current.rotation.y) * 0.08;
-    head.current.rotation.x += (-look.y * 0.2 - head.current.rotation.x) * 0.08;
+    const aim = "current" in look ? look.current : look;
+    head.current.rotation.y += (aim.x * 0.35 - head.current.rotation.y) * 0.08;
+    head.current.rotation.x += (-aim.y * 0.2 - head.current.rotation.x) * 0.08;
   });
 
   return (
@@ -76,6 +77,7 @@ export function CharacterRig({
         <group name="Spine" position={[0, 1.05, 0]}>
           <group name="Chest" position={[0, 0.22, 0]}>
             <mesh
+              name="Body"
               position={[0, 0.08, 0]}
               castShadow
               onClick={(event) => {
@@ -93,6 +95,7 @@ export function CharacterRig({
             <group name="Neck" position={[0, 0.38, 0]}>
               <group ref={head} name="Head" position={[0, 0.16, 0]}>
                 <mesh
+                  name="Head"
                   castShadow
                   onClick={(event) => {
                     event.stopPropagation();
@@ -127,6 +130,7 @@ export function CharacterRig({
               </mesh>
               <group name="RightHand" position={[0, -0.28, 0]}>
                 <mesh
+                  name="RightHand"
                   onClick={(event) => {
                     event.stopPropagation();
                     onHit("hand");

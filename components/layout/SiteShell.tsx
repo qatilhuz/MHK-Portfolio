@@ -1,4 +1,4 @@
-import { GuideDock } from "@/components/guide/GuideDock";
+import { CharacterWorldLazy } from "@/components/character/CharacterWorldLazy";
 import { GuideProvider } from "@/lib/guide/context";
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import { Footer } from "./Footer";
@@ -16,7 +16,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </main>
           <Footer />
         </div>
-        <GuideDock />
+        <CharacterWorld />
       </div>
     </GuideProvider>
   );

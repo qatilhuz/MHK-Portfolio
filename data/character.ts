@@ -8,7 +8,11 @@ export type CharacterClip =
   | "Point"
   | "Talk"
   | "Think"
-  | "Walk";
+  | "Walk"
+  | "LookAround"
+  | "Surprise"
+  | "Fall"
+  | "GetUp";
 
 export type CharacterHit = "head" | "hand" | "body";
 
@@ -60,4 +64,9 @@ export const CLIP_ALIASES: Record<string, CharacterClip> = {
   Think: "Think",
   walk: "Walk",
   Walk: "Walk",
+  LookAround: "LookAround",
+  lookaround: "LookAround",
+  Surprise: "Surprise",
+  Fall: "Fall",
+  GetUp: "GetUp",
 };

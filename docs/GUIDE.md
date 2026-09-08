@@ -1,38 +1,7 @@
 # Guided 3D host
 
-Homepage companion: greets, narrates sections, then stays interactive after Skip.
+The host is a **page-level overlay** (transparent canvas, `pointer-events: none` except raycast hits). It is not a dock/card.
 
-Not a likeness of Muhammad Huzaifa Khan. Not the Q&A assistant.
+See `docs/3D-MODEL-LICENSE.md`. Production-quality licensed GLB is **not** in the repo.
 
-## Model slot
-
-Drop a **rigged, licensed** GLB at:
-
-`public/models/portfolio-guide.glb`
-
-Preferred clip names (aliases accepted): Idle, Greet, Wave, Nod, Point, Talk, Think, Walk.
-
-Until that file exists, a local **AnimationMixer** humanoid (original, no third-party mesh) is used. It is a fallback host, not a photoreal person.
-
-Do not hotlink unlicensed models.
-
-## Interaction
-
-- Hover/pointer: limited head look-at
-- Head click: nod
-- Hand click: wave
-- Body click: short acknowledgment
-- Keyboard: focus the host stage, Enter/Space waves
-- Reactions do **not** skip or restart narration
-
-## Tour (unchanged rules)
-
-Hero → About → Skills → Experience → Projects → QA → Arcade → Terminal → Assistant → Resume → Contact.
-
-Skip Intro / Escape / navbar / workspace click restores free scroll. Host remains.
-
-`sessionStorage` `mhk-guide-skipped`.
-
-## Voice
-
-`speechSynthesis` only. Autoplay may be blocked.
+Tour, Skip, workspace, and assistant are unchanged. After Skip the host stays and can wander in the right-side safe zone.

@@ -352,7 +352,6 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       phase,
       react,
       reaction,
-      section?.id,
       section?.message,
       section?.pose,
       setLook,

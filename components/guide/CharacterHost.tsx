@@ -51,7 +51,7 @@ export function CharacterHost({
   onHit,
 }: {
   clip: CharacterClip;
-  look: { x: number; y: number };
+  look: { x: number; y: number } | { current: { x: number; y: number } };
   reducedMotion: boolean;
   onHit: (region: CharacterHit) => void;
 }) {

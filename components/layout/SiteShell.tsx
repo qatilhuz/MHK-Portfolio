@@ -16,7 +16,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </main>
           <Footer />
         </div>
-        <CharacterWorld />
+        <CharacterWorldLazy />
       </div>
     </GuideProvider>
   );

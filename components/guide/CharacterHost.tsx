@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { GUIDE_MODEL_PATH } from "@/data/guide";
 import { CLIP_ALIASES, type CharacterClip, type CharacterHit } from "@/data/character";
-import { CharacterRig } from "./CharacterRig";
+import { ArmoredRig } from "@/components/character/ArmoredRig";
 
 function GltfHost({
   clip,
@@ -51,7 +51,7 @@ export function CharacterHost({
   onHit,
 }: {
   clip: CharacterClip;
-  look: { x: number; y: number } | { current: { x: number; y: number } };
+  look: { current: { x: number; y: number } };
   reducedMotion: boolean;
   onHit: (region: CharacterHit) => void;
 }) {
@@ -61,7 +61,8 @@ export function CharacterHost({
     let live = true;
     fetch(GUIDE_MODEL_PATH, { method: "HEAD" })
       .then((response) => {
-        if (live && response.ok) setHasFile(true);
+        const len = Number(response.headers.get("content-length") ?? "0");
+        if (live && response.ok && len > 2048) setHasFile(true);
       })
       .catch(() => {
         if (live) setHasFile(false);
@@ -72,17 +73,11 @@ export function CharacterHost({
   }, []);
 
   if (!hasFile) {
-    return (
-      <CharacterRig clip={clip} look={look} reducedMotion={reducedMotion} onHit={onHit} />
-    );
+    return <ArmoredRig clip={clip} look={look} reducedMotion={reducedMotion} onHit={onHit} />;
   }
 
   return (
-    <Suspense
-      fallback={
-        <CharacterRig clip={clip} look={look} reducedMotion={reducedMotion} onHit={onHit} />
-      }
-    >
+    <Suspense fallback={<ArmoredRig clip={clip} look={look} reducedMotion={reducedMotion} onHit={onHit} />}>
       <GltfHost clip={clip} reducedMotion={reducedMotion} onHit={onHit} />
     </Suspense>
   );

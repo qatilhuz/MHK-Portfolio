@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { useGuide } from "@/lib/guide/context";
+import { characterConfig } from "@/data/characterConfig";
 import { CharacterHud } from "./CharacterHud";
 
 const CharacterScene = dynamic(
@@ -21,6 +22,7 @@ export function CharacterWorld() {
     setScreen((prev) => (Math.abs(prev.x - x) + Math.abs(prev.y - y) > 2 ? { x, y } : prev));
   }, []);
 
+  if (!characterConfig.enabled) return null;
   if (!guide?.visible) return null;
 
   return (
@@ -28,8 +30,8 @@ export function CharacterWorld() {
       {webgl === false ? null : (
         <div className="pointer-events-none fixed inset-0 z-[45]">
           <Canvas
-            dpr={[1, 1.4]}
-            camera={{ position: [0, 0.35, 6.2], fov: 38 }}
+            dpr={[1, 1.35]}
+            camera={{ position: [0, 0.4, 6.4], fov: 38 }}
             gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
             className="h-full w-full !bg-transparent"
             style={{ pointerEvents: "none", background: "transparent" }}

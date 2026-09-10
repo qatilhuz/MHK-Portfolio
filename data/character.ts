@@ -32,7 +32,8 @@ export type CharacterClip =
   | "Facepalm"
   | "Bow"
   | "Dance"
-  | "Sit";
+  | "Sit"
+  | "Relax";
 
 export type CharacterHit = "head" | "hand" | "body" | "shoulder";
 
@@ -107,4 +108,5 @@ export const CLIP_ALIASES: Record<string, CharacterClip> = {
   Bow: "Bow",
   Dance: "Dance",
   Sit: "Sit",
+  Relax: "Relax",
 };

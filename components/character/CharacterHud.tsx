@@ -16,18 +16,18 @@ export function CharacterHud({
   if (!guide?.visible) return null;
 
   const text = line ?? (guide.guided ? guide.message : null);
+  if (!text && !guide.guided) return null;
+
   const placed = x > 1 && y > 1;
-  const left = placed ? Math.min(typeof window !== "undefined" ? window.innerWidth - 280 : x, Math.max(12, x - 220)) : undefined;
+  const left = placed
+    ? Math.min(typeof window !== "undefined" ? window.innerWidth - 280 : x, Math.max(12, x - 220))
+    : undefined;
   const top = placed ? Math.max(72, y - 24) : undefined;
 
   return (
     <div
       className="pointer-events-none fixed z-[56]"
-      style={
-        placed
-          ? { left, top }
-          : { right: 16, bottom: 24 }
-      }
+      style={placed ? { left, top } : { right: 16, bottom: 24 }}
       aria-label="Portfolio host"
     >
       <div className="pointer-events-auto max-w-[16rem] rounded-[var(--radius-md)] border border-border bg-surface/95 px-3 py-2 shadow-[var(--shadow)]">
@@ -35,11 +35,9 @@ export function CharacterHud({
           <p className="text-sm leading-relaxed text-foreground" aria-live="polite">
             {text}
           </p>
-        ) : (
-          <p className="text-xs text-muted">Host</p>
-        )}
+        ) : null}
         {guide.guided ? (
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className={text ? "mt-2 flex flex-wrap gap-2" : "flex flex-wrap gap-2"}>
             <Button type="button" size="sm" variant="secondary" onClick={guide.skip}>
               Skip Intro
             </Button>

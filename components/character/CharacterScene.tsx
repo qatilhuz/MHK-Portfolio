@@ -11,7 +11,7 @@ import { guidedSections } from "@/data/guide";
 import { useGuide } from "@/lib/guide/context";
 import { CharacterHost } from "@/components/guide/CharacterHost";
 import { clipForDecision, nextAutonomousDecision } from "@/lib/character/brain";
-import { characterWorldLimits, clampViewport, isBottomStageEvent } from "@/lib/character/bounds";
+import { characterWorldLimits, isBottomStageEvent } from "@/lib/character/bounds";
 import { pointerLook } from "@/lib/character/lookAt";
 import { createLocomotion, setDestination, stepLocomotion } from "@/lib/character/movement";
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
@@ -48,20 +48,17 @@ export function CharacterScene({
   const pokes = useRef(0);
   const screen = useRef({ x: 0, y: 0 });
   const box = useRef(new Box3());
-  const stage = characterWorldLimits();
-  const start = viewportToWorld(0.5, stage.stageNy);
-  const loco = useRef(createLocomotion(start));
+  const loco = useRef(createLocomotion(viewportToWorld(0.5)));
   const [clip, setClip] = useState<CharacterClip>("Idle");
   const clipRef = useRef(clip);
   clipRef.current = clip;
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const projected = useRef(new Vector3());
 
   const locked = () => FALL_CLIPS.has(clipRef.current) || fallTarget.current > 0.05 || fallPitch.current > 0.05;
 
   const walkToNx = (nx: number, reason: "walking" | "moving-to-section") => {
-    const lim = characterWorldLimits();
-    const dest = viewportToWorld(clampViewport(nx).nx, lim.stageNy);
+    const dest = viewportToWorld(nx);
     setDestination(loco.current, dest, reason);
   };
 
@@ -105,7 +102,7 @@ export function CharacterScene({
       const decision = nextAutonomousDecision(lastDecision.current);
       lastDecision.current = decision;
       if (decision === "WANDER" && characterConfig.movement.autonomousWalking) {
-        const zone = pickSafeZone({ variety: true, currentNx: worldToViewport(loco.current.position.x, loco.current.position.y).nx });
+        const zone = pickSafeZone({ variety: true, currentNx: worldToViewport(loco.current.position.x).nx });
         if (zone) walkToNx(zone.nx, "walking");
         return;
       }
@@ -133,27 +130,28 @@ export function CharacterScene({
       lookWeightTarget.current = clipRef.current === "Walk" || clipRef.current === "Turn" ? 0.4 : 1;
     }
     const lim = characterWorldLimits();
-    const vp = clampViewport(worldToViewport(loco.current.position.x, loco.current.position.y).nx);
-    const clamped = viewportToWorld(vp.nx, lim.stageNy);
-    loco.current.position.x = clamped.x;
-    loco.current.position.y = clamped.y;
+    const maxX = lim.maxNxWorld;
+    loco.current.position.x = Math.min(maxX, Math.max(-maxX, loco.current.position.x));
+    loco.current.position.y = 0;
     loco.current.position.z = 0;
-    node.position.set(clamped.x, clamped.y, 0);
+    node.position.set(loco.current.position.x, 0, 0);
     node.rotation.y += (loco.current.yaw + torso.current - node.rotation.y) * Math.min(1, 5 * delta);
     torso.current *= 0.94;
     if (node.parent) {
       box.current.setFromObject(node);
-      const min = box.current.min.project(camera);
-      const max = box.current.max.project(camera);
-      const left = (Math.min(min.x, max.x) * 0.5 + 0.5) * window.innerWidth;
-      const right = (Math.max(min.x, max.x) * 0.5 + 0.5) * window.innerWidth;
-      if (left < 12) loco.current.position.x += 0.04;
-      if (right > window.innerWidth - 12) loco.current.position.x -= 0.04;
+      const rect = gl.domElement.getBoundingClientRect();
+      const min = box.current.min.clone().project(camera);
+      const max = box.current.max.clone().project(camera);
+      const left = (Math.min(min.x, max.x) * 0.5 + 0.5) * rect.width + rect.left;
+      const right = (Math.max(min.x, max.x) * 0.5 + 0.5) * rect.width + rect.left;
+      if (left < 8) loco.current.position.x += 0.05;
+      if (right > window.innerWidth - 8) loco.current.position.x -= 0.05;
     }
-    projected.current.set(loco.current.position.x, loco.current.position.y + 0.7, 0).project(camera);
+    const rect = gl.domElement.getBoundingClientRect();
+    projected.current.set(loco.current.position.x, 0.55, 0).project(camera);
     screen.current = {
-      x: (projected.current.x * 0.5 + 0.5) * window.innerWidth,
-      y: (-projected.current.y * 0.5 + 0.5) * window.innerHeight,
+      x: (projected.current.x * 0.5 + 0.5) * rect.width + rect.left,
+      y: (-projected.current.y * 0.5 + 0.5) * rect.height + rect.top,
     };
     onScreen(screen.current.x, screen.current.y);
   });
@@ -310,7 +308,7 @@ export function CharacterScene({
       window.removeEventListener("keydown", onKey);
       document.body.style.cursor = "";
     };
-  }, [camera, guide, onLine]);
+  }, [camera, gl, guide, onLine]);
 
   const mobile = typeof window !== "undefined" && window.innerWidth < 768;
 

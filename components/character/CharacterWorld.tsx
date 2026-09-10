@@ -28,10 +28,10 @@ export function CharacterWorld() {
   return (
     <>
       {webgl === false ? null : (
-        <div className="pointer-events-none fixed inset-0 z-[45]">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[45] h-[26vh]">
           <Canvas
             dpr={[1, 1.35]}
-            camera={{ position: [0, 0.4, 6.4], fov: 38 }}
+            camera={{ position: [0, 0.55, 4.4], fov: 32 }}
             gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
             className="h-full w-full !bg-transparent"
             style={{ pointerEvents: "none", background: "transparent" }}

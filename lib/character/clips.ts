@@ -21,11 +21,72 @@ export function createHostClips(): AnimationClip[] {
       new NumberKeyframeTrack("Chest.rotation[y]", [0, 0.4, 2.4], [0, 0.12, 0]),
       new NumberKeyframeTrack("Head.rotation[y]", [0, 0.5, 2.4], [0, 0.08, 0]),
     ]),
-    loop("Wave", 1.8, [
-      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.25, 1.8], [0, -1.9, 0]),
-      new NumberKeyframeTrack("RightArm.rotation[z]", [0, 0.35, 0.7, 1.05, 1.4, 1.8], [
-        0, -0.45, 0.35, -0.45, 0.25, 0,
-      ]),
+    loop("Wave", 3.35, [
+      new NumberKeyframeTrack(
+        "Head.rotation[y]",
+        [0, 0.22, 0.55, 2.4, 3.35],
+        [0, 0.16, 0.12, 0.08, 0],
+      ),
+      new NumberKeyframeTrack(
+        "Head.rotation[x]",
+        [0, 0.2, 0.48, 0.85, 2.5, 3.35],
+        [0, -0.08, 0.14, 0.04, 0.02, 0],
+      ),
+      new NumberKeyframeTrack(
+        "Chest.rotation[y]",
+        [0, 0.3, 0.7, 2.6, 3.35],
+        [0, 0.08, 0.12, 0.05, 0],
+      ),
+      new NumberKeyframeTrack(
+        "Chest.rotation[x]",
+        [0, 0.28, 0.7, 3.35],
+        [0, 0.05, 0.03, 0],
+      ),
+      new NumberKeyframeTrack(
+        "RightShoulder.rotation[x]",
+        [0, 0.18, 0.55, 2.5, 3.35],
+        [0, 0.04, 0.1, 0.04, 0],
+      ),
+      new NumberKeyframeTrack(
+        "RightShoulder.rotation[z]",
+        [0, 0.2, 0.6, 2.55, 3.35],
+        [-0.06, -0.1, -0.2, -0.1, -0.06],
+      ),
+      new NumberKeyframeTrack(
+        "RightArm.rotation[x]",
+        [0, 0.2, 0.55, 0.9, 2.35, 2.9, 3.35],
+        [0, 0.1, -0.95, -1.12, -1.08, -0.35, 0],
+      ),
+      new NumberKeyframeTrack(
+        "RightArm.rotation[y]",
+        [0, 0.5, 0.9, 2.4, 3.35],
+        [0, -0.22, -0.32, -0.18, 0],
+      ),
+      new NumberKeyframeTrack(
+        "RightArm.rotation[z]",
+        [0, 0.5, 0.9, 2.5, 3.35],
+        [-0.12, -0.18, -0.22, -0.16, -0.12],
+      ),
+      new NumberKeyframeTrack(
+        "RightForeArm.rotation[x]",
+        [0, 0.35, 0.75, 2.3, 2.85, 3.35],
+        [0, -0.35, -0.85, -0.78, -0.28, 0],
+      ),
+      new NumberKeyframeTrack(
+        "RightForeArm.rotation[z]",
+        [0, 0.85, 1.15, 1.45, 1.75, 2.05, 2.45, 3.35],
+        [0, 0, 0.2, -0.16, 0.18, -0.1, 0.04, 0],
+      ),
+      new NumberKeyframeTrack(
+        "RightHand.rotation[x]",
+        [0, 0.7, 2.2, 3.35],
+        [0, 0.18, 0.12, 0],
+      ),
+      new NumberKeyframeTrack(
+        "RightHand.rotation[z]",
+        [0, 0.85, 1.15, 1.45, 1.75, 2.05, 2.5, 3.35],
+        [0, 0.12, 0.28, -0.08, 0.26, -0.06, 0.08, 0],
+      ),
     ]),
     loop("Nod", 1.2, [
       new NumberKeyframeTrack("Head.rotation[x]", [0, 0.25, 0.5, 0.75, 1.2], [0, 0.32, 0, 0.24, 0]),

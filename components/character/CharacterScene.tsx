@@ -131,7 +131,8 @@ export function CharacterScene({
       if (dist <= 0.08 && (clipRef.current === "Walk" || clipRef.current === "Turn")) {
         setClip("Idle");
       }
-      lookWeightTarget.current = clipRef.current === "Walk" || clipRef.current === "Turn" ? 0.4 : 1;
+      lookWeightTarget.current =
+        clipRef.current === "Walk" || clipRef.current === "Turn" ? 0.4 : clipRef.current === "Wave" ? 0.28 : 1;
     }
     loco.current.position.y = 0;
     loco.current.position.z = 0;

@@ -115,7 +115,8 @@ export function ArmoredRig({
 
   useFrame((_, delta) => {
     mixer.current?.update(delta);
-    const w = reducedMotion ? 0.2 : lookWeight.current;
+    const greeting = clip === "Wave";
+    const w = (reducedMotion ? 0.2 : lookWeight.current) * (greeting ? 0.22 : 1);
     const aim = look.current;
     const yaw = MathUtils.clamp(aim.x * 0.62 * w, -0.65, 0.65);
     const pitch = MathUtils.clamp(aim.y * 0.46 * w, -0.38, 0.4);
@@ -142,8 +143,9 @@ export function ArmoredRig({
       eye.scale.y = MathUtils.damp(eye.scale.y, lid, 18, delta);
     }
     if (mouth.current) {
-      const talk = clip === "Talk" ? 0.7 + Math.sin(blink.current * 10) * 0.25 : 0.35;
+      const talk = clip === "Talk" ? 0.7 + Math.sin(blink.current * 10) * 0.25 : clip === "Wave" ? 0.55 : 0.35;
       mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 10, delta);
+      mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, clip === "Wave" ? 1.18 : 1, 8, delta);
     }
   });
 
@@ -243,21 +245,23 @@ export function ArmoredRig({
                 <boxGeometry args={[0.09, 0.2, 0.11]} />
                 <meshStandardMaterial color={PRIMARY} roughness={0.68} metalness={0.12} />
               </mesh>
-              <Plate args={[0.08, 0.12, 0.1]} position={[0, -0.18, 0]} color={SECONDARY} />
-              <group name="RightHand" position={[0, -0.3, 0]}>
-                <mesh
-                  name="RightHand"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onHit("hand");
-                  }}
-                >
-                  <boxGeometry args={[0.09, 0.08, 0.09]} />
-                  <meshStandardMaterial color={DETAIL} roughness={0.7} metalness={0.1} />
-                </mesh>
-                <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.03]} color={DETAIL} />
-                <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.03]} color={DETAIL} />
-                <Plate args={[0.02, 0.05, 0.02]} position={[0.03, -0.05, 0.03]} color={DETAIL} />
+              <group name="RightForeArm" position={[0, -0.18, 0]}>
+                <Plate args={[0.08, 0.12, 0.1]} color={SECONDARY} />
+                <group name="RightHand" position={[0, -0.12, 0]}>
+                  <mesh
+                    name="RightHand"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onHit("hand");
+                    }}
+                  >
+                    <boxGeometry args={[0.09, 0.08, 0.09]} />
+                    <meshStandardMaterial color={DETAIL} roughness={0.7} metalness={0.1} />
+                  </mesh>
+                  <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.03]} color={DETAIL} />
+                  <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.03]} color={DETAIL} />
+                  <Plate args={[0.02, 0.05, 0.02]} position={[0.03, -0.05, 0.03]} color={DETAIL} />
+                </group>
               </group>
             </group>
           </group>

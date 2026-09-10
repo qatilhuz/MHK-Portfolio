@@ -11,7 +11,7 @@ import { guidedSections } from "@/data/guide";
 import { useGuide } from "@/lib/guide/context";
 import { CharacterHost } from "@/components/guide/CharacterHost";
 import { clipForDecision, nextAutonomousDecision } from "@/lib/character/brain";
-import { characterWorldLimits, isBottomStageEvent } from "@/lib/character/bounds";
+import { isBottomStageEvent } from "@/lib/character/bounds";
 import { pointerLook } from "@/lib/character/lookAt";
 import { createLocomotion, setDestination, stepLocomotion } from "@/lib/character/movement";
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
@@ -130,9 +130,6 @@ export function CharacterScene({
       }
       lookWeightTarget.current = clipRef.current === "Walk" || clipRef.current === "Turn" ? 0.4 : 1;
     }
-    const lim = characterWorldLimits();
-    const maxX = lim.maxNxWorld;
-    loco.current.position.x = Math.min(maxX, Math.max(-maxX, loco.current.position.x));
     loco.current.position.y = 0;
     loco.current.position.z = 0;
     if (soleY.current === null) {
@@ -146,17 +143,22 @@ export function CharacterScene({
     camera.lookAt(0, 1.52, 0);
     node.rotation.y += (loco.current.yaw + torso.current - node.rotation.y) * Math.min(1, 5 * delta);
     torso.current *= 0.94;
-    if (node.parent) {
-      box.current.setFromObject(node);
-      const rect = gl.domElement.getBoundingClientRect();
-      const min = box.current.min.clone().project(camera);
-      const max = box.current.max.clone().project(camera);
-      const left = (Math.min(min.x, max.x) * 0.5 + 0.5) * rect.width + rect.left;
-      const right = (Math.max(min.x, max.x) * 0.5 + 0.5) * rect.width + rect.left;
-      if (left < 8) loco.current.position.x += 0.05;
-      if (right > window.innerWidth - 8) loco.current.position.x -= 0.05;
-    }
+    node.updateWorldMatrix(true, true);
+    box.current.setFromObject(node);
     const rect = gl.domElement.getBoundingClientRect();
+    const aspect = Math.max(0.5, rect.width / Math.max(1, rect.height));
+    const halfView = Math.tan((30 * Math.PI) / 360) * 5.6 * aspect;
+    const halfChar = Math.max(0.2, (box.current.max.x - box.current.min.x) / 2);
+    const maxX = Math.max(0.35, halfView - halfChar - 0.06);
+    loco.current.position.x = Math.min(maxX, Math.max(-maxX, loco.current.position.x));
+    node.position.x = loco.current.position.x;
+    const min = box.current.min.clone().project(camera);
+    const max = box.current.max.clone().project(camera);
+    const left = (Math.min(min.x, max.x) * 0.5 + 0.5) * rect.width + rect.left;
+    const right = (Math.max(min.x, max.x) * 0.5 + 0.5) * rect.width + rect.left;
+    if (left < 8) loco.current.position.x += 0.06;
+    if (right > window.innerWidth - 8) loco.current.position.x -= 0.06;
+    node.position.x = loco.current.position.x;
     projected.current.set(loco.current.position.x, 0.55, 0).project(camera);
     screen.current = {
       x: (projected.current.x * 0.5 + 0.5) * rect.width + rect.left,
@@ -327,7 +329,7 @@ export function CharacterScene({
       <hemisphereLight args={[materials.fill, materials.desk, 0.3]} />
       <directionalLight position={[2.2, 3.6, 4]} intensity={1.05} color={materials.light} />
       <pointLight position={[0.2, 0.8, 1.6]} intensity={0.22} color={ACCENT_LIGHT} />
-      <group ref={group} scale={mobile ? 0.5 : 0.62}>
+      <group ref={group} scale={mobile ? 1.0 : 1.24}>
         <group ref={pivot} position={[0, -0.95, 0]}>
           <group position={[0, 0.95, 0]}>
             <CharacterHost

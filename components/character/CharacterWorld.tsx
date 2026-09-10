@@ -22,7 +22,7 @@ export function CharacterWorld() {
     setScreen((prev) => (Math.abs(prev.x - x) + Math.abs(prev.y - y) > 2 ? { x, y } : prev));
   }, []);
 
-  if (!characterConfig.enabled) return null;
+  if (!characterConfig.enabled || !characterConfig.is3DModelEnabled) return null;
   if (!guide?.visible) return null;
 
   return (

@@ -11,7 +11,7 @@ const World = dynamic(
 
 export function CharacterWorldLazy() {
   const path = usePathname();
-  if (!characterConfig.enabled) return null;
+  if (!characterConfig.enabled || !characterConfig.is3DModelEnabled) return null;
   if (path !== "/") return null;
   return <World />;
 }

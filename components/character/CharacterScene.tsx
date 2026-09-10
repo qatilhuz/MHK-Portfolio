@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { MathUtils, Raycaster, Vector2, Vector3, type Group } from "three";
+import { Box3, MathUtils, Raycaster, Vector2, Vector3, type Group } from "three";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { materials } from "@/components/three/materials";
 import { characterConfig } from "@/data/characterConfig";
@@ -11,9 +11,9 @@ import { guidedSections } from "@/data/guide";
 import { useGuide } from "@/lib/guide/context";
 import { CharacterHost } from "@/components/guide/CharacterHost";
 import { clipForDecision, nextAutonomousDecision } from "@/lib/character/brain";
+import { characterWorldLimits, clampViewport, isBottomStageEvent } from "@/lib/character/bounds";
 import { pointerLook } from "@/lib/character/lookAt";
 import { createLocomotion, setDestination, stepLocomotion } from "@/lib/character/movement";
-import { clampViewport } from "@/lib/character/bounds";
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
 import type { CharacterDecision } from "@/lib/character/types";
 
@@ -41,11 +41,16 @@ export function CharacterScene({
   const hoverCool = useRef(0);
   const hovering = useRef(false);
   const lastHead = useRef(0);
+  const lastBottomTap = useRef(0);
   const lastScroll = useRef(0);
+  const manualUntil = useRef(0);
   const lastDecision = useRef<CharacterDecision>("RETURN_TO_IDLE");
   const pokes = useRef(0);
   const screen = useRef({ x: 0, y: 0 });
-  const loco = useRef(createLocomotion({ x: 1.55, y: -0.12, z: 0 }));
+  const box = useRef(new Box3());
+  const stage = characterWorldLimits();
+  const start = viewportToWorld(0.5, stage.stageNy);
+  const loco = useRef(createLocomotion(start));
   const [clip, setClip] = useState<CharacterClip>("Idle");
   const clipRef = useRef(clip);
   clipRef.current = clip;
@@ -54,34 +59,17 @@ export function CharacterScene({
 
   const locked = () => FALL_CLIPS.has(clipRef.current) || fallTarget.current > 0.05 || fallPitch.current > 0.05;
 
-  const goSafe = (
-    preferNx: number,
-    preferNy: number,
-    reason: "walking" | "moving-to-section",
-    variety = true,
-  ) => {
-    if (!characterConfig.movement.freeRoam) return;
-    const vp = worldToViewport(loco.current.position.x, loco.current.position.y);
-    const zone = pickSafeZone({
-      preferNx,
-      preferNy,
-      currentNx: vp.nx,
-      currentNy: vp.ny,
-      variety,
-    });
-    if (!zone) return;
-    setDestination(loco.current, viewportToWorld(zone.nx, zone.ny), reason);
+  const walkToNx = (nx: number, reason: "walking" | "moving-to-section") => {
+    const lim = characterWorldLimits();
+    const dest = viewportToWorld(clampViewport(nx).nx, lim.stageNy);
+    setDestination(loco.current, dest, reason);
   };
 
   useEffect(() => {
     if (!guide?.visible) return;
-    const id = guide.guided ? guidedSections[guide.index]?.id ?? "hero" : undefined;
-    if (guide.guided && id) {
-      const el = document.getElementById(guidedSections[guide.index]?.target ?? id);
-      const r = el?.getBoundingClientRect();
-      const preferNx = r && r.left > window.innerWidth * 0.42 ? 0.16 : 0.84;
-      const preferNy = r ? Math.min(0.72, Math.max(0.28, (r.top + r.height * 0.45) / window.innerHeight)) : 0.5;
-      goSafe(preferNx, preferNy, "moving-to-section", false);
+    if (guide.guided) {
+      const prefer = guide.index % 2 === 0 ? 0.42 : 0.62;
+      if (performance.now() > manualUntil.current) walkToNx(prefer, "moving-to-section");
     }
   }, [guide?.guided, guide?.index, guide?.visible]);
 
@@ -89,54 +77,42 @@ export function CharacterScene({
     if (!guide?.visible) return;
     const onScroll = () => {
       const now = performance.now();
-      if (now - lastScroll.current < 900) return;
+      if (now - lastScroll.current < 1100) return;
       lastScroll.current = now;
-      if (guide.guided || reduced || !characterConfig.movement.autonomousWalking) return;
+      if (now < manualUntil.current || reduced || !characterConfig.movement.autonomousWalking) return;
       if (now < loco.current.busyUntil || locked()) return;
-      const mid = window.innerHeight * 0.42;
-      let bestId = "hero";
-      let bestEl: HTMLElement | null = null;
-      let bestDist = Infinity;
-      for (const section of guidedSections) {
-        const el = document.getElementById(section.target);
-        if (!el) continue;
+      const zone = pickSafeZone({ preferNx: 0.35 + Math.random() * 0.3, variety: true });
+      if (zone) walkToNx(zone.nx, "walking");
+      const id = guidedSections.find((s) => {
+        const el = document.getElementById(s.target);
+        if (!el) return false;
         const r = el.getBoundingClientRect();
-        const d = Math.abs(r.top + r.height * 0.35 - mid);
-        if (d < bestDist) {
-          bestDist = d;
-          bestId = section.id;
-          bestEl = el;
-        }
-      }
-      const r = bestEl?.getBoundingClientRect();
-      const preferNx = r && r.left > window.innerWidth * 0.4 ? 0.14 : 0.86;
-      const preferNy = r
-        ? Math.min(0.74, Math.max(0.26, (r.top + r.height * 0.5) / window.innerHeight))
-        : 0.52;
-      goSafe(preferNx, preferNy, "moving-to-section", true);
-      setClip(sectionClip[bestId] ?? "Idle");
-      loco.current.busyUntil = now + 2600;
+        return r.top < window.innerHeight * 0.55 && r.bottom > 80;
+      })?.id;
+      if (id) setClip(sectionClip[id] ?? "Idle");
+      loco.current.busyUntil = now + 2800;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [guide?.guided, guide?.visible, reduced]);
+  }, [guide?.visible, reduced]);
 
   useEffect(() => {
     if (!guide?.visible || reduced || !characterConfig.interaction.autonomousBehavior) return;
     const id = window.setInterval(() => {
       const now = performance.now();
-      if (now < loco.current.busyUntil || locked()) return;
+      if (now < manualUntil.current || now < loco.current.busyUntil || locked()) return;
       if (guide.guided && (guide.phase === "speaking" || guide.phase === "greeting")) return;
       const decision = nextAutonomousDecision(lastDecision.current);
       lastDecision.current = decision;
       if (decision === "WANDER" && characterConfig.movement.autonomousWalking) {
-        goSafe(Math.random(), 0.28 + Math.random() * 0.44, "walking", true);
+        const zone = pickSafeZone({ variety: true, currentNx: worldToViewport(loco.current.position.x, loco.current.position.y).nx });
+        if (zone) walkToNx(zone.nx, "walking");
         return;
       }
       setClip(clipForDecision(decision, guidedSections[guide.index]?.id));
-      loco.current.busyUntil = now + 2200;
-      window.setTimeout(() => setClip("Idle"), 2000);
-    }, 11000 + Math.random() * 9000);
+      loco.current.busyUntil = now + 2000;
+      window.setTimeout(() => setClip("Idle"), 1800);
+    }, 12000 + Math.random() * 8000);
     return () => window.clearInterval(id);
   }, [guide, reduced]);
 
@@ -144,32 +120,37 @@ export function CharacterScene({
     const node = group.current;
     if (!node) return;
     lookWeight.current = MathUtils.damp(lookWeight.current, lookWeightTarget.current, 6, delta);
-    fallPitch.current = MathUtils.damp(fallPitch.current, fallTarget.current, fallTarget.current > fallPitch.current ? 4.2 : 3.2, delta);
+    fallPitch.current = MathUtils.damp(fallPitch.current, fallTarget.current, 4, delta);
     if (pivot.current) pivot.current.rotation.x = fallPitch.current;
     if (!locked()) {
       const dist = stepLocomotion(loco.current, delta, reduced);
       if (dist > 0.1 && clipRef.current !== "Walk" && clipRef.current !== "Turn") {
-        setClip(Math.abs(loco.current.targetYaw - loco.current.yaw) > 0.55 ? "Turn" : "Walk");
+        setClip(Math.abs(loco.current.targetYaw - loco.current.yaw) > 0.5 ? "Turn" : "Walk");
       }
       if (dist <= 0.08 && (clipRef.current === "Walk" || clipRef.current === "Turn")) {
-        const section = guidedSections[guide?.index ?? 0];
-        setClip(guide?.guided ? sectionClip[section?.id ?? ""] ?? "Idle" : "Idle");
+        setClip("Idle");
       }
-      lookWeightTarget.current = clipRef.current === "Walk" || clipRef.current === "Turn" ? 0.45 : 1;
+      lookWeightTarget.current = clipRef.current === "Walk" || clipRef.current === "Turn" ? 0.4 : 1;
     }
-    const vp = clampViewport(
-      worldToViewport(loco.current.position.x, loco.current.position.y).nx,
-      worldToViewport(loco.current.position.x, loco.current.position.y).ny,
-    );
-    const clamped = viewportToWorld(vp.nx, vp.ny);
+    const lim = characterWorldLimits();
+    const vp = clampViewport(worldToViewport(loco.current.position.x, loco.current.position.y).nx);
+    const clamped = viewportToWorld(vp.nx, lim.stageNy);
     loco.current.position.x = clamped.x;
     loco.current.position.y = clamped.y;
-    node.position.set(loco.current.position.x, loco.current.position.y, loco.current.position.z);
-    node.rotation.y += (loco.current.yaw + torso.current - node.rotation.y) * Math.min(1, 5.2 * delta);
+    loco.current.position.z = 0;
+    node.position.set(clamped.x, clamped.y, 0);
+    node.rotation.y += (loco.current.yaw + torso.current - node.rotation.y) * Math.min(1, 5 * delta);
     torso.current *= 0.94;
-    projected.current
-      .set(loco.current.position.x, loco.current.position.y + 0.95, loco.current.position.z)
-      .project(camera);
+    if (node.parent) {
+      box.current.setFromObject(node);
+      const min = box.current.min.project(camera);
+      const max = box.current.max.project(camera);
+      const left = (Math.min(min.x, max.x) * 0.5 + 0.5) * window.innerWidth;
+      const right = (Math.max(min.x, max.x) * 0.5 + 0.5) * window.innerWidth;
+      if (left < 12) loco.current.position.x += 0.04;
+      if (right > window.innerWidth - 12) loco.current.position.x -= 0.04;
+    }
+    projected.current.set(loco.current.position.x, loco.current.position.y + 0.7, 0).project(camera);
     screen.current = {
       x: (projected.current.x * 0.5 + 0.5) * window.innerWidth,
       y: (-projected.current.y * 0.5 + 0.5) * window.innerHeight,
@@ -188,7 +169,7 @@ export function CharacterScene({
     };
     const regionFrom = (name: string): CharacterHit => {
       const value = name.toLowerCase();
-      if (value.includes("head") || value.includes("eye")) return "head";
+      if (value.includes("head") || value.includes("eye") || value.includes("mouth")) return "head";
       if (value.includes("hand") || value.includes("arm")) return "hand";
       if (value.includes("shoulder")) return "shoulder";
       return "body";
@@ -201,10 +182,10 @@ export function CharacterScene({
       window.setTimeout(() => setClip("Stagger"), 220);
       window.setTimeout(() => {
         setClip("Fall");
-        fallTarget.current = 0.16;
+        fallTarget.current = 0.22;
       }, 480);
       window.setTimeout(() => {
-        fallTarget.current = 0.28;
+        fallTarget.current = 0.32;
       }, 900);
       window.setTimeout(() => setClip("Annoyed"), 2000);
       window.setTimeout(() => {
@@ -247,21 +228,19 @@ export function CharacterScene({
       look.current = pointerLook(event.clientX, event.clientY, screen.current.x, screen.current.y);
       guide?.setLook(look.current.x, look.current.y);
       if (Math.abs(look.current.x) > 0.62 && lookWeight.current > 0.4) {
-        torso.current += (look.current.x * 0.28 - torso.current) * 0.08;
+        torso.current += (look.current.x * 0.22 - torso.current) * 0.08;
       }
       const hit = pick(event);
       document.body.style.cursor = hit ? "pointer" : "";
       const entered = Boolean(hit) && !hovering.current;
       hovering.current = Boolean(hit);
-      const cx = screen.current.x;
-      const cy = screen.current.y;
-      const ang = Math.atan2(event.clientY - cy, event.clientX - cx);
+      const ang = Math.atan2(event.clientY - screen.current.y, event.clientX - screen.current.x);
       if (lastAngle.current != null && hit) {
         let d = ang - lastAngle.current;
         while (d > Math.PI) d -= Math.PI * 2;
         while (d < -Math.PI) d += Math.PI * 2;
         orbit.current += d;
-        torso.current = Math.max(-0.7, Math.min(0.7, torso.current + d * 0.14));
+        torso.current = Math.max(-0.55, Math.min(0.55, torso.current + d * 0.12));
       }
       lastAngle.current = hit ? ang : null;
       if (Math.abs(orbit.current) > 5 && performance.now() > loco.current.busyUntil && !locked()) {
@@ -289,19 +268,30 @@ export function CharacterScene({
 
     const onClick = (event: PointerEvent) => {
       const hit = pick(event);
-      if (!hit) return;
-      event.preventDefault();
-      event.stopPropagation();
-      const region = regionFrom(hit.object.name || hit.object.parent?.name || "");
       const now = performance.now();
+      const region = hit ? regionFrom(hit.object.name || hit.object.parent?.name || "") : null;
       if (region === "head" && characterConfig.interaction.faceDoubleTap && now - lastHead.current < 450) {
         lastHead.current = 0;
+        event.preventDefault();
+        event.stopPropagation();
         onLine("Hey! I’m getting up.");
         play("head", "Fall");
         return;
       }
       if (region === "head") lastHead.current = now;
-      play(region);
+      if (isBottomStageEvent(event.clientY) && now - lastBottomTap.current < 420 && region !== "head") {
+        lastBottomTap.current = 0;
+        if (!locked()) {
+          manualUntil.current = now + 5000;
+          walkToNx(event.clientX / window.innerWidth, "walking");
+        }
+        return;
+      }
+      if (isBottomStageEvent(event.clientY)) lastBottomTap.current = now;
+      if (!hit) return;
+      event.preventDefault();
+      event.stopPropagation();
+      play(region ?? "body");
     };
 
     const onKey = (event: KeyboardEvent) => {
@@ -327,10 +317,10 @@ export function CharacterScene({
   return (
     <group>
       <ambientLight intensity={0.42} />
-      <hemisphereLight args={[materials.fill, materials.desk, 0.32]} />
-      <directionalLight position={[2.4, 4.2, 3.2]} intensity={1.05} color={materials.light} />
-      <pointLight position={[0.3, 1.3, 1.5]} intensity={0.22} color={materials.accent} />
-      <group ref={group} scale={mobile ? 0.76 : 1.1}>
+      <hemisphereLight args={[materials.fill, materials.desk, 0.3]} />
+      <directionalLight position={[2.2, 3.6, 4]} intensity={1.05} color={materials.light} />
+      <pointLight position={[0.2, 0.8, 1.6]} intensity={0.22} color={ACCENT_LIGHT} />
+      <group ref={group} scale={mobile ? 0.5 : 0.62}>
         <group ref={pivot} position={[0, -0.95, 0]}>
           <group position={[0, 0.95, 0]}>
             <CharacterHost
@@ -346,3 +336,5 @@ export function CharacterScene({
     </group>
   );
 }
+
+const ACCENT_LIGHT = "#3b82f6";

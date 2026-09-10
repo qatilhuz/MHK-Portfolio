@@ -1,3 +1,4 @@
+import { FACE_USER_YAW } from "./forward";
 import type { CharacterMovementState, CharacterWorldPosition } from "./types";
 
 export type Locomotion = {
@@ -51,6 +52,10 @@ export function stepLocomotion(loco: Locomotion, delta: number, reduced: boolean
       loco.velocity = { x: 0, y: 0, z: 0 };
       if (loco.state === "walking" || loco.state === "moving-to-section") loco.state = "idle";
     }
+    const turn = reduced ? 10 : 4.5;
+    const dyaw = FACE_USER_YAW - loco.yaw;
+    const wrapped = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
+    loco.yaw += wrapped * Math.min(1, turn * delta);
     return dist;
   }
 

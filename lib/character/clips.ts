@@ -16,13 +16,15 @@ export function createHostClips(): AnimationClip[] {
       new NumberKeyframeTrack("RightHand.rotation[z]", [0, 2.6, 5.2], [0, 0.08, 0]),
     ]),
     loop("Greet", 2.4, [
-      new NumberKeyframeTrack("RightArm.rotation[z]", [0, 0.4, 1.2, 2.4], [0.2, -2.05, -1.55, 0.2]),
-      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.4, 2.4], [0, -0.35, 0]),
-      new NumberKeyframeTrack("Head.rotation[y]", [0, 0.5, 2.4], [0, 0.18, 0]),
+      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.35, 1.1, 2.4], [0, -1.85, -1.35, 0]),
+      new NumberKeyframeTrack("RightArm.rotation[z]", [0, 0.35, 2.4], [0, -0.25, 0]),
+      new NumberKeyframeTrack("Chest.rotation[y]", [0, 0.4, 2.4], [0, 0.12, 0]),
+      new NumberKeyframeTrack("Head.rotation[y]", [0, 0.5, 2.4], [0, 0.08, 0]),
     ]),
     loop("Wave", 1.8, [
-      new NumberKeyframeTrack("RightArm.rotation[z]", [0, 0.3, 0.6, 0.9, 1.2, 1.8], [
-        0.15, -2.15, -1.45, -2.15, -1.45, 0.15,
+      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.25, 1.8], [0, -1.9, 0]),
+      new NumberKeyframeTrack("RightArm.rotation[z]", [0, 0.35, 0.7, 1.05, 1.4, 1.8], [
+        0, -0.45, 0.35, -0.45, 0.25, 0,
       ]),
     ]),
     loop("Nod", 1.2, [

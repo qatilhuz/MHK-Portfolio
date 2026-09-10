@@ -125,10 +125,13 @@ export function CharacterScene({
     if (pivot.current) pivot.current.rotation.x = fallPitch.current;
     if (!locked()) {
       const dist = stepLocomotion(loco.current, delta, reduced);
-      if (dist > 0.1 && clipRef.current !== "Walk" && clipRef.current !== "Turn") {
-        setClip(Math.abs(loco.current.targetYaw - loco.current.yaw) > 0.5 ? "Turn" : "Walk");
-      }
-      if (dist <= 0.08 && (clipRef.current === "Walk" || clipRef.current === "Turn")) {
+      const yawErr = Math.abs(
+        Math.atan2(Math.sin(loco.current.targetYaw - loco.current.yaw), Math.cos(loco.current.targetYaw - loco.current.yaw)),
+      );
+      if (dist > 0.12) {
+        const next = yawErr > 0.55 || loco.current.state === "turning" ? "Turn" : "Walk";
+        if (clipRef.current !== next) setClip(next);
+      } else if (dist <= 0.08 && (clipRef.current === "Walk" || clipRef.current === "Turn")) {
         setClip("Idle");
       }
       lookWeightTarget.current =

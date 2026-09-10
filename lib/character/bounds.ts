@@ -1,6 +1,6 @@
 /** Bottom-stage: the host lives in the lower ~26vh strip only. */
 
-const STAGE_VH = 0.26;
+const STAGE_VH = 0.38;
 
 let cache = { at: 0, minNx: 0.1, maxNx: 0.9, minNy: 0.74, maxNxWorld: 2.1 };
 

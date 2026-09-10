@@ -48,6 +48,7 @@ export function CharacterScene({
   const pokes = useRef(0);
   const screen = useRef({ x: 0, y: 0 });
   const box = useRef(new Box3());
+  const soleY = useRef<number | null>(null);
   const loco = useRef(createLocomotion(viewportToWorld(0.5)));
   const [clip, setClip] = useState<CharacterClip>("Idle");
   const clipRef = useRef(clip);
@@ -134,7 +135,15 @@ export function CharacterScene({
     loco.current.position.x = Math.min(maxX, Math.max(-maxX, loco.current.position.x));
     loco.current.position.y = 0;
     loco.current.position.z = 0;
-    node.position.set(loco.current.position.x, 0, 0);
+    if (soleY.current === null) {
+      node.position.set(loco.current.position.x, 0, 0);
+      node.updateWorldMatrix(true, true);
+      box.current.setFromObject(node);
+      soleY.current = box.current.min.y;
+    }
+    node.position.set(loco.current.position.x, -soleY.current, 0);
+    camera.position.set(0, 1.52, 5.6);
+    camera.lookAt(0, 1.52, 0);
     node.rotation.y += (loco.current.yaw + torso.current - node.rotation.y) * Math.min(1, 5 * delta);
     torso.current *= 0.94;
     if (node.parent) {

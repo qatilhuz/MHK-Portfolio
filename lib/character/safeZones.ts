@@ -7,7 +7,7 @@ export function pickSafeZone(opts: {
   currentNx?: number;
 }): CharacterSafeZone | null {
   const lim = characterWorldLimits();
-  const xs = [0.08, 0.22, 0.38, 0.5, 0.62, 0.78, 0.92];
+  const xs = [0.06, 0.22, 0.38, 0.5, 0.62, 0.78, 0.94];
   let best: CharacterSafeZone | null = null;
   let score = -Infinity;
   xs.forEach((nx, i) => {

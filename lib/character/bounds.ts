@@ -2,7 +2,7 @@
 
 const STAGE_VH = 0.38;
 
-let cache = { at: 0, minNx: 0.1, maxNx: 0.9, minNy: 0.74, maxNxWorld: 2.1 };
+let cache = { at: 0, minNx: 0.03, maxNx: 0.97, minNy: 0.62, maxNxWorld: 4 };
 
 export function characterWorldLimits() {
   if (typeof window === "undefined") return cache;
@@ -10,10 +10,10 @@ export function characterWorldLimits() {
   if (now - cache.at < 250) return cache;
   cache = {
     at: now,
-    minNx: 0.04,
-    maxNx: 0.96,
+    minNx: 0.03,
+    maxNx: 0.97,
     minNy: 1 - STAGE_VH,
-    maxNxWorld: window.innerWidth < 768 ? 2.6 : 3.4,
+    maxNxWorld: window.innerWidth < 768 ? 3.2 : 4,
   };
   return cache;
 }

@@ -47,11 +47,13 @@ function GltfHost({
 export function CharacterHost({
   clip,
   look,
+  lookWeight,
   reducedMotion,
   onHit,
 }: {
   clip: CharacterClip;
   look: { current: { x: number; y: number } };
+  lookWeight: { current: number };
   reducedMotion: boolean;
   onHit: (region: CharacterHit) => void;
 }) {
@@ -73,11 +75,17 @@ export function CharacterHost({
   }, []);
 
   if (!hasFile) {
-    return <ArmoredRig clip={clip} look={look} reducedMotion={reducedMotion} onHit={onHit} />;
+    return (
+      <ArmoredRig clip={clip} look={look} lookWeight={lookWeight} reducedMotion={reducedMotion} onHit={onHit} />
+    );
   }
 
   return (
-    <Suspense fallback={<ArmoredRig clip={clip} look={look} reducedMotion={reducedMotion} onHit={onHit} />}>
+    <Suspense
+      fallback={
+        <ArmoredRig clip={clip} look={look} lookWeight={lookWeight} reducedMotion={reducedMotion} onHit={onHit} />
+      }
+    >
       <GltfHost clip={clip} reducedMotion={reducedMotion} onHit={onHit} />
     </Suspense>
   );

@@ -1,3 +1,4 @@
+/** Screen-space look. y > 0 = pointer below the character (DOM Y grows downward). */
 export function pointerLook(
   pointerX: number,
   pointerY: number,

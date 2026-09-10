@@ -74,24 +74,22 @@ export function createHostClips(): AnimationClip[] {
       new NumberKeyframeTrack("LeftUpLeg.rotation[x]", [0, 0.25, 0.55], [0, 0.25, 0.1]),
     ]),
     loop("Fall", 0.95, [
-      new NumberKeyframeTrack("Hips.rotation[x]", [0, 0.35, 0.95], [0, 0.55, 1.15]),
-      new NumberKeyframeTrack("Hips.rotation[z]", [0, 0.35, 0.95], [0, 0.35, 0.55]),
-      new NumberKeyframeTrack("Hips.position[y]", [0, 0.35, 0.95], [0, -0.18, -0.48]),
-      new NumberKeyframeTrack("Spine.rotation[x]", [0, 0.35, 0.95], [0, 0.35, 0.7]),
-      new NumberKeyframeTrack("LeftArm.rotation[z]", [0, 0.4, 0.95], [0, 1.1, 0.4]),
-      new NumberKeyframeTrack("RightArm.rotation[z]", [0, 0.4, 0.95], [0, -1.2, -0.35]),
-      new NumberKeyframeTrack("LeftUpLeg.rotation[x]", [0, 0.45, 0.95], [0, 0.6, 0.9]),
-      new NumberKeyframeTrack("RightUpLeg.rotation[x]", [0, 0.45, 0.95], [0, -0.15, 0.35]),
+      new NumberKeyframeTrack("LeftArm.rotation[z]", [0, 0.25, 0.95], [0, 1.15, 0.55]),
+      new NumberKeyframeTrack("RightArm.rotation[z]", [0, 0.25, 0.95], [0, -1.25, -0.4]),
+      new NumberKeyframeTrack("LeftArm.rotation[x]", [0, 0.3, 0.95], [0, -0.4, -0.2]),
+      new NumberKeyframeTrack("Spine.rotation[x]", [0, 0.4, 0.95], [0, 0.12, 0.2]),
+      new NumberKeyframeTrack("Head.rotation[x]", [0, 0.2, 0.95], [0, -0.25, 0.15]),
     ]),
-    loop("Recover", 0.7, [
-      new NumberKeyframeTrack("Hips.rotation[x]", [0, 0.7], [1.15, 0.4]),
-      new NumberKeyframeTrack("Hips.position[y]", [0, 0.7], [-0.48, -0.18]),
+    loop("Recover", 0.9, [
+      new NumberKeyframeTrack("LeftArm.rotation[x]", [0, 0.45, 0.9], [-0.2, -0.7, -0.3]),
+      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.45, 0.9], [-0.2, -0.65, -0.25]),
+      new NumberKeyframeTrack("Spine.rotation[x]", [0, 0.9], [0.2, 0.08]),
     ]),
-    loop("GetUp", 1.15, [
-      new NumberKeyframeTrack("Hips.rotation[x]", [0, 0.5, 1.15], [0.4, 0.12, 0]),
-      new NumberKeyframeTrack("Hips.rotation[z]", [0, 0.5, 1.15], [0.55, 0.12, 0]),
-      new NumberKeyframeTrack("Hips.position[y]", [0, 0.5, 1.15], [-0.18, -0.06, 0]),
-      new NumberKeyframeTrack("Spine.rotation[x]", [0, 0.5, 1.15], [0.7, 0.15, 0]),
+    loop("GetUp", 1.4, [
+      new NumberKeyframeTrack("LeftArm.rotation[x]", [0, 0.5, 1.4], [-0.3, -0.15, 0]),
+      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.5, 1.4], [-0.25, -0.1, 0]),
+      new NumberKeyframeTrack("Spine.rotation[x]", [0, 0.6, 1.4], [0.08, 0.04, 0]),
+      new NumberKeyframeTrack("Head.rotation[x]", [0, 0.5, 1.4], [0.1, 0.05, 0]),
     ]),
     loop("Playful", 1.4, [
       new NumberKeyframeTrack("Head.rotation[z]", [0, 0.35, 0.7, 1.4], [0, 0.2, -0.15, 0]),

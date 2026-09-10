@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Raycaster, Vector2, Vector3, type Group } from "three";
+import { MathUtils, Raycaster, Vector2, Vector3, type Group } from "three";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { materials } from "@/components/three/materials";
 import { characterConfig } from "@/data/characterConfig";
@@ -16,6 +16,8 @@ import { createLocomotion, setDestination, stepLocomotion } from "@/lib/characte
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
 import type { CharacterDecision } from "@/lib/character/types";
 
+const FALL_CLIPS = new Set(["Fall", "GetUp", "Recover", "Stagger", "Surprise", "Annoyed"]);
+
 export function CharacterScene({
   onScreen,
   onLine,
@@ -26,11 +28,17 @@ export function CharacterScene({
   const guide = useGuide();
   const reduced = useReducedMotion() && characterConfig.accessibility.reducedMotionRespect;
   const group = useRef<Group>(null);
+  const pivot = useRef<Group>(null);
   const look = useRef({ x: 0, y: 0 });
+  const lookWeight = useRef(1);
+  const lookWeightTarget = useRef(1);
+  const fallPitch = useRef(0);
+  const fallTarget = useRef(0);
   const torso = useRef(0);
   const orbit = useRef(0);
   const lastAngle = useRef<number | null>(null);
   const hoverCool = useRef(0);
+  const hovering = useRef(false);
   const lastHead = useRef(0);
   const lastScroll = useRef(0);
   const lastDecision = useRef<CharacterDecision>("RETURN_TO_IDLE");
@@ -43,7 +51,7 @@ export function CharacterScene({
   const { camera } = useThree();
   const projected = useRef(new Vector3());
 
-  const locked = () => ["Fall", "GetUp", "Recover", "Stagger", "Surprise", "Annoyed"].includes(clipRef.current);
+  const locked = () => FALL_CLIPS.has(clipRef.current) || fallTarget.current > 0.05 || fallPitch.current > 0.05;
 
   const goSafe = (
     preferNx: number,
@@ -134,6 +142,9 @@ export function CharacterScene({
   useFrame((_, delta) => {
     const node = group.current;
     if (!node) return;
+    lookWeight.current = MathUtils.damp(lookWeight.current, lookWeightTarget.current, 6, delta);
+    fallPitch.current = MathUtils.damp(fallPitch.current, fallTarget.current, fallTarget.current > fallPitch.current ? 4.2 : 3.2, delta);
+    if (pivot.current) pivot.current.rotation.x = fallPitch.current;
     if (!locked()) {
       const dist = stepLocomotion(loco.current, delta, reduced);
       if (dist > 0.1 && clipRef.current !== "Walk" && clipRef.current !== "Turn") {
@@ -173,25 +184,55 @@ export function CharacterScene({
       if (value.includes("shoulder")) return "shoulder";
       return "body";
     };
+    const playFall = () => {
+      lookWeightTarget.current = 0;
+      loco.current.busyUntil = performance.now() + 6400;
+      setClip("Surprise");
+      fallTarget.current = 0.18;
+      window.setTimeout(() => setClip("Stagger"), 220);
+      window.setTimeout(() => {
+        setClip("Fall");
+        fallTarget.current = 0.55;
+      }, 480);
+      window.setTimeout(() => {
+        fallTarget.current = 1.05;
+      }, 820);
+      window.setTimeout(() => {
+        fallTarget.current = 1.42;
+      }, 1180);
+      window.setTimeout(() => setClip("Annoyed"), 2000);
+      window.setTimeout(() => {
+        setClip("Recover");
+        fallTarget.current = 0.95;
+      }, 3200);
+      window.setTimeout(() => {
+        setClip("GetUp");
+        fallTarget.current = 0.45;
+      }, 4100);
+      window.setTimeout(() => {
+        fallTarget.current = 0.12;
+      }, 5000);
+      window.setTimeout(() => {
+        fallTarget.current = 0;
+        setClip("Playful");
+      }, 5600);
+      window.setTimeout(() => {
+        lookWeightTarget.current = 1;
+        setClip("Idle");
+        onLine(null);
+      }, 6800);
+    };
     const play = (region: CharacterHit, extra?: CharacterClip) => {
+      if (locked() && extra !== "Fall") return;
       pokes.current += 1;
       onLine(pokes.current > 6 ? "Easy — I still need to host the site." : hitReactions[region].message);
       const next = extra ?? hitReactions[region].clip;
-      setClip(next);
-      loco.current.busyUntil = performance.now() + (next === "Fall" ? 5200 : 1700);
       if (next === "Fall") {
-        window.setTimeout(() => setClip("Stagger"), 180);
-        window.setTimeout(() => setClip("Fall"), 520);
-        window.setTimeout(() => setClip("Recover"), 1600);
-        window.setTimeout(() => setClip("GetUp"), 2300);
-        window.setTimeout(() => setClip("Annoyed"), 3400);
-        window.setTimeout(() => setClip("Playful"), 5000);
-        window.setTimeout(() => {
-          setClip("Idle");
-          onLine(null);
-        }, 6200);
+        playFall();
         return;
       }
+      setClip(next);
+      loco.current.busyUntil = performance.now() + 1700;
       window.setTimeout(() => {
         setClip("Idle");
         onLine(null);
@@ -202,25 +243,24 @@ export function CharacterScene({
       if (!characterConfig.interaction.pointerFollow) return;
       look.current = pointerLook(event.clientX, event.clientY, screen.current.x, screen.current.y);
       guide?.setLook(look.current.x, look.current.y);
-      if (Math.abs(look.current.x) > 0.62) {
-        torso.current += (look.current.x * 0.35 - torso.current) * 0.08;
+      if (Math.abs(look.current.x) > 0.62 && lookWeight.current > 0.4) {
+        torso.current += (look.current.x * 0.28 - torso.current) * 0.08;
       }
       const hit = pick(event);
       document.body.style.cursor = hit ? "pointer" : "";
+      const entered = Boolean(hit) && !hovering.current;
+      hovering.current = Boolean(hit);
       const cx = screen.current.x;
       const cy = screen.current.y;
       const ang = Math.atan2(event.clientY - cy, event.clientX - cx);
-      if (lastAngle.current != null) {
+      if (lastAngle.current != null && hit) {
         let d = ang - lastAngle.current;
         while (d > Math.PI) d -= Math.PI * 2;
         while (d < -Math.PI) d += Math.PI * 2;
         orbit.current += d;
-        if (hit) {
-          torso.current += d * 0.16;
-          torso.current = Math.max(-0.75, Math.min(0.75, torso.current));
-        }
+        torso.current = Math.max(-0.7, Math.min(0.7, torso.current + d * 0.14));
       }
-      lastAngle.current = ang;
+      lastAngle.current = hit ? ang : null;
       if (Math.abs(orbit.current) > 5 && performance.now() > loco.current.busyUntil && !locked()) {
         orbit.current = 0;
         setClip("LookAround");
@@ -228,7 +268,7 @@ export function CharacterScene({
         window.setTimeout(() => setClip("Idle"), 1800);
       }
       if (
-        hit &&
+        entered &&
         characterConfig.interaction.hoverGreeting &&
         performance.now() > hoverCool.current &&
         performance.now() > loco.current.busyUntil &&
@@ -254,8 +294,7 @@ export function CharacterScene({
       if (region === "head" && characterConfig.interaction.faceDoubleTap && now - lastHead.current < 450) {
         lastHead.current = 0;
         onLine("Hey! I’m getting up.");
-        setClip("Surprise");
-        window.setTimeout(() => play("head", "Fall"), 220);
+        play("head", "Fall");
         return;
       }
       if (region === "head") lastHead.current = now;
@@ -283,12 +322,24 @@ export function CharacterScene({
   const mobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   return (
-    <group ref={group} scale={mobile ? 0.76 : 1.1}>
+    <group>
       <ambientLight intensity={0.42} />
-      <hemisphereLight args={[materials.fill, materials.desk, 0.35]} />
+      <hemisphereLight args={[materials.fill, materials.desk, 0.32]} />
       <directionalLight position={[2.4, 4.2, 3.2]} intensity={1.05} color={materials.light} />
-      <pointLight position={[0.3, 1.3, 1.5]} intensity={0.28} color={materials.accent} />
-      <CharacterHost clip={clip} look={look} reducedMotion={reduced} onHit={() => undefined} />
+      <pointLight position={[0.3, 1.3, 1.5]} intensity={0.22} color={materials.accent} />
+      <group ref={group} scale={mobile ? 0.76 : 1.1}>
+        <group ref={pivot} position={[0, -0.95, 0]}>
+          <group position={[0, 0.95, 0]}>
+            <CharacterHost
+              clip={clip}
+              look={look}
+              lookWeight={lookWeight}
+              reducedMotion={reduced}
+              onHit={() => undefined}
+            />
+          </group>
+        </group>
+      </group>
     </group>
   );
 }

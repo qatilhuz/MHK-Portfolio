@@ -39,8 +39,9 @@ export function stepLocomotion(loco: Locomotion, delta: number, reduced: boolean
   const dy = loco.target.y - loco.position.y;
   const dz = loco.target.z - loco.position.z;
   const dist = Math.hypot(dx, dy, dz);
-  const accel = reduced ? 8 : 3.2;
-  const max = reduced ? 3.4 : loco.speed;
+  const accel = reduced ? 8 : 2.6;
+  const cruise = reduced ? 3.4 : loco.speed;
+  const max = dist < 0.5 ? cruise * Math.max(0.22, dist / 0.5) : cruise;
 
   if (dist < 0.06) {
     loco.velocity.x *= 0.7;

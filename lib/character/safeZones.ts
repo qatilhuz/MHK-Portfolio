@@ -1,3 +1,4 @@
+import { characterWorldLimits, clampViewport } from "./bounds";
 import type { CharacterSafeZone } from "./types";
 
 const BLOCK =
@@ -33,13 +34,14 @@ export function listSafeZones(opts: {
   currentNy?: number;
 }): CharacterSafeZone[] {
   const blocked = collectBlockedRects();
+  const lim = characterWorldLimits();
   const candidates: CharacterSafeZone[] = [];
   let i = 0;
   for (let gx = 0; gx <= 10; gx += 1) {
     for (let gy = 0; gy <= 8; gy += 1) {
       const nx = 0.08 + (gx / 10) * 0.84;
       const ny = 0.18 + (gy / 8) * 0.64;
-      if (ny < 0.16 || ny > 0.86) continue;
+      if (nx < lim.minNx || nx > lim.maxNx || ny < lim.minNy || ny > lim.maxNy) continue;
       if (overlaps(nx, ny, blocked, 42)) continue;
       const prefer =
         opts.preferNx != null
@@ -78,10 +80,11 @@ export function pickSafeZone(opts: {
 }
 
 export function viewportToWorld(nx: number, ny: number) {
+  const clamped = clampViewport(nx, ny);
   return {
-    x: (nx - 0.5) * 5.4,
-    y: (0.52 - ny) * 3.35,
-    z: ((nx - 0.5) * 0.15),
+    x: (clamped.nx - 0.5) * 5.4,
+    y: (0.52 - clamped.ny) * 3.35,
+    z: (clamped.nx - 0.5) * 0.15,
   };
 }
 

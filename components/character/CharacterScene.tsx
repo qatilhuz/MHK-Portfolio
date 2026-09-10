@@ -13,6 +13,7 @@ import { CharacterHost } from "@/components/guide/CharacterHost";
 import { clipForDecision, nextAutonomousDecision } from "@/lib/character/brain";
 import { pointerLook } from "@/lib/character/lookAt";
 import { createLocomotion, setDestination, stepLocomotion } from "@/lib/character/movement";
+import { clampViewport } from "@/lib/character/bounds";
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
 import type { CharacterDecision } from "@/lib/character/types";
 
@@ -154,7 +155,15 @@ export function CharacterScene({
         const section = guidedSections[guide?.index ?? 0];
         setClip(guide?.guided ? sectionClip[section?.id ?? ""] ?? "Idle" : "Idle");
       }
+      lookWeightTarget.current = clipRef.current === "Walk" || clipRef.current === "Turn" ? 0.45 : 1;
     }
+    const vp = clampViewport(
+      worldToViewport(loco.current.position.x, loco.current.position.y).nx,
+      worldToViewport(loco.current.position.x, loco.current.position.y).ny,
+    );
+    const clamped = viewportToWorld(vp.nx, vp.ny);
+    loco.current.position.x = clamped.x;
+    loco.current.position.y = clamped.y;
     node.position.set(loco.current.position.x, loco.current.position.y, loco.current.position.z);
     node.rotation.y += (loco.current.yaw + torso.current - node.rotation.y) * Math.min(1, 5.2 * delta);
     torso.current *= 0.94;
@@ -188,30 +197,24 @@ export function CharacterScene({
       lookWeightTarget.current = 0;
       loco.current.busyUntil = performance.now() + 6400;
       setClip("Surprise");
-      fallTarget.current = 0.18;
+      fallTarget.current = 0.08;
       window.setTimeout(() => setClip("Stagger"), 220);
       window.setTimeout(() => {
         setClip("Fall");
-        fallTarget.current = 0.55;
+        fallTarget.current = 0.16;
       }, 480);
       window.setTimeout(() => {
-        fallTarget.current = 1.05;
-      }, 820);
-      window.setTimeout(() => {
-        fallTarget.current = 1.42;
-      }, 1180);
+        fallTarget.current = 0.28;
+      }, 900);
       window.setTimeout(() => setClip("Annoyed"), 2000);
       window.setTimeout(() => {
         setClip("Recover");
-        fallTarget.current = 0.95;
+        fallTarget.current = 0.14;
       }, 3200);
       window.setTimeout(() => {
         setClip("GetUp");
-        fallTarget.current = 0.45;
-      }, 4100);
-      window.setTimeout(() => {
-        fallTarget.current = 0.12;
-      }, 5000);
+        fallTarget.current = 0.06;
+      }, 4300);
       window.setTimeout(() => {
         fallTarget.current = 0;
         setClip("Playful");

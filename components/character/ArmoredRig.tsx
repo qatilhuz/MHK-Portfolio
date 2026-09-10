@@ -16,8 +16,9 @@ import { createHostClips } from "@/lib/character/clips";
 const JACKET = materials.figure;
 const INNER = materials.metal;
 const BOOT = materials.desk;
+const GLOVE = materials.paper;
 const TRIM = materials.accent;
-const LIGHT = materials.paper;
+const LIGHT = materials.fill;
 
 function Plate({
   args,
@@ -119,7 +120,7 @@ export function ArmoredRig({
     const aim = look.current;
     const yaw = MathUtils.clamp(aim.x * 0.68 * w, -0.7, 0.7);
     const pitch = MathUtils.clamp(aim.y * 0.5 * w, -0.4, 0.42);
-    const damp = reducedMotion ? 12 : 8.5;
+    const damp = reducedMotion ? 14 : 16;
     if (head.current) {
       head.current.rotation.y = MathUtils.damp(head.current.rotation.y, yaw, damp, delta);
       head.current.rotation.x = MathUtils.damp(head.current.rotation.x, pitch, damp, delta);
@@ -215,7 +216,12 @@ export function ArmoredRig({
             <group name="LeftArm" position={[-0.34, 0.04, 0]} rotation={[0, 0, 0.14]}>
               <Plate args={[0.1, 0.22, 0.12]} color={JACKET} />
               <Plate args={[0.11, 0.14, 0.13]} position={[0, -0.2, 0]} color={INNER} />
-              <Plate args={[0.08, 0.07, 0.08]} position={[0, -0.3, 0]} color={BOOT} />
+              <group name="LeftHand" position={[0, -0.32, 0]}>
+                <Plate args={[0.09, 0.08, 0.09]} color={GLOVE} roughness={0.7} metalness={0.12} />
+                <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.02]} color={GLOVE} />
+                <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.02]} color={GLOVE} />
+                <Plate args={[0.02, 0.05, 0.02]} position={[0.03, -0.05, 0.02]} color={GLOVE} />
+              </group>
             </group>
             <group name="RightArm" position={[0.34, 0.04, 0]} rotation={[0, 0, -0.14]}>
               <mesh
@@ -237,11 +243,11 @@ export function ArmoredRig({
                   }}
                 >
                   <boxGeometry args={[0.09, 0.08, 0.09]} />
-                  <meshStandardMaterial color={BOOT} metalness={0.3} roughness={0.6} />
+                  <meshStandardMaterial color={GLOVE} metalness={0.12} roughness={0.7} />
                 </mesh>
-                <Plate args={[0.018, 0.05, 0.018]} position={[-0.03, -0.05, 0.02]} color={INNER} />
-                <Plate args={[0.018, 0.055, 0.018]} position={[0, -0.055, 0.02]} color={INNER} />
-                <Plate args={[0.018, 0.05, 0.018]} position={[0.03, -0.05, 0.02]} color={INNER} />
+                <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.02]} color={GLOVE} />
+                <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.02]} color={GLOVE} />
+                <Plate args={[0.02, 0.05, 0.02]} position={[0.03, -0.05, 0.02]} color={GLOVE} />
               </group>
             </group>
           </group>

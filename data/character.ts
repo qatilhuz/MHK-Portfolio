@@ -19,7 +19,20 @@ export type CharacterClip =
   | "GetUp"
   | "Playful"
   | "Annoyed"
-  | "Interaction";
+  | "Interaction"
+  | "Backflip"
+  | "Jump"
+  | "ThumbsUp"
+  | "Clap"
+  | "Laugh"
+  | "Celebrate"
+  | "Sad"
+  | "Shrug"
+  | "Victory"
+  | "Facepalm"
+  | "Bow"
+  | "Dance"
+  | "Sit";
 
 export type CharacterHit = "head" | "hand" | "body" | "shoulder";
 
@@ -81,4 +94,17 @@ export const CLIP_ALIASES: Record<string, CharacterClip> = {
   Playful: "Playful",
   Annoyed: "Annoyed",
   Interaction: "Interaction",
+  Backflip: "Backflip",
+  Jump: "Jump",
+  ThumbsUp: "ThumbsUp",
+  Clap: "Clap",
+  Laugh: "Laugh",
+  Celebrate: "Celebrate",
+  Sad: "Sad",
+  Shrug: "Shrug",
+  Victory: "Victory",
+  Facepalm: "Facepalm",
+  Bow: "Bow",
+  Dance: "Dance",
+  Sit: "Sit",
 };

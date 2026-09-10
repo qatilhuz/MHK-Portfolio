@@ -12,12 +12,15 @@ import { useGuide } from "@/lib/guide/context";
 import { CharacterHost } from "@/components/guide/CharacterHost";
 import { clipForDecision, nextAutonomousDecision } from "@/lib/character/brain";
 import { isBottomStageEvent } from "@/lib/character/bounds";
+import { emoteById } from "@/data/emotes";
+import { subscribeEmote } from "@/lib/character/emoteBus";
 import { pointerLook } from "@/lib/character/lookAt";
 import { createLocomotion, setDestination, stepLocomotion } from "@/lib/character/movement";
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
 import type { CharacterDecision } from "@/lib/character/types";
 
 const FALL_CLIPS = new Set(["Fall", "GetUp", "Recover", "Stagger", "Surprise", "Annoyed"]);
+const EMOTE_LOCK = new Set(["Backflip", "Jump", "Dance", "Sit", "Bow", "Celebrate"]);
 
 export function CharacterScene({
   onScreen,
@@ -58,13 +61,53 @@ export function CharacterScene({
   const { camera, gl } = useThree();
   const projected = useRef(new Vector3());
 
-  const locked = () => FALL_CLIPS.has(clipRef.current) || fallTarget.current > 0.05 || fallPitch.current > 0.05;
+  const emoteUntil = useRef(0);
+  const emoteCool = useRef(0);
+  const pendingEmote = useRef<string | null>(null);
+  const locked = () =>
+    FALL_CLIPS.has(clipRef.current) ||
+    EMOTE_LOCK.has(clipRef.current) ||
+    fallTarget.current > 0.05 ||
+    fallPitch.current > 0.05 ||
+    performance.now() < emoteUntil.current;
 
   const walkToNx = (nx: number, reason: "walking" | "moving-to-section") => {
     const n = Math.min(0.97, Math.max(0.03, nx));
     const x = (n - 0.5) * 2 * maxX.current;
     setDestination(loco.current, { x, y: 0, z: 0 }, reason);
   };
+
+  const playEmote = (id: string) => {
+    const def = emoteById(id);
+    if (!def) return;
+    const now = performance.now();
+    if (now < emoteCool.current) return;
+    const dist = Math.abs(loco.current.target.x - loco.current.position.x);
+    if ((locked() && now < emoteUntil.current) || (dist > 0.14 && clipRef.current === "Walk")) {
+      pendingEmote.current = id;
+      return;
+    }
+    if (def.fullBody && Math.abs(loco.current.position.x) > maxX.current * 0.82) {
+      pendingEmote.current = id;
+      walkToNx(0.5, "walking");
+      return;
+    }
+    const next = reduced ? def.reducedClip : def.clip;
+    lookWeightTarget.current = def.fullBody ? 0 : 0.35;
+    setClip(next);
+    emoteUntil.current = now + (reduced ? Math.min(def.durationMs, 900) : def.durationMs);
+    emoteCool.current = now + def.cooldownMs;
+    loco.current.busyUntil = emoteUntil.current;
+    loco.current.target = { ...loco.current.position };
+    window.setTimeout(() => {
+      if (performance.now() >= emoteUntil.current - 50) {
+        setClip("Idle");
+        lookWeightTarget.current = 1;
+      }
+    }, (reduced ? Math.min(def.durationMs, 900) : def.durationMs) + 50);
+  };
+
+  useEffect(() => subscribeEmote((id) => playEmote(id)), []); // eslint-disable-line react-hooks/exhaustive-deps -- refs only
 
   useEffect(() => {
     if (!guide?.visible) return;
@@ -135,7 +178,18 @@ export function CharacterScene({
         setClip("Idle");
       }
       lookWeightTarget.current =
-        clipRef.current === "Walk" || clipRef.current === "Turn" ? 0.4 : clipRef.current === "Wave" ? 0.28 : 1;
+        clipRef.current === "Walk" || clipRef.current === "Turn"
+          ? 0.4
+          : clipRef.current === "Wave"
+            ? 0.28
+            : EMOTE_LOCK.has(clipRef.current)
+              ? 0
+              : 1;
+      if (pendingEmote.current && dist <= 0.12) {
+        const queued = pendingEmote.current;
+        pendingEmote.current = null;
+        playEmote(queued);
+      }
     }
     loco.current.position.y = 0;
     loco.current.position.z = 0;

@@ -11,6 +11,7 @@ import {
 } from "three";
 import type { CharacterClip, CharacterHit } from "@/data/character";
 import { createHostClips } from "@/lib/character/clips";
+import { sampleViseme } from "@/lib/character/visemes";
 
 const PRIMARY = "#1a1f2e";
 const SECONDARY = "#2e3444";
@@ -100,7 +101,7 @@ export function ArmoredRig({
     const incoming = list[clip] ?? list.Idle;
     const outgoing = list[current.current];
     if (!incoming || current.current === clip) return;
-    const loop = clip === "Idle" || clip === "Talk" || clip === "Walk";
+    const loop = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Dance";
     incoming.reset();
     incoming.setLoop(LoopRepeat, loop ? Infinity : 1);
     incoming.clampWhenFinished = !loop;
@@ -117,7 +118,10 @@ export function ArmoredRig({
     mixer.current?.update(delta);
     const greeting = clip === "Wave";
     const walking = clip === "Walk" || clip === "Turn";
-    const w = (reducedMotion ? 0.2 : lookWeight.current) * (greeting ? 0.22 : walking ? 0.18 : 1);
+    const fullBody = clip === "Backflip" || clip === "Jump" || clip === "Dance" || clip === "Sit" || clip === "Bow" || clip === "Fall";
+    const w =
+      (reducedMotion ? 0.2 : lookWeight.current) *
+      (fullBody ? 0 : greeting ? 0.22 : walking ? 0.18 : 1);
     const aim = look.current;
     const yaw = MathUtils.clamp(aim.x * 0.62 * w, -0.65, 0.65);
     const pitch = MathUtils.clamp(aim.y * 0.46 * w, -0.38, 0.4);
@@ -144,9 +148,17 @@ export function ArmoredRig({
       eye.scale.y = MathUtils.damp(eye.scale.y, lid, 18, delta);
     }
     if (mouth.current) {
-      const talk = clip === "Talk" ? 0.7 + Math.sin(blink.current * 10) * 0.25 : clip === "Wave" ? 0.55 : 0.35;
-      mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 10, delta);
-      mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, clip === "Wave" ? 1.18 : 1, 8, delta);
+      const viseme = sampleViseme();
+      const talk = viseme
+        ? 0.28 + viseme.open * 0.85
+        : clip === "Talk"
+          ? 0.7 + Math.sin(blink.current * 10) * 0.25
+          : clip === "Wave" || clip === "Laugh"
+            ? 0.55
+            : 0.35;
+      const wide = viseme ? viseme.wide : clip === "Wave" || clip === "Laugh" ? 1.18 : 1;
+      mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 14, delta);
+      mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, wide, 12, delta);
     }
   });
 

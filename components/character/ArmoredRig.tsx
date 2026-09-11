@@ -4,8 +4,11 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import {
   AnimationMixer,
+  CanvasTexture,
   LoopRepeat,
   MathUtils,
+  Sprite,
+  SpriteMaterial,
   type AnimationAction,
   type Group as ThreeGroup,
 } from "three";
@@ -17,6 +20,80 @@ const PRIMARY = "#1a1f2e";
 const SECONDARY = "#2e3444";
 const ACCENT = "#3b82f6";
 const DETAIL = "#e5e7eb";
+
+function makeZTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.clearRect(0, 0, 64, 64);
+    ctx.font = "700 46px ui-sans-serif, system-ui, sans-serif";
+    ctx.fillStyle = "#93c5fd";
+    ctx.globalAlpha = 0.95;
+    ctx.fillText("Z", 10, 48);
+  }
+  const texture = new CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function SleepZs({ active }: { active: boolean }) {
+  const group = useRef<ThreeGroup>(null);
+  const sprites = useRef<Sprite[]>([]);
+  const texture = useMemo(() => (typeof document === "undefined" ? null : makeZTexture()), []);
+  const seeds = useRef([
+    { phase: 0, drift: 0.035, size: 0.085, span: 1.35 },
+    { phase: 0.42, drift: -0.028, size: 0.07, span: 1.55 },
+    { phase: 0.78, drift: 0.02, size: 0.095, span: 1.7 },
+  ]);
+
+  useEffect(() => {
+    const node = group.current;
+    if (!node || !texture) return;
+    for (let i = 0; i < 3; i += 1) {
+      const mat = new SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthWrite: false,
+        opacity: 0,
+      });
+      const sprite = new Sprite(mat);
+      sprite.scale.set(0.08, 0.08, 1);
+      node.add(sprite);
+      sprites.current.push(sprite);
+    }
+    return () => {
+      for (const sprite of sprites.current) {
+        node.remove(sprite);
+        sprite.material.dispose();
+      }
+      sprites.current = [];
+      texture.dispose();
+    };
+  }, [texture]);
+
+  useFrame((_, delta) => {
+    const list = sprites.current;
+    if (!list.length) return;
+    for (let i = 0; i < list.length; i += 1) {
+      const seed = seeds.current[i];
+      seed.phase += delta / seed.span;
+      if (seed.phase > 1) seed.phase -= 1;
+      const u = active ? seed.phase : 1;
+      const rise = u * u * (3 - 2 * u);
+      const sprite = list[i];
+      sprite.visible = active && u < 0.98;
+      sprite.position.set(0.06 + seed.drift * Math.sin(u * 4.2 + i), 0.08 + rise * 0.28, 0.1);
+      const fade = active ? Math.sin(u * Math.PI) : 0;
+      sprite.material.opacity = fade * 0.85;
+      const s = seed.size * (0.75 + u * 0.55);
+      sprite.scale.set(s, s, 1);
+    }
+  });
+
+  return <group ref={group} name="SleepZs" />;
+}
 
 function Plate({
   args,
@@ -101,7 +178,11 @@ export function ArmoredRig({
     const incoming = list[clip] ?? list.Idle;
     const outgoing = list[current.current];
     if (!incoming || current.current === clip) return;
-    const loop = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Run" || clip === "Dance";
+    if (current.current === "Backflip" && root.current) {
+      const hips = root.current.getObjectByName("Hips");
+      if (hips) hips.rotation.x = 0;
+    }
+    const loop = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Run" || clip === "Dance" || clip === "Sleep";
     incoming.reset();
     incoming.setLoop(LoopRepeat, loop ? Infinity : 1);
     incoming.clampWhenFinished = !loop;
@@ -118,7 +199,15 @@ export function ArmoredRig({
     mixer.current?.update(delta);
     const greeting = clip === "Wave";
     const walking = clip === "Walk" || clip === "Run" || clip === "Turn";
-    const fullBody = clip === "Backflip" || clip === "Jump" || clip === "Dance" || clip === "Sit" || clip === "Bow" || clip === "Fall";
+    const fullBody =
+      clip === "Backflip" ||
+      clip === "Jump" ||
+      clip === "Dance" ||
+      clip === "Sit" ||
+      clip === "Bow" ||
+      clip === "Fall" ||
+      clip === "Sleep" ||
+      clip === "Wake";
     const contactEmote = clip === "Clap" || clip === "Facepalm" || clip === "Think";
     const w =
       (reducedMotion ? 0.2 : lookWeight.current) *
@@ -127,21 +216,33 @@ export function ArmoredRig({
     const yaw = MathUtils.clamp(aim.x * 0.62 * w, -0.65, 0.65);
     const pitch = MathUtils.clamp(aim.y * 0.46 * w, -0.38, 0.4);
     const damp = reducedMotion ? 14 : 16;
-    if (head.current) {
-      head.current.rotation.y = MathUtils.damp(head.current.rotation.y, yaw, damp, delta);
-      head.current.rotation.x = MathUtils.damp(head.current.rotation.x, pitch, damp, delta);
-    }
-    if (neck.current) {
-      neck.current.rotation.y = MathUtils.damp(neck.current.rotation.y, yaw * 0.3, damp, delta);
-      neck.current.rotation.x = MathUtils.damp(neck.current.rotation.x, pitch * 0.2, damp, delta);
-    }
-    if (chest.current && !walking) {
-      chest.current.rotation.y = MathUtils.damp(chest.current.rotation.y, yaw * 0.08, 6, delta);
+    if (w > 0.04) {
+      if (head.current) {
+        head.current.rotation.y = MathUtils.damp(head.current.rotation.y, yaw, damp, delta);
+        head.current.rotation.x = MathUtils.damp(head.current.rotation.x, pitch, damp, delta);
+      }
+      if (neck.current) {
+        neck.current.rotation.y = MathUtils.damp(neck.current.rotation.y, yaw * 0.3, damp, delta);
+        neck.current.rotation.x = MathUtils.damp(neck.current.rotation.x, pitch * 0.2, damp, delta);
+      }
+      if (chest.current && !walking) {
+        chest.current.rotation.y = MathUtils.damp(chest.current.rotation.y, yaw * 0.08, 6, delta);
+      }
     }
     const eyeY = MathUtils.clamp(aim.x * 0.2 * w, -0.18, 0.18);
     const eyeX = MathUtils.clamp(aim.y * 0.14 * w, -0.12, 0.12);
     blink.current += delta;
-    const lid = blink.current % 4.2 > 4.05 ? 0.35 : 1;
+    const wakeT = actions.current.Wake?.time ?? 0;
+    const lid =
+      clip === "Sleep"
+        ? 0.08
+        : clip === "Wake"
+          ? Math.min(1, 0.12 + wakeT / 1.2)
+          : clip === "Surprise"
+            ? 1.22
+            : blink.current % 4.2 > 4.05
+              ? 0.35
+              : 1;
     for (const eye of [leftEye.current, rightEye.current]) {
       if (!eye) continue;
       eye.rotation.y = MathUtils.damp(eye.rotation.y, eyeY, 18, delta);
@@ -156,8 +257,12 @@ export function ArmoredRig({
           ? 0.7 + Math.sin(blink.current * 10) * 0.25
           : clip === "Wave" || clip === "Laugh"
             ? 0.55
-            : 0.35;
-      const wide = viseme ? viseme.wide : clip === "Wave" || clip === "Laugh" ? 1.18 : 1;
+            : clip === "Surprise"
+              ? 0.85
+              : clip === "Sleep"
+                ? 0.22
+                : 0.35;
+      const wide = viseme ? viseme.wide : clip === "Wave" || clip === "Laugh" || clip === "Surprise" ? 1.18 : 1;
       mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 14, delta);
       mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, wide, 12, delta);
     }
@@ -237,6 +342,7 @@ export function ArmoredRig({
                 <group ref={mouth} name="Mouth" position={[0, -0.06, 0.11]}>
                   <Plate args={[0.07, 0.02, 0.015]} color={SECONDARY} />
                 </group>
+                <SleepZs active={clip === "Sleep"} />
               </group>
             </group>
             <group name="LeftArm" position={[-0.32, 0.02, 0]} rotation={[0, 0, 0.12]}>

@@ -34,6 +34,8 @@ export function brainFromMovement(
   interacting: boolean,
   clip: CharacterClip,
 ): CharacterBrainState {
+  if (clip === "Sleep") return "SLEEP";
+  if (clip === "Wake") return "WAKE";
   if (clip === "Fall") return "FALLING";
   if (clip === "GetUp" || clip === "Recover") return "RECOVERING";
   if (clip === "Surprise") return "SURPRISED";

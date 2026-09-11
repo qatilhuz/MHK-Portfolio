@@ -40,7 +40,9 @@ export type CharacterBrainState =
   | "FALLING"
   | "RECOVERING"
   | "INTERACTING"
-  | "SECTION_TRANSITION";
+  | "SECTION_TRANSITION"
+  | "SLEEP"
+  | "WAKE";
 
 export type CharacterSafeZone = {
   id: string;

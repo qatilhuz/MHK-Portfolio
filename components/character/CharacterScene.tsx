@@ -20,7 +20,8 @@ import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/
 import type { CharacterDecision } from "@/lib/character/types";
 
 const FALL_CLIPS = new Set(["Fall", "GetUp", "Recover", "Stagger", "Surprise", "Annoyed"]);
-const EMOTE_LOCK = new Set(["Backflip", "Jump", "Dance", "Sit", "Bow", "Celebrate"]);
+const EMOTE_LOCK = new Set(["Backflip", "Jump", "Dance", "Sit", "Bow", "Celebrate", "Sleep", "Wake"]);
+const SLEEP_AFTER_MS = 20000;
 
 export function CharacterScene({
   onScreen,
@@ -64,14 +65,53 @@ export function CharacterScene({
   const emoteUntil = useRef(0);
   const emoteCool = useRef(0);
   const pendingEmote = useRef<string | null>(null);
+  const lastActivity = useRef(typeof performance !== "undefined" ? performance.now() : 0);
+  const asleep = useRef(false);
+  const waking = useRef(false);
   const locked = () =>
+    asleep.current ||
+    waking.current ||
     FALL_CLIPS.has(clipRef.current) ||
     EMOTE_LOCK.has(clipRef.current) ||
     fallTarget.current > 0.05 ||
     fallPitch.current > 0.05 ||
     performance.now() < emoteUntil.current;
 
+  const noteActivity = () => {
+    if (asleep.current || waking.current) return;
+    lastActivity.current = performance.now();
+  };
+
+  const beginSleep = () => {
+    if (asleep.current || waking.current || reduced) return;
+    asleep.current = true;
+    lookWeightTarget.current = 0;
+    loco.current.target = { ...loco.current.position };
+    loco.current.velocity = { x: 0, y: 0, z: 0 };
+    loco.current.state = "idle";
+    loco.current.busyUntil = Number.POSITIVE_INFINITY;
+    setClip("Sleep");
+  };
+
+  const beginWake = () => {
+    if (!asleep.current || waking.current) return;
+    asleep.current = false;
+    waking.current = true;
+    lookWeightTarget.current = 0.35;
+    setClip("Wake");
+    loco.current.busyUntil = performance.now() + 2000;
+    hoverCool.current = performance.now() + 9000;
+    window.setTimeout(() => {
+      waking.current = false;
+      lastActivity.current = performance.now();
+      lookWeightTarget.current = 1;
+      setClip("Idle");
+      loco.current.busyUntil = performance.now() + 400;
+    }, 1900);
+  };
+
   const walkToNx = (nx: number, reason: "walking" | "moving-to-section") => {
+    if (asleep.current || waking.current) return;
     const n = Math.min(0.97, Math.max(0.03, nx));
     const x = (n - 0.5) * 2 * maxX.current;
     const span = Math.max(0.001, maxX.current * 2);
@@ -84,6 +124,7 @@ export function CharacterScene({
   };
 
   const playEmote = (id: string) => {
+    if (asleep.current || waking.current) return;
     const def = emoteById(id);
     if (!def) return;
     const now = performance.now();
@@ -114,6 +155,22 @@ export function CharacterScene({
   };
 
   useEffect(() => subscribeEmote((id) => playEmote(id)), []); // eslint-disable-line react-hooks/exhaustive-deps -- refs only
+
+  useEffect(() => {
+    const bump = () => noteActivity();
+    window.addEventListener("pointermove", bump, { passive: true });
+    window.addEventListener("pointerdown", bump, { passive: true });
+    window.addEventListener("scroll", bump, { passive: true });
+    window.addEventListener("keydown", bump);
+    window.addEventListener("touchstart", bump, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", bump);
+      window.removeEventListener("pointerdown", bump);
+      window.removeEventListener("scroll", bump);
+      window.removeEventListener("keydown", bump);
+      window.removeEventListener("touchstart", bump);
+    };
+  }, []);
 
   useEffect(() => {
     if (!guide?.visible) return;
@@ -172,6 +229,21 @@ export function CharacterScene({
     lookWeight.current = MathUtils.damp(lookWeight.current, lookWeightTarget.current, 6, delta);
     fallPitch.current = MathUtils.damp(fallPitch.current, fallTarget.current, 4, delta);
     if (pivot.current) pivot.current.rotation.x = fallPitch.current;
+    const now = performance.now();
+    const moving = Math.abs(loco.current.target.x - loco.current.position.x) > 0.12;
+    const tourBusy = Boolean(guide?.guided && (guide.phase === "speaking" || guide.phase === "greeting"));
+    if (
+      !asleep.current &&
+      !waking.current &&
+      !reduced &&
+      clipRef.current === "Idle" &&
+      !moving &&
+      !tourBusy &&
+      !locked() &&
+      now - lastActivity.current >= SLEEP_AFTER_MS
+    ) {
+      beginSleep();
+    }
     if (!locked()) {
       const dist = stepLocomotion(loco.current, delta, reduced);
       const yawErr = Math.abs(
@@ -293,6 +365,7 @@ export function CharacterScene({
       }, 6800);
     };
     const play = (region: CharacterHit, extra?: CharacterClip) => {
+      if (asleep.current || waking.current) return;
       if (locked() && extra !== "Fall") return;
       pokes.current += 1;
       onLine(pokes.current > 6 ? "Easy — I still need to host the site." : hitReactions[region].message);
@@ -320,6 +393,11 @@ export function CharacterScene({
       document.body.style.cursor = hit ? "pointer" : "";
       const entered = Boolean(hit) && !hovering.current;
       hovering.current = Boolean(hit);
+      if (entered && asleep.current) {
+        beginWake();
+        lastAngle.current = hit ? Math.atan2(event.clientY - screen.current.y, event.clientX - screen.current.x) : null;
+        return;
+      }
       const ang = Math.atan2(event.clientY - screen.current.y, event.clientX - screen.current.x);
       if (lastAngle.current != null && hit) {
         let d = ang - lastAngle.current;

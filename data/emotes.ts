@@ -58,7 +58,7 @@ export const EMOTES: EmoteDef[] = [
     label: "Backflip",
     icon: "🔄",
     clip: "Backflip",
-    durationMs: 1900,
+    durationMs: 2100,
     cooldownMs: 3400,
     fullBody: true,
     loops: false,

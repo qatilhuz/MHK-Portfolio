@@ -6,7 +6,6 @@ import {
   AnimationMixer,
   LoopRepeat,
   MathUtils,
-  Vector3,
   type AnimationAction,
   type Group as ThreeGroup,
 } from "three";
@@ -74,12 +73,7 @@ export function ArmoredRig({
   const leftEye = useRef<ThreeGroup>(null);
   const rightEye = useRef<ThreeGroup>(null);
   const mouth = useRef<ThreeGroup>(null);
-  const leftHand = useRef<ThreeGroup>(null);
-  const rightHand = useRef<ThreeGroup>(null);
   const mixer = useRef<AnimationMixer | null>(null);
-  const tmpA = useRef(new Vector3());
-  const tmpB = useRef(new Vector3());
-  const tmpM = useRef(new Vector3());
   const actions = useRef<Record<string, AnimationAction>>({});
   const current = useRef("Idle");
   const blink = useRef(0);
@@ -107,7 +101,7 @@ export function ArmoredRig({
     const incoming = list[clip] ?? list.Idle;
     const outgoing = list[current.current];
     if (!incoming || current.current === clip) return;
-    const loop = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Dance";
+    const loop = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Run" || clip === "Dance";
     incoming.reset();
     incoming.setLoop(LoopRepeat, loop ? Infinity : 1);
     incoming.clampWhenFinished = !loop;
@@ -123,7 +117,7 @@ export function ArmoredRig({
   useFrame((_, delta) => {
     mixer.current?.update(delta);
     const greeting = clip === "Wave";
-    const walking = clip === "Walk" || clip === "Turn";
+    const walking = clip === "Walk" || clip === "Run" || clip === "Turn";
     const fullBody = clip === "Backflip" || clip === "Jump" || clip === "Dance" || clip === "Sit" || clip === "Bow" || clip === "Fall";
     const contactEmote = clip === "Clap" || clip === "Facepalm" || clip === "Think";
     const w =
@@ -166,31 +160,6 @@ export function ArmoredRig({
       const wide = viseme ? viseme.wide : clip === "Wave" || clip === "Laugh" ? 1.18 : 1;
       mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 14, delta);
       mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, wide, 12, delta);
-    }
-
-    const action = actions.current[clip];
-    const t = action?.time ?? 0;
-    if (clip === "Clap" && leftHand.current?.parent && rightHand.current?.parent) {
-      const hit = (t > 0.42 && t < 0.52) || (t > 0.66 && t < 0.76) || (t > 0.9 && t < 1.0);
-      if (hit) {
-        leftHand.current.getWorldPosition(tmpA.current);
-        rightHand.current.getWorldPosition(tmpB.current);
-        tmpM.current.copy(tmpA.current).add(tmpB.current).multiplyScalar(0.5);
-        leftHand.current.position.copy(leftHand.current.parent.worldToLocal(tmpM.current.clone()));
-        rightHand.current.position.copy(rightHand.current.parent.worldToLocal(tmpM.current.clone()));
-      } else {
-        leftHand.current.position.set(0, -0.12, 0);
-        rightHand.current.position.set(0, -0.12, 0);
-      }
-    } else if (clip === "Facepalm" && rightHand.current?.parent && head.current && t > 0.45 && t < 1.45) {
-      head.current.localToWorld(tmpM.current.set(0.03, 0.02, 0.09));
-      rightHand.current.position.copy(rightHand.current.parent.worldToLocal(tmpM.current.clone()));
-    } else if (clip === "Think" && leftHand.current?.parent && head.current && t > 0.55 && t < 2.15) {
-      head.current.localToWorld(tmpM.current.set(-0.05, -0.07, 0.1));
-      leftHand.current.position.copy(leftHand.current.parent.worldToLocal(tmpM.current.clone()));
-    } else {
-      if (leftHand.current && clip !== "Clap" && clip !== "Think") leftHand.current.position.set(0, -0.12, 0);
-      if (rightHand.current && clip !== "Clap" && clip !== "Facepalm") rightHand.current.position.set(0, -0.12, 0);
     }
   });
 
@@ -274,7 +243,7 @@ export function ArmoredRig({
               <Plate args={[0.09, 0.2, 0.11]} color={PRIMARY} />
               <group name="LeftForeArm" position={[0, -0.18, 0]}>
                 <Plate args={[0.08, 0.12, 0.1]} color={SECONDARY} />
-                <group ref={leftHand} name="LeftHand" position={[0, -0.12, 0]}>
+                <group name="LeftHand" position={[0, -0.12, 0]}>
                   <Plate args={[0.09, 0.08, 0.09]} color={DETAIL} roughness={0.7} />
                   <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.03]} color={DETAIL} />
                   <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.03]} color={DETAIL} />
@@ -294,7 +263,7 @@ export function ArmoredRig({
               </mesh>
               <group name="RightForeArm" position={[0, -0.18, 0]}>
                 <Plate args={[0.08, 0.12, 0.1]} color={SECONDARY} />
-                <group ref={rightHand} name="RightHand" position={[0, -0.12, 0]}>
+                <group name="RightHand" position={[0, -0.12, 0]}>
                   <mesh
                     name="RightHand"
                     onClick={(e) => {
@@ -307,8 +276,9 @@ export function ArmoredRig({
                   </mesh>
                   <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.03]} color={DETAIL} />
                   <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.03]} color={DETAIL} />
-                  <group name="RightThumb" position={[0.045, 0.01, 0.02]} rotation={[0, 0, -0.7]}>
-                    <Plate args={[0.018, 0.07, 0.018]} color={DETAIL} />
+                  <Plate args={[0.02, 0.05, 0.02]} position={[0.03, -0.05, 0.03]} color={DETAIL} />
+                  <group name="RightThumb" position={[0.05, 0.02, 0.01]} rotation={[0, 0, -0.85]}>
+                    <Plate args={[0.018, 0.065, 0.018]} color={DETAIL} />
                   </group>
                 </group>
               </group>

@@ -8,13 +8,16 @@ export type Locomotion = {
   yaw: number;
   targetYaw: number;
   speed: number;
+  gait: "walk" | "run";
   state: CharacterMovementState;
   busyUntil: number;
 };
 
-/** In-place walk cycle length (s) and world travel per cycle. speed = stride / cycle. */
+/** In-place cycle length (s) and world travel per cycle. speed = stride / cycle. */
 export const WALK_CYCLE = 1;
 export const WALK_STRIDE = 0.7;
+export const RUN_CYCLE = 0.55;
+export const RUN_STRIDE = 1.15;
 
 function travelYaw(dx: number, dz: number) {
   if (Math.abs(dx) < 0.002 && Math.abs(dz) < 0.002) return FACE_USER_YAW;
@@ -29,6 +32,7 @@ export function createLocomotion(start: CharacterWorldPosition): Locomotion {
     yaw: 0,
     targetYaw: 0,
     speed: WALK_STRIDE / WALK_CYCLE,
+    gait: "walk",
     state: "idle",
     busyUntil: 0,
   };

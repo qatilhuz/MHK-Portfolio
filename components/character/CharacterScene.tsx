@@ -15,7 +15,7 @@ import { isBottomStageEvent } from "@/lib/character/bounds";
 import { emoteById } from "@/data/emotes";
 import { subscribeEmote } from "@/lib/character/emoteBus";
 import { pointerLook } from "@/lib/character/lookAt";
-import { createLocomotion, setDestination, stepLocomotion } from "@/lib/character/movement";
+import { createLocomotion, RUN_CYCLE, RUN_STRIDE, setDestination, stepLocomotion, WALK_CYCLE, WALK_STRIDE } from "@/lib/character/movement";
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
 import type { CharacterDecision } from "@/lib/character/types";
 
@@ -74,6 +74,12 @@ export function CharacterScene({
   const walkToNx = (nx: number, reason: "walking" | "moving-to-section") => {
     const n = Math.min(0.97, Math.max(0.03, nx));
     const x = (n - 0.5) * 2 * maxX.current;
+    const span = Math.max(0.001, maxX.current * 2);
+    const currentNx = loco.current.position.x / span + 0.5;
+    const distPx = Math.abs(n - currentNx) * window.innerWidth;
+    const run = !reduced && distPx > window.innerWidth * 0.45;
+    loco.current.gait = run ? "run" : "walk";
+    loco.current.speed = run ? RUN_STRIDE / RUN_CYCLE : WALK_STRIDE / WALK_CYCLE;
     setDestination(loco.current, { x, y: 0, z: 0 }, reason);
   };
 
@@ -172,13 +178,18 @@ export function CharacterScene({
         Math.atan2(Math.sin(loco.current.targetYaw - loco.current.yaw), Math.cos(loco.current.targetYaw - loco.current.yaw)),
       );
       if (dist > 0.12) {
-        const next = yawErr > 0.55 || loco.current.state === "turning" ? "Turn" : "Walk";
+        const next =
+          yawErr > 0.55 || loco.current.state === "turning"
+            ? "Turn"
+            : loco.current.gait === "run"
+              ? "Run"
+              : "Walk";
         if (clipRef.current !== next) setClip(next);
-      } else if (dist <= 0.08 && (clipRef.current === "Walk" || clipRef.current === "Turn")) {
+      } else if (dist <= 0.08 && (clipRef.current === "Walk" || clipRef.current === "Run" || clipRef.current === "Turn")) {
         setClip("Idle");
       }
       lookWeightTarget.current =
-        clipRef.current === "Walk" || clipRef.current === "Turn"
+        clipRef.current === "Walk" || clipRef.current === "Run" || clipRef.current === "Turn"
           ? 0.4
           : clipRef.current === "Wave"
             ? 0.28

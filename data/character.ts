@@ -9,6 +9,7 @@ export type CharacterClip =
   | "Talk"
   | "Think"
   | "Walk"
+  | "Run"
   | "Turn"
   | "LookAround"
   | "Curious"
@@ -83,6 +84,7 @@ export const CLIP_ALIASES: Record<string, CharacterClip> = {
   Think: "Think",
   walk: "Walk",
   Walk: "Walk",
+  Run: "Run",
   Turn: "Turn",
   LookAround: "LookAround",
   lookaround: "LookAround",

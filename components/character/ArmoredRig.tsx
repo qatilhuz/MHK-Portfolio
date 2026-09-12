@@ -179,7 +179,7 @@ export function ArmoredRig({
     const outgoing = list[current.current];
     if (!incoming || current.current === clip) return;
     const fromFlip = current.current === "Backflip";
-    const loop = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Run" || clip === "Dance" || clip === "Sleep";
+    const loop = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Run" || clip === "Sleep";
     incoming.reset();
     incoming.setLoop(LoopRepeat, loop ? Infinity : 1);
     incoming.clampWhenFinished = !loop;

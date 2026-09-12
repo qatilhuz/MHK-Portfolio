@@ -178,19 +178,29 @@ export function ArmoredRig({
     const incoming = list[clip] ?? list.Idle;
     const outgoing = list[current.current];
     if (!incoming || current.current === clip) return;
-    if (current.current === "Backflip" && root.current) {
-      const hips = root.current.getObjectByName("Hips");
-      if (hips) hips.rotation.x = 0;
-    }
+    const fromFlip = current.current === "Backflip";
     const loop = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Run" || clip === "Dance" || clip === "Sleep";
     incoming.reset();
     incoming.setLoop(LoopRepeat, loop ? Infinity : 1);
     incoming.clampWhenFinished = !loop;
     incoming.setEffectiveTimeScale(reducedMotion ? 1.2 : 1);
     incoming.setEffectiveWeight(1);
-    const fade = reducedMotion ? 0.05 : 0.36;
-    if (outgoing && outgoing !== incoming) incoming.crossFadeFrom(outgoing, fade, true);
-    else incoming.fadeIn(fade);
+    const fade = reducedMotion ? 0.05 : fromFlip ? 0.22 : 0.36;
+    if (fromFlip) {
+      outgoing?.stop();
+      outgoing?.setEffectiveWeight(0);
+      const hips = root.current?.getObjectByName("Hips");
+      if (hips) {
+        hips.rotation.set(0, 0, 0);
+        hips.position.y = 0;
+        hips.position.z = 0;
+      }
+      incoming.fadeIn(fade);
+    } else if (outgoing && outgoing !== incoming) {
+      incoming.crossFadeFrom(outgoing, fade, true);
+    } else {
+      incoming.fadeIn(fade);
+    }
     incoming.play();
     current.current = clip;
   }, [clip, reducedMotion]);
@@ -270,8 +280,9 @@ export function ArmoredRig({
 
   return (
     <group ref={root} name="Host">
-      <group name="Hips">
-        <Plate args={[0.28, 0.1, 0.18]} position={[0, 0.88, 0]} color={SECONDARY} />
+        <group name="Hips">
+        <Plate args={[0.3, 0.1, 0.2]} position={[0, 0.88, 0]} color={SECONDARY} />
+        <Plate args={[0.32, 0.03, 0.12]} position={[0, 0.93, 0.04]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.12} />
         <group name="Spine" position={[0, 0.98, 0]}>
           <group ref={chest} name="Chest" position={[0, 0.2, 0]}>
             <mesh
@@ -284,6 +295,7 @@ export function ArmoredRig({
               <boxGeometry args={[0.42, 0.46, 0.24]} />
               <meshStandardMaterial color={PRIMARY} metalness={0.12} roughness={0.68} />
             </mesh>
+            <Plate args={[0.44, 0.04, 0.26]} position={[0, 0.2, 0]} color={SECONDARY} />
             <Plate args={[0.18, 0.22, 0.06]} position={[0, 0.04, 0.12]} color={SECONDARY} />
             <Plate
               args={[0.06, 0.06, 0.02]}
@@ -294,6 +306,8 @@ export function ArmoredRig({
             />
             <Plate args={[0.08, 0.22, 0.05]} position={[-0.12, 0.02, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.18} />
             <Plate args={[0.08, 0.22, 0.05]} position={[0.12, 0.02, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.18} />
+            <Plate args={[0.03, 0.18, 0.04]} position={[-0.2, 0.02, 0.1]} color={DETAIL} roughness={0.45} />
+            <Plate args={[0.03, 0.18, 0.04]} position={[0.2, 0.02, 0.1]} color={DETAIL} roughness={0.45} />
             <Plate args={[0.28, 0.32, 0.1]} position={[0, 0.02, -0.16]} color={SECONDARY} />
             <group
               name="LeftShoulder"
@@ -329,6 +343,7 @@ export function ArmoredRig({
                   <meshStandardMaterial color={DETAIL} metalness={0.08} roughness={0.55} />
                 </mesh>
                 <Plate args={[0.22, 0.08, 0.22]} position={[0, 0.12, 0]} color={PRIMARY} />
+                <Plate args={[0.18, 0.025, 0.04]} position={[0, 0.07, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.22} />
                 <Plate args={[0.08, 0.1, 0.08]} position={[-0.12, 0.08, 0]} color={PRIMARY} />
                 <Plate args={[0.08, 0.1, 0.08]} position={[0.12, 0.08, 0]} color={PRIMARY} />
                 <group ref={leftEye} name="LeftEye" position={[-0.05, 0.03, 0.11]}>
@@ -347,7 +362,9 @@ export function ArmoredRig({
             </group>
             <group name="LeftArm" position={[-0.32, 0.02, 0]} rotation={[0, 0, 0.12]}>
               <Plate args={[0.09, 0.2, 0.11]} color={PRIMARY} />
+              <Plate args={[0.11, 0.05, 0.12]} position={[0, -0.08, 0]} color={SECONDARY} />
               <group name="LeftForeArm" position={[0, -0.18, 0]}>
+                <Plate args={[0.1, 0.05, 0.11]} position={[0, 0.02, 0]} color={PRIMARY} />
                 <Plate args={[0.08, 0.12, 0.1]} color={SECONDARY} />
                 <group name="LeftHand" position={[0, -0.12, 0]}>
                   <Plate args={[0.09, 0.08, 0.09]} color={DETAIL} roughness={0.7} />
@@ -367,7 +384,9 @@ export function ArmoredRig({
                 <boxGeometry args={[0.09, 0.2, 0.11]} />
                 <meshStandardMaterial color={PRIMARY} roughness={0.68} metalness={0.12} />
               </mesh>
+              <Plate args={[0.11, 0.05, 0.12]} position={[0, -0.08, 0]} color={SECONDARY} />
               <group name="RightForeArm" position={[0, -0.18, 0]}>
+                <Plate args={[0.1, 0.05, 0.11]} position={[0, 0.02, 0]} color={PRIMARY} />
                 <Plate args={[0.08, 0.12, 0.1]} color={SECONDARY} />
                 <group name="RightHand" position={[0, -0.12, 0]}>
                   <mesh
@@ -393,7 +412,9 @@ export function ArmoredRig({
         </group>
         <group name="LeftUpLeg" position={[-0.09, 0.74, 0]}>
           <Plate args={[0.13, 0.26, 0.14]} color={PRIMARY} />
+          <Plate args={[0.15, 0.05, 0.15]} position={[0, -0.1, 0]} color={SECONDARY} />
           <group name="LeftLeg" position={[0, -0.22, 0]}>
+            <Plate args={[0.15, 0.05, 0.16]} position={[0, 0.02, 0]} color={PRIMARY} />
             <Plate args={[0.14, 0.16, 0.15]} color={SECONDARY} />
             <group name="LeftFoot" position={[0, -0.12, 0.03]}>
               <Plate args={[0.15, 0.07, 0.2]} color={SECONDARY} />

@@ -318,6 +318,7 @@ export function ArmoredRig({
               }}
             >
               <Plate args={[0.16, 0.14, 0.18]} color={PRIMARY} />
+              <Plate args={[0.12, 0.04, 0.2]} position={[0, 0.07, 0]} color={SECONDARY} />
             </group>
             <group
               name="RightShoulder"
@@ -328,6 +329,7 @@ export function ArmoredRig({
               }}
             >
               <Plate args={[0.16, 0.14, 0.18]} color={PRIMARY} />
+              <Plate args={[0.12, 0.04, 0.2]} position={[0, 0.07, 0]} color={SECONDARY} />
             </group>
             <group ref={neck} name="Neck" position={[0, 0.3, 0]}>
               <Plate args={[0.09, 0.08, 0.09]} color={DETAIL} roughness={0.55} />
@@ -371,6 +373,7 @@ export function ArmoredRig({
                   <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.03]} color={DETAIL} />
                   <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.03]} color={DETAIL} />
                   <Plate args={[0.02, 0.05, 0.02]} position={[0.03, -0.05, 0.03]} color={DETAIL} />
+                  <Plate args={[0.018, 0.045, 0.018]} position={[-0.05, -0.01, 0.02]} color={DETAIL} />
                 </group>
               </group>
             </group>
@@ -419,16 +422,20 @@ export function ArmoredRig({
             <group name="LeftFoot" position={[0, -0.12, 0.03]}>
               <Plate args={[0.15, 0.07, 0.2]} color={SECONDARY} />
               <Plate args={[0.15, 0.03, 0.22]} position={[0, -0.04, 0.02]} color={DETAIL} roughness={0.8} />
+              <Plate args={[0.12, 0.025, 0.06]} position={[0, -0.03, 0.1]} color={PRIMARY} />
             </group>
           </group>
         </group>
         <group name="RightUpLeg" position={[0.09, 0.74, 0]}>
           <Plate args={[0.13, 0.26, 0.14]} color={PRIMARY} />
+          <Plate args={[0.15, 0.05, 0.15]} position={[0, -0.1, 0]} color={SECONDARY} />
           <group name="RightLeg" position={[0, -0.22, 0]}>
+            <Plate args={[0.15, 0.05, 0.16]} position={[0, 0.02, 0]} color={PRIMARY} />
             <Plate args={[0.14, 0.16, 0.15]} color={SECONDARY} />
             <group name="RightFoot" position={[0, -0.12, 0.03]}>
               <Plate args={[0.15, 0.07, 0.2]} color={SECONDARY} />
               <Plate args={[0.15, 0.03, 0.22]} position={[0, -0.04, 0.02]} color={DETAIL} roughness={0.8} />
+              <Plate args={[0.12, 0.025, 0.06]} position={[0, -0.03, 0.1]} color={PRIMARY} />
             </group>
           </group>
         </group>

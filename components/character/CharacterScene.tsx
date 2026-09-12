@@ -68,6 +68,12 @@ export function CharacterScene({
   const lastActivity = useRef(typeof performance !== "undefined" ? performance.now() : 0);
   const asleep = useRef(false);
   const waking = useRef(false);
+  const inspectYaw = useRef(0);
+  const inspectTarget = useRef(0);
+  const inspecting = useRef(false);
+  const inspectResetAt = useRef(0);
+  const inspectPointer = useRef<{ id: number; x: number; y: number; onChar: boolean } | null>(null);
+  const inspectDragged = useRef(false);
   const locked = () =>
     asleep.current ||
     waking.current ||
@@ -244,7 +250,7 @@ export function CharacterScene({
     ) {
       beginSleep();
     }
-    if (!locked()) {
+    if (!locked() && !inspecting.current) {
       const dist = stepLocomotion(loco.current, delta, reduced);
       const yawErr = Math.abs(
         Math.atan2(Math.sin(loco.current.targetYaw - loco.current.yaw), Math.cos(loco.current.targetYaw - loco.current.yaw)),
@@ -286,7 +292,13 @@ export function CharacterScene({
     node.position.set(loco.current.position.x, -soleY.current, 0);
     camera.position.set(0, 1.52, 5.6);
     camera.lookAt(0, 1.52, 0);
-    node.rotation.y += (loco.current.yaw + torso.current - node.rotation.y) * Math.min(1, 5 * delta);
+    if (!inspecting.current && inspectResetAt.current > 0 && now >= inspectResetAt.current) {
+      inspectTarget.current = 0;
+      inspectResetAt.current = 0;
+    }
+    inspectYaw.current = MathUtils.damp(inspectYaw.current, inspectTarget.current, inspecting.current ? 18 : 4.2, delta);
+    const faceYaw = loco.current.yaw + torso.current + inspectYaw.current;
+    node.rotation.y += (faceYaw - node.rotation.y) * Math.min(1, 8 * delta);
     torso.current *= 0.94;
     const rect = gl.domElement.getBoundingClientRect();
     const aspect = Math.max(1.2, rect.width / Math.max(1, rect.height));
@@ -382,7 +394,41 @@ export function CharacterScene({
       }, 1500);
     };
 
+    const onPointerDown = (event: PointerEvent) => {
+      const hit = pick(event);
+      inspectPointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY, onChar: Boolean(hit) };
+      inspectDragged.current = false;
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      if (inspectPointer.current?.id !== event.pointerId) return;
+      if (inspecting.current) {
+        inspecting.current = false;
+        inspectTarget.current = inspectYaw.current;
+        inspectResetAt.current = performance.now() + 3000;
+        loco.current.busyUntil = Math.max(loco.current.busyUntil, performance.now() + 3000);
+      }
+      inspectPointer.current = null;
+    };
+
     const onMove = (event: PointerEvent) => {
+      const down = inspectPointer.current;
+      if (down && down.id === event.pointerId && down.onChar) {
+        const dx = event.clientX - down.x;
+        const dy = event.clientY - down.y;
+        if (!inspecting.current && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+          inspecting.current = true;
+          inspectDragged.current = true;
+          inspectResetAt.current = 0;
+          loco.current.target = { ...loco.current.position };
+        }
+        if (inspecting.current) {
+          inspectYaw.current += dx * 0.012;
+          inspectTarget.current = inspectYaw.current;
+          down.x = event.clientX;
+          down.y = event.clientY;
+        }
+      }
       if (!characterConfig.interaction.pointerFollow) return;
       look.current = pointerLook(event.clientX, event.clientY, screen.current.x, screen.current.y);
       guide?.setLook(look.current.x, look.current.y);
@@ -431,6 +477,10 @@ export function CharacterScene({
     };
 
     const onClick = (event: PointerEvent) => {
+      if (inspectDragged.current) {
+        inspectDragged.current = false;
+        return;
+      }
       const hit = pick(event);
       const now = performance.now();
       const region = hit ? regionFrom(hit.object.name || hit.object.parent?.name || "") : null;
@@ -465,11 +515,17 @@ export function CharacterScene({
       play("hand");
     };
 
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
     window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", onPointerUp, { passive: true });
+    window.addEventListener("pointercancel", onPointerUp, { passive: true });
     window.addEventListener("click", onClick, true);
     window.addEventListener("keydown", onKey);
     return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
       window.removeEventListener("click", onClick, true);
       window.removeEventListener("keydown", onKey);
       document.body.style.cursor = "";

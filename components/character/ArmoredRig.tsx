@@ -185,7 +185,7 @@ export function ArmoredRig({
     incoming.clampWhenFinished = !loop;
     incoming.setEffectiveTimeScale(reducedMotion ? 1.2 : 1);
     incoming.setEffectiveWeight(1);
-    const fade = reducedMotion ? 0.05 : fromFlip ? 0.22 : 0.36;
+    const fade = reducedMotion ? 0.05 : fromFlip ? 0.04 : 0.36;
     if (fromFlip) {
       outgoing?.stop();
       outgoing?.setEffectiveWeight(0);
@@ -195,6 +195,10 @@ export function ArmoredRig({
         hips.position.y = 0;
         hips.position.z = 0;
       }
+      const spine = root.current?.getObjectByName("Spine");
+      if (spine) spine.rotation.set(0, 0, 0);
+      incoming.reset();
+      incoming.setEffectiveWeight(1);
       incoming.fadeIn(fade);
     } else if (outgoing && outgoing !== incoming) {
       incoming.crossFadeFrom(outgoing, fade, true);
@@ -213,6 +217,7 @@ export function ArmoredRig({
       clip === "Backflip" ||
       clip === "Jump" ||
       clip === "Dance" ||
+      clip === "Celebrate" ||
       clip === "Sit" ||
       clip === "Bow" ||
       clip === "Fall" ||
@@ -276,7 +281,7 @@ export function ArmoredRig({
                   : clip === "Sleep"
                     ? 0.22
                     : 0.35;
-      const wide = viseme ? viseme.wide : clip === "Wave" || clip === "Laugh" || clip === "Surprise" ? 1.18 : 1;
+      const wide = viseme ? viseme.wide : clip === "Wave" || clip === "Laugh" || clip === "Surprise" || clip === "Celebrate" ? 1.18 : 1;
       mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 14, delta);
       mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, wide, 12, delta);
     }

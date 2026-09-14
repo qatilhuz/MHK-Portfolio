@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { Badge } from "@/components/ui/Badge";
 import { experience } from "@/data/experience";
+import { InView } from "@/components/motion/InView";
 
 export function ExperiencePreview({
   headingLevel = "h2",
@@ -14,11 +15,13 @@ export function ExperiencePreview({
       eyebrow="Career"
       headingLevel={headingLevel}
       title="Experience"
+      titleMotion="mask"
       description="Roles from Huzaifa’s CV. No extra employers or invented dates."
     >
+      <InView>
       <ol className="relative border-l border-border pl-6">
         {experience.map((item) => (
-          <li key={item.id} className="relative mb-10 last:mb-0">
+          <li key={item.id} data-in className="relative mb-10 last:mb-0">
             <span
               className="absolute -left-[1.54rem] top-1.5 h-3 w-3 rounded-full border border-accent bg-background"
               aria-hidden="true"
@@ -51,6 +54,7 @@ export function ExperiencePreview({
           </li>
         ))}
       </ol>
+      </InView>
       <p className="mt-8 text-sm text-muted">
         <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
           Projects

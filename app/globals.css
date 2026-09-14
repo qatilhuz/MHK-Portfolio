@@ -151,6 +151,26 @@ h3 {
   animation-delay: 160ms;
 }
 
+.motion-text {
+  overflow-wrap: anywhere;
+}
+
+.hero-scan {
+  transform-origin: left center;
+  animation: hero-scan-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+
+@keyframes hero-scan-draw {
+  from {
+    transform: scaleX(0);
+    opacity: 0.2;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
 .grid-fade {
   background-image:
     linear-gradient(to right, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px),

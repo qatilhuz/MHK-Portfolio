@@ -9,6 +9,7 @@ import {
   getSkillsByCategory,
 } from "@/data/skills";
 import { cn } from "@/lib/utils";
+import { InView } from "@/components/motion/InView";
 import type { SkillCategory } from "@/types";
 
 export function SkillsPreview() {
@@ -21,6 +22,7 @@ export function SkillsPreview() {
       id="skills"
       eyebrow="Stack"
       title="Skills"
+      titleMotion="scan"
       description="From the CV. No proficiency percentages."
       className="bg-surface/40"
     >
@@ -51,27 +53,31 @@ export function SkillsPreview() {
         })}
       </div>
 
-      <ul className="mt-6 flex flex-wrap gap-2" aria-label="Core strengths">
-        {coreStrengths.map((item) => (
-          <li key={item}>
-            <Badge>{item}</Badge>
-          </li>
-        ))}
-      </ul>
+      <InView>
+        <ul className="mt-6 flex flex-wrap gap-2" aria-label="Core strengths">
+          {coreStrengths.map((item) => (
+            <li key={item} data-in>
+              <Badge>{item}</Badge>
+            </li>
+          ))}
+        </ul>
+      </InView>
 
-      <ul
-        role="tabpanel"
-        className="mt-8 flex flex-wrap gap-2"
-        aria-label={`${active} skills`}
-      >
-        {items.map((skill) => (
-          <li key={skill.id}>
-            <Badge className="px-3 py-1.5 text-sm text-foreground">
-              {skill.name}
-            </Badge>
-          </li>
-        ))}
-      </ul>
+      <InView>
+        <ul
+          role="tabpanel"
+          className="mt-8 flex flex-wrap gap-2"
+          aria-label={`${active} skills`}
+        >
+          {items.map((skill) => (
+            <li key={skill.id} data-in>
+              <Badge className="px-3 py-1.5 text-sm text-foreground">
+                {skill.name}
+              </Badge>
+            </li>
+          ))}
+        </ul>
+      </InView>
     </Section>
   );
 }

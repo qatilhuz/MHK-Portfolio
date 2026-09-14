@@ -10,7 +10,7 @@ export function ProjectCard({ project }: { project: Project }) {
   return (
     <article>
       <Card className="flex h-full flex-col overflow-hidden p-0 transition-[border-color] duration-[var(--motion-micro)] hover:border-accent/40">
-        <div className="relative aspect-[16/10] overflow-hidden border-b border-border bg-surface-secondary">
+        <div className="relative aspect-[16/10] overflow-hidden border-b border-border bg-surface-secondary [clip-path:inset(0)] transition-[clip-path] duration-700 group-hover:[clip-path:inset(0)]">
           {project.thumbnail ? (
             <Image
               src={project.thumbnail}

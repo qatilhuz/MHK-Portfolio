@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectEmptyState } from "./ProjectEmptyState";
+import { InView } from "@/components/motion/InView";
 
 export function ProjectGrid({
   projects,
@@ -75,11 +76,13 @@ export function ProjectGrid({
       {filtered.length === 0 ? (
         <p className="text-sm text-muted">No projects in this category yet.</p>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2">
+        <InView className="grid gap-6 sm:grid-cols-2" y={22}>
           {filtered.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+            <div key={project.id} data-in className="h-full">
+              <ProjectCard project={project} />
+            </div>
           ))}
-        </div>
+        </InView>
       )}
     </div>
   );

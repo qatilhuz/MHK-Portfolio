@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { education } from "@/data/education";
 import { siteConfig } from "@/data/site";
+import { InView } from "@/components/motion/InView";
 
 const focusAreas = [
   {
@@ -27,6 +28,7 @@ export function AboutPreview({ headingLevel = "h2" }: { headingLevel?: "h1" | "h
       eyebrow="About"
       headingLevel={headingLevel}
       title={`I’m ${siteConfig.displayName}.`}
+      titleMotion="words"
       description={`${siteConfig.role} in ${siteConfig.location}, specializing in ${siteConfig.specialization}.`}
     >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
@@ -51,16 +53,18 @@ export function AboutPreview({ headingLevel = "h2" }: { headingLevel?: "h1" | "h
             </Link>
             .
           </p>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <InView className="grid gap-4 sm:grid-cols-3">
             {focusAreas.map((item) => (
-              <Card key={item.title} className="p-5">
-                <h3 className="text-sm">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
-                  {item.body}
-                </p>
-              </Card>
+              <div key={item.title} data-in>
+                <Card className="p-5">
+                  <h3 className="text-sm">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    {item.body}
+                  </p>
+                </Card>
+              </div>
             ))}
-          </div>
+          </InView>
           <div>
             <h3 className="text-sm">Education</h3>
             <ul className="mt-3 space-y-1 text-sm text-muted">

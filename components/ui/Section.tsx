@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { SECTION_CLASS } from "@/lib/constants";
+import { TextReveal, type TextRevealVariant } from "@/components/motion/TextReveal";
 import { Container } from "./Container";
 
 interface SectionProps {
@@ -8,6 +9,7 @@ interface SectionProps {
   title?: string;
   description?: string;
   headingLevel?: "h1" | "h2";
+  titleMotion?: TextRevealVariant;
   children?: React.ReactNode;
   className?: string;
 }
@@ -18,17 +20,21 @@ export function Section({
   title,
   description,
   headingLevel = "h2",
+  titleMotion = "words",
   children,
   className,
 }: SectionProps) {
-  const Heading = headingLevel;
   return (
     <section id={id} className={cn(SECTION_CLASS, className)}>
       <Container>
         {(eyebrow || title || description) && (
           <header className="mb-10 max-w-2xl">
-            {eyebrow ? <p className="label mb-3">{eyebrow}</p> : null}
-            {title ? <Heading className="text-foreground">{title}</Heading> : null}
+            {eyebrow ? (
+              <TextReveal as="p" className="label mb-3" text={eyebrow} variant="scan" />
+            ) : null}
+            {title ? (
+              <TextReveal as={headingLevel} className="text-foreground" text={title} variant={titleMotion} />
+            ) : null}
             {description ? (
               <p className="mt-3 text-muted leading-relaxed">{description}</p>
             ) : null}

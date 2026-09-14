@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { workspaceObjects } from "@/data/workspace";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
+import { markHeroReady } from "@/lib/boot/reveal";
 import { WorkspaceFallback } from "./WorkspaceFallback";
 
 const WorkspaceCanvas = dynamic(
@@ -23,6 +25,10 @@ const WorkspaceCanvas = dynamic(
 
 export function HeroWorkspace() {
   const webgl = useWebGLSupport();
+
+  useEffect(() => {
+    if (webgl !== null) markHeroReady();
+  }, [webgl]);
 
   return (
     <div className="flex h-full min-h-[280px] flex-col">

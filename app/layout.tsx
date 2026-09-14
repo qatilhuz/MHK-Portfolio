@@ -4,6 +4,7 @@ import { SiteShell } from "@/components/layout/SiteShell";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { siteConfig } from "@/data/site";
 import { getSiteUrl, personJsonLd, websiteJsonLd } from "@/lib/seo";
+import { charmonman } from "@/app/fonts";
 import "./globals.css";
 
 const metadataBase = getSiteUrl() ? new URL(getSiteUrl()) : undefined;
@@ -48,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`dark ${charmonman.variable}`}>
       <body className="bg-background font-sans text-foreground antialiased">
         <JsonLd data={personJsonLd()} />
         <JsonLd data={websiteJsonLd()} />

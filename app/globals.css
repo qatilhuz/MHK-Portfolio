@@ -25,6 +25,7 @@
   --container-max: 72rem;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-charmonman: "Charmonman", cursive;
 }
 
 @theme inline {

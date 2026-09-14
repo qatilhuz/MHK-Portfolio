@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { LoadingGate } from "@/components/boot/LoadingGate";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { siteConfig } from "@/data/site";
@@ -59,6 +60,7 @@ export default function RootLayout({
         >
           Skip to content
         </a>
+        <LoadingGate />
         <SiteShell>
           <AnalyticsProvider />
           {children}

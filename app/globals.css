@@ -121,6 +121,59 @@ h3 {
   font-weight: 600;
 }
 
+.font-huz {
+  font-family: var(--font-charmonman), cursive;
+}
+
+.boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  clip-path: inset(0);
+}
+
+.boot-huz {
+  clip-path: inset(0 100% 0 0);
+  animation: boot-write 1.7s cubic-bezier(0.33, 0.1, 0.2, 1) forwards;
+}
+
+.boot-overlay.is-open {
+  animation: boot-reveal 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes boot-write {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    text-shadow: none;
+  }
+  18% {
+    clip-path: inset(0 78% 0 0);
+  }
+  52% {
+    clip-path: inset(0 38% 0 0);
+  }
+  78% {
+    clip-path: inset(0 0 0 0);
+    text-shadow: none;
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    text-shadow: 0 0 22px rgba(59, 130, 246, 0.38), 0 0 48px rgba(59, 130, 246, 0.16);
+  }
+}
+
+@keyframes boot-reveal {
+  to {
+    clip-path: inset(50% 50% 50% 50%);
+    opacity: 0;
+  }
+}
+
 .label {
   font-size: 0.75rem;
   letter-spacing: 0.14em;

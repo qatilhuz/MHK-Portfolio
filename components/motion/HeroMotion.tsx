@@ -14,7 +14,7 @@ export function HeroMotion({
   role: string;
   name: string;
 }) {
-  const [live, setLive] = useState(false);
+  const [live, setLive] = useState(isPageRevealed());
 
   useEffect(() => onPageRevealed(() => setLive(true)), []);
 

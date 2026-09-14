@@ -269,9 +269,13 @@ export function ArmoredRig({
             ? 0.55
             : clip === "Surprise"
               ? 0.85
-              : clip === "Sleep"
-                ? 0.22
-                : 0.35;
+              : clip === "Facepalm"
+                ? 0.18
+                : clip === "Think"
+                  ? 0.28
+                  : clip === "Sleep"
+                    ? 0.22
+                    : 0.35;
       const wide = viseme ? viseme.wide : clip === "Wave" || clip === "Laugh" || clip === "Surprise" ? 1.18 : 1;
       mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 14, delta);
       mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, wide, 12, delta);

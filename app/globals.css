@@ -217,6 +217,24 @@ h3 {
   display: inline;
 }
 
+.hero-stack-caret {
+  opacity: 0.85;
+  animation: hero-stack-caret 1s steps(1) infinite;
+}
+
+@keyframes hero-stack-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stack-caret {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
 .hero-scan {
   transform-origin: left center;
   animation: hero-scan-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { siteConfig } from "@/data/site";
+import { HeroStackLoop } from "@/components/hero/HeroStackLoop";
 import { requestEmote } from "@/lib/character/emoteBus";
 import { isPageRevealed, onPageRevealed } from "@/lib/boot/reveal";
 import { prefersReducedMotion } from "@/lib/motion/engine";
@@ -28,18 +28,17 @@ export function HeroMotion({
 
   return (
     <div>
-      <p className="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted">
-        {siteConfig.location} · {siteConfig.specialization}
-      </p>
       {live || isPageRevealed() ? (
         <>
           <TextReveal as="p" className="label mt-3" text={role} variant="scan" once={false} />
+          <HeroStackLoop />
           <TextReveal as="h1" className="display mt-5" text={name} variant="assemble" once={false} delay={0.08} />
           <span className="hero-scan mt-2 block h-px w-24 bg-accent/50" aria-hidden="true" />
         </>
       ) : (
         <>
           <p className="label mt-3">{role}</p>
+          <HeroStackLoop />
           <h1 className="display mt-5">{name}</h1>
         </>
       )}

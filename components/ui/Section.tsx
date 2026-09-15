@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { SECTION_CLASS } from "@/lib/constants";
 import { TextReveal, type TextRevealVariant } from "@/components/motion/TextReveal";
+import { TypeIn } from "@/components/motion/TypeIn";
 import { Container } from "./Container";
 
 interface SectionProps {
@@ -36,7 +37,7 @@ export function Section({
               <TextReveal as={headingLevel} className="text-foreground" text={title} variant={titleMotion} />
             ) : null}
             {description ? (
-              <p className="mt-3 text-muted leading-relaxed">{description}</p>
+              <TypeIn as="p" className="mt-3 text-muted leading-relaxed" text={description} />
             ) : null}
           </header>
         )}

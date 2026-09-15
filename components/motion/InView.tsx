@@ -3,7 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
-import { motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
+import { isPastTrigger, motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
 
 type Props = {
   children: ReactNode;
@@ -13,7 +13,7 @@ type Props = {
   delay?: number;
 };
 
-export function InView({ children, className, stagger = "[data-in]", y = 16, delay = 0 }: Props) {
+export function InView({ children, className, stagger = "[data-in]", y = 14, delay = 0 }: Props) {
   const root = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,31 +25,26 @@ export function InView({ children, className, stagger = "[data-in]", y = 16, del
 
     const ctx = gsap.context(() => {
       gsap.set(items, { opacity: 0, y });
-      ScrollTrigger.create({
-        trigger: node,
-        start: "top 86%",
-        once: true,
-        onEnter: () => {
-          gsap.to(items, {
+      items.forEach((item, index) => {
+        const play = () => {
+          gsap.to(item, {
             opacity: 1,
             y: 0,
-            duration: 0.55,
+            duration: 0.48,
             ease: "power3.out",
-            stagger: 0.06,
-            delay,
+            delay: delay + Math.min(index * 0.045, 0.18),
+            overwrite: "auto",
           });
-        },
-      });
-      if (node.getBoundingClientRect().top < window.innerHeight * 0.9) {
-        gsap.to(items, {
-          opacity: 1,
-          y: 0,
-          duration: 0.55,
-          ease: "power3.out",
-          stagger: 0.06,
-          delay,
+        };
+        ScrollTrigger.create({
+          trigger: item,
+          start: "top 76%",
+          once: true,
+          invalidateOnRefresh: true,
+          onEnter: play,
         });
-      }
+        if (isPastTrigger(item, 0.76)) play();
+      });
     }, node);
 
     return () => ctx.revert();

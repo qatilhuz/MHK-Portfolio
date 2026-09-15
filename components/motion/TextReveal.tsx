@@ -3,7 +3,12 @@
 import { createElement, useEffect, useRef } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
-import { isCompactViewport, motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
+import {
+  isCompactViewport,
+  isPastTrigger,
+  motionEngine,
+  prefersReducedMotion,
+} from "@/lib/motion/engine";
 
 export type TextRevealVariant = "assemble" | "words" | "mask" | "scan";
 
@@ -54,19 +59,19 @@ export function TextReveal({
         tl.fromTo(
           words,
           { y: compact ? 8 : 14, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.55, stagger: 0.045 },
+          { y: 0, opacity: 1, duration: 0.5, stagger: 0.04 },
         );
       } else if (variant === "mask" && mask.length) {
         tl.fromTo(
           mask,
           { clipPath: "inset(0 100% 0 0)" },
-          { clipPath: "inset(0 0% 0 0)", duration: 0.85, ease: "power2.inOut" },
+          { clipPath: "inset(0 0% 0 0)", duration: 0.75, ease: "power2.inOut" },
         );
       } else if (variant === "scan") {
         tl.fromTo(
           node,
           { opacity: 0.35, letterSpacing: "0.22em" },
-          { opacity: 1, letterSpacing: "0.14em", duration: 0.5 },
+          { opacity: 1, letterSpacing: "0.14em", duration: 0.45 },
         );
       }
 
@@ -77,11 +82,12 @@ export function TextReveal({
       if (once) {
         ScrollTrigger.create({
           trigger: node,
-          start: "top 88%",
+          start: "top 80%",
           once: true,
+          invalidateOnRefresh: true,
           onEnter: play,
         });
-        if (node.getBoundingClientRect().top < window.innerHeight * 0.92) play();
+        if (isPastTrigger(node, 0.8)) play();
       } else {
         play();
       }

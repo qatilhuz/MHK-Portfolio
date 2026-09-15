@@ -3,7 +3,6 @@ import { Section } from "@/components/ui/Section";
 import { Badge } from "@/components/ui/Badge";
 import { experience } from "@/data/experience";
 import { InView } from "@/components/motion/InView";
-import { TypeIn } from "@/components/motion/TypeIn";
 
 export function ExperiencePreview({
   headingLevel = "h2",
@@ -33,11 +32,7 @@ export function ExperiencePreview({
             <h3 className="mt-2">
               {item.role} · {item.company}
             </h3>
-            <TypeIn
-              as="p"
-              className="mt-2 max-w-2xl text-sm leading-relaxed text-muted"
-              text={item.description}
-            />
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{item.description}</p>
             {item.responsibilities.length > 0 ? (
               <ul className="mt-3 max-w-2xl list-disc space-y-1 pl-5 text-sm text-muted">
                 {item.responsibilities.map((line) => (

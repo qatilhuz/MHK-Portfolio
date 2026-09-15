@@ -7,7 +7,6 @@ import { ProjectActions } from "./ProjectActions";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectPreview } from "./ProjectPreview";
 import { ScreenshotGallery } from "./ScreenshotGallery";
-import { TypeIn } from "@/components/motion/TypeIn";
 import { VideoPreview } from "./VideoPreview";
 
 export function ProjectDetail({
@@ -29,7 +28,7 @@ export function ProjectDetail({
           This page is a UI demonstration, not a real portfolio case study.
         </p>
       ) : null}
-      <TypeIn as="p" className="max-w-2xl text-lg leading-relaxed text-muted" text={project.shortDescription} />
+      <p className="max-w-2xl text-lg leading-relaxed text-muted">{project.shortDescription}</p>
       <div className="mt-6 flex flex-wrap gap-2">
         {project.isDemo ? <Badge>Demo</Badge> : <Badge>{project.category}</Badge>}
         {project.featured ? <Badge>Featured</Badge> : null}
@@ -44,7 +43,7 @@ export function ProjectDetail({
 
       <div className="mt-10 max-w-2xl space-y-4">
         <h2>Overview</h2>
-        <TypeIn as="p" className="leading-relaxed text-muted" text={project.description} />
+        <p className="leading-relaxed text-muted">{project.description}</p>
       </div>
 
       {project.features.length > 0 ? (

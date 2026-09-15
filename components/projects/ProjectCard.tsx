@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { previewLabel } from "@/lib/projects";
 import type { Project } from "@/types";
-import { TypeIn } from "@/components/motion/TypeIn";
 import { ProjectLinks } from "./ProjectLinks";
 
 export function ProjectCard({ project }: { project: Project }) {
@@ -42,11 +41,7 @@ export function ProjectCard({ project }: { project: Project }) {
               {project.title}
             </Link>
           </h3>
-          <TypeIn
-            as="p"
-            className="mt-2 flex-1 text-sm leading-relaxed text-muted"
-            text={project.shortDescription}
-          />
+          <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">{project.shortDescription}</p>
           {project.technologies.length > 0 ? (
             <ul className="mt-4 flex flex-wrap gap-2">
               {project.technologies.map((tech) => (

@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/Badge";
 import { education } from "@/data/education";
 import { siteConfig } from "@/data/site";
 import { InView } from "@/components/motion/InView";
-import { TypeIn } from "@/components/motion/TypeIn";
 
 const focusAreas = [
   {
@@ -34,11 +33,10 @@ export function AboutPreview({ headingLevel = "h2" }: { headingLevel?: "h1" | "h
     >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <div className="space-y-4">
-          <TypeIn
-            as="p"
-            className="max-w-2xl leading-relaxed text-muted"
-            text={`${siteConfig.legalName} builds web and mobile software across frontend and backend. Current work is .NET development; previous work was Next.js and React.`}
-          />
+          <p className="max-w-2xl leading-relaxed text-muted">
+            {siteConfig.legalName} builds web and mobile software across frontend and backend.
+            Current work is .NET development; previous work was Next.js and React.
+          </p>
           <p className="max-w-2xl leading-relaxed text-muted">
             Languages spoken: {siteConfig.spokenLanguages.join(" and ")}. See{" "}
             <Link href="/experience" className="text-foreground underline-offset-4 hover:underline">
@@ -59,7 +57,7 @@ export function AboutPreview({ headingLevel = "h2" }: { headingLevel?: "h1" | "h
               <div key={item.title} data-in>
                 <Card className="p-5">
                   <h3 className="text-sm">{item.title}</h3>
-                  <TypeIn as="p" className="mt-2 text-sm leading-relaxed text-muted" text={item.body} />
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{item.body}</p>
                 </Card>
               </div>
             ))}

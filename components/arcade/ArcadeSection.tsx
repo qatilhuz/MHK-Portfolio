@@ -1,6 +1,6 @@
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import { Section } from "@/components/ui/Section";
-import { ArcadeBoard } from "./ArcadeBoard";
+import { ArcadeExperience } from "./ArcadeExperience";
 
 export function ArcadeSection() {
   return (
@@ -8,12 +8,12 @@ export function ArcadeSection() {
       <AmbientBackground variant="arcade" />
       <Section
         id="arcade"
-        eyebrow="Play"
+        eyebrow="Arcade"
         title="Dev Arcade"
-        description="Small browser games that demonstrate interaction, state, and timing. They are portfolio exercises, not commercial products."
+        description="Step into a private rig, then through the monitor. Small browser games for interaction, state, and timing — portfolio exercises, not commercial products."
         className="relative bg-surface/40"
       >
-        <ArcadeBoard />
+        <ArcadeExperience />
       </Section>
     </div>
   );

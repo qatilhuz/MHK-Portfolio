@@ -397,6 +397,352 @@ h3 {
   }
 }
 
+.arcade-rig {
+  --arcade-cyan: #22d3ee;
+  --arcade-magenta: #c084fc;
+  --arcade-blue: #3b82f6;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.16), transparent 55%),
+    linear-gradient(180deg, #0c0d12 0%, #09090b 100%);
+}
+
+.arcade-portal {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  opacity: 0;
+  visibility: hidden;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(34, 211, 238, 0.45), transparent 38%),
+    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.55), #05060a 72%);
+  clip-path: circle(0% at 50% 40%);
+}
+
+.arcade-desk {
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1rem 1.5rem;
+}
+
+.arcade-desk-glow {
+  position: absolute;
+  inset: auto 10% -20% 10%;
+  height: 40%;
+  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.22), transparent 70%);
+  pointer-events: none;
+}
+
+.arcade-scene {
+  display: grid;
+  grid-template-columns: minmax(0, 0.28fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 0.75rem;
+  min-height: 17rem;
+}
+
+.arcade-pc {
+  position: relative;
+  height: 9.5rem;
+  border-radius: 0.45rem;
+  background: linear-gradient(180deg, #1c1d24, #0d0e12);
+  border: 1px solid #2a2b33;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 28px rgba(192, 132, 252, 0.12);
+}
+
+.arcade-pc-window {
+  position: absolute;
+  inset: 12% 14% 18% 14%;
+  overflow: hidden;
+  border-radius: 0.2rem;
+  background: radial-gradient(circle at 30% 20%, rgba(192, 132, 252, 0.35), transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(34, 211, 238, 0.28), #07080c 70%);
+}
+
+.arcade-fan {
+  position: absolute;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: repeating-conic-gradient(from 0deg, transparent 0 18deg, rgba(255, 255, 255, 0.22) 18deg 28deg);
+  animation: arcade-spin 3.2s linear infinite;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+}
+
+.arcade-fan-a {
+  left: 12%;
+  top: 18%;
+}
+
+.arcade-fan-b {
+  right: 12%;
+  bottom: 22%;
+  animation-duration: 2.4s;
+  animation-direction: reverse;
+}
+
+.arcade-gpu {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 10%;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--arcade-magenta), var(--arcade-cyan), var(--arcade-blue));
+  background-size: 200% 100%;
+  animation: arcade-rgb 4s linear infinite;
+}
+
+.arcade-pc-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--arcade-cyan), var(--arcade-magenta), var(--arcade-blue));
+  background-size: 200% 100%;
+  animation: arcade-rgb 5s linear infinite;
+}
+
+.arcade-monitor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.arcade-bezel {
+  width: 100%;
+  max-width: 36rem;
+  padding: 0.55rem 0.55rem 0.7rem;
+  border-radius: 0.7rem;
+  background: linear-gradient(180deg, #1a1b22, #0b0c10);
+  border: 1px solid #2e2f38;
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.9), 0 0 40px rgba(59, 130, 246, 0.12);
+}
+
+.arcade-screen {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.28rem;
+  background: #05070d;
+}
+
+.arcade-wallpaper {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(34, 211, 238, 0.28), transparent 32%),
+    radial-gradient(circle at 80% 70%, rgba(192, 132, 252, 0.3), transparent 36%),
+    linear-gradient(125deg, #07101c, #120818 45%, #061018);
+  animation: arcade-wall 10s ease-in-out infinite alternate;
+}
+
+.arcade-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(0, 0, 0, 0.18) 3px 4px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.arcade-screen-ui {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.arcade-screen-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.arcade-screen-copy {
+  max-width: 18rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #d4d4d8;
+}
+
+.arcade-enter {
+  margin-top: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--arcade-cyan) 55%, white);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.18), rgba(59, 130, 246, 0.12));
+  color: #f4f4f5;
+  border-radius: 999px;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.25);
+}
+
+.arcade-enter:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.32), rgba(59, 130, 246, 0.2));
+}
+
+.arcade-enter:disabled {
+  opacity: 0.6;
+}
+
+.arcade-stand {
+  width: 4.5rem;
+  height: 0.7rem;
+  margin-top: 0.15rem;
+  background: #15161c;
+  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+}
+
+.arcade-peripherals {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.arcade-keyboard {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 3px;
+  width: min(100%, 22rem);
+  padding: 0.45rem;
+  border-radius: 0.4rem;
+  background: #121318;
+  border: 1px solid #2a2b32;
+}
+
+.arcade-key {
+  height: 0.42rem;
+  border-radius: 2px;
+  background: hsl(200 80% 55%);
+  animation: arcade-keys 2.8s linear infinite;
+}
+
+.arcade-mouse {
+  width: 1.6rem;
+  height: 2.4rem;
+  border-radius: 0.8rem 0.8rem 0.7rem 0.7rem;
+  background: #14151b;
+  border: 1px solid #32333c;
+  box-shadow: 0 0 12px rgba(192, 132, 252, 0.35);
+  position: relative;
+}
+
+.arcade-mouse::after {
+  content: "";
+  position: absolute;
+  inset: auto 35% 12% 35%;
+  height: 2px;
+  background: var(--arcade-cyan);
+  box-shadow: 0 0 8px var(--arcade-cyan);
+}
+
+.arcade-world {
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1rem 1.4rem;
+  min-height: 22rem;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(34, 211, 238, 0.14), transparent 50%),
+    linear-gradient(180deg, #07080e, #09090b);
+}
+
+.arcade-world-grid {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+
+.arcade-cabinet {
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--arcade-cyan) 28%, var(--border));
+  background: color-mix(in srgb, var(--surface) 88%, #022);
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.08);
+}
+
+.arcade-cabinet-locked {
+  opacity: 0.72;
+  border-style: dashed;
+}
+
+@keyframes arcade-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes arcade-rgb {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes arcade-wall {
+  from {
+    transform: translate3d(-3%, -2%, 0) scale(1.05);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+  }
+}
+
+@keyframes arcade-keys {
+  0% {
+    background: hsl(190 85% 55%);
+  }
+  33% {
+    background: hsl(270 75% 62%);
+  }
+  66% {
+    background: hsl(220 85% 58%);
+  }
+  100% {
+    background: hsl(190 85% 55%);
+  }
+}
+
+@media (max-width: 639px) {
+  .arcade-scene {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .arcade-pc {
+    display: none;
+  }
+
+  .arcade-desk {
+    padding: 0.85rem 0.7rem 1.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arcade-fan,
+  .arcade-gpu,
+  .arcade-pc-strip,
+  .arcade-wallpaper,
+  .arcade-key {
+    animation: none !important;
+  }
+}
+
 .scene-slot {
   min-height: 280px;
 }

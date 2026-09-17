@@ -8,7 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return [];
   }
 
-  const staticRoutes = ["/", "/about", "/experience", "/projects", "/contact"];
+  const staticRoutes = ["/", "/about", "/experience", "/projects", "/contact", "/arcade"];
 
   const pages: MetadataRoute.Sitemap = staticRoutes.map((path) => ({
     url: absoluteUrl(path) as string,

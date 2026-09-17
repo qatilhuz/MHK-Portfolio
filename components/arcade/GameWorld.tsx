@@ -1,11 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { trackEvent } from "@/lib/analytics/client";
+import { arcadeGames, futureCabinets } from "@/lib/arcade/registry";
 import type { ArcadeGameId } from "@/lib/arcade/gameTypes";
-import { arcadeGames } from "./ArcadeMenu";
 
 const RockPaperScissors = dynamic(() =>
   import("./games/RockPaperScissors").then((mod) => mod.RockPaperScissors),
@@ -16,13 +17,29 @@ const ReactionTest = dynamic(() =>
   import("./games/ReactionTest").then((mod) => mod.ReactionTest),
 );
 
-const futureSlots = [
-  { id: "lane", title: "Neon Lane", note: "Coming online" },
-  { id: "orbit", title: "Orbit Drift", note: "Coming online" },
-];
-
-export function GameWorld({ onExit }: { onExit: () => void }) {
+export function GameWorld() {
+  const router = useRouter();
   const [game, setGame] = useState<ArcadeGameId | null>(null);
+
+  const exit = useCallback(() => {
+    router.push("/#arcade");
+  }, [router]);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (game) setGame(null);
+        else exit();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [exit, game]);
 
   const back = () => setGame(null);
   const select = (id: ArcadeGameId) => {
@@ -36,42 +53,44 @@ export function GameWorld({ onExit }: { onExit: () => void }) {
   if (game === "reaction") return <ReactionTest onBack={back} />;
 
   return (
-    <div className="arcade-world">
+    <div className="arcade-world relative min-h-dvh px-4 py-8 sm:px-8">
       <div className="arcade-world-grid" aria-hidden="true" />
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="label text-accent">Inside the monitor</p>
-          <h3 className="mt-2">Game world</h3>
-          <p className="mt-1 max-w-xl text-sm text-muted">
-            Four playable prototypes live here. Extra cabinets are wired for later titles.
-          </p>
+      <div className="relative mx-auto max-w-5xl">
+        <div className="mb-8 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="label text-accent">Inside the monitor</p>
+            <h1 className="mt-2">Game world</h1>
+            <p className="mt-2 max-w-xl text-sm text-muted">
+              Four playable prototypes. Extra cabinets stay offline until the next drop.
+            </p>
+          </div>
+          <Button type="button" variant="secondary" onClick={exit}>
+            Exit Arcade
+          </Button>
         </div>
-        <Button type="button" size="sm" variant="secondary" onClick={onExit}>
-          Leave arcade
-        </Button>
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {arcadeGames.map((item) => (
+            <li key={item.id}>
+              <div className="arcade-cabinet flex h-full flex-col p-5">
+                <h2 className="text-lg">{item.title}</h2>
+                <p className="mt-2 flex-1 text-sm text-muted">{item.summary}</p>
+                <Button className="mt-4" type="button" variant="secondary" onClick={() => select(item.id)}>
+                  Play {item.title}
+                </Button>
+              </div>
+            </li>
+          ))}
+          {futureCabinets.map((slot) => (
+            <li key={slot.id}>
+              <div className="arcade-cabinet arcade-cabinet-locked flex h-full flex-col p-5">
+                <h2 className="text-lg">{slot.title}</h2>
+                <p className="mt-2 flex-1 text-sm text-muted">{slot.note}</p>
+                <p className="mt-4 font-mono text-xs uppercase tracking-[0.16em] text-muted">Offline</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul className="grid gap-4 sm:grid-cols-2">
-        {arcadeGames.map((item) => (
-          <li key={item.id}>
-            <div className="arcade-cabinet flex h-full flex-col p-5">
-              <h3>{item.title}</h3>
-              <p className="mt-2 flex-1 text-sm text-muted">{item.summary}</p>
-              <Button className="mt-4" type="button" variant="secondary" onClick={() => select(item.id)}>
-                Play {item.title}
-              </Button>
-            </div>
-          </li>
-        ))}
-        {futureSlots.map((slot) => (
-          <li key={slot.id}>
-            <div className="arcade-cabinet arcade-cabinet-locked flex h-full flex-col p-5">
-              <h3>{slot.title}</h3>
-              <p className="mt-2 flex-1 text-sm text-muted">{slot.note}</p>
-              <p className="mt-4 font-mono text-xs uppercase tracking-[0.16em] text-muted">Offline</p>
-            </div>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

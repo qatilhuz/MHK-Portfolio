@@ -42,7 +42,7 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
   });
 
   return (
-    <group position={[0.02, 0.042, 0.28]} rotation={[0.04, 0, 0]}>
+    <group position={[0.02, 0.055, 0.26]} rotation={[0.05, 0, 0]}>
       <mesh receiveShadow castShadow>
         <boxGeometry args={[0.46, 0.018, 0.16]} />
         <meshStandardMaterial color="#0e0f14" metalness={0.4} roughness={0.48} />

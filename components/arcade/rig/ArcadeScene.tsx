@@ -1,56 +1,66 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
-import gsap from "gsap";
 import { prefersReducedMotion } from "@/lib/motion/engine";
+import { buildArcadePortalTimeline } from "@/lib/arcade/portal";
 import { Keyboard } from "./Keyboard";
 import { Monitor, Speaker } from "./Monitor";
 import { Mouse, MousePad } from "./Mouse";
 import { PcCase } from "./PcCase";
+import { concreteAlbedo, woodAlbedo } from "./textures";
 
 function CameraRig({
-  entering,
+  mode,
   onArrived,
 }: {
-  entering: boolean;
+  mode: "idle" | "enter" | "exit";
   onArrived: () => void;
 }) {
   const { camera } = useThree();
   const look = useRef({ x: 0.08, y: 0.28, z: 0.02 });
   const done = useRef(false);
+  const arrived = useRef(onArrived);
+  arrived.current = onArrived;
 
   useEffect(() => {
-    camera.position.set(0.12, 1.05, 1.72);
-    camera.lookAt(0.08, 0.28, 0.02);
-  }, [camera]);
-
-  useEffect(() => {
-    if (!entering) return;
     done.current = false;
-    if (prefersReducedMotion()) {
-      onArrived();
-      return;
+    const reduced = prefersReducedMotion();
+    const tl = buildArcadePortalTimeline(camera, look.current);
+
+    if (mode === "idle") {
+      tl.progress(0);
+      return () => tl.kill();
     }
-    const tl = gsap.timeline({
-      defaults: { ease: "power2.inOut" },
-      onComplete: () => {
-        if (!done.current) {
-          done.current = true;
-          onArrived();
-        }
-      },
-    });
-    tl.to(camera.position, { x: 0.02, y: 0.55, z: 0.85, duration: 0.7 }, 0);
-    tl.to(look.current, { x: 0.02, y: 0.42, z: -0.16, duration: 0.7 }, 0);
-    tl.to(camera.position, { x: 0.02, y: 0.43, z: 0.18, duration: 0.9 }, 0.55);
-    tl.to(look.current, { z: -0.5, duration: 0.9 }, 0.55);
-    tl.to(camera.position, { z: -0.05, duration: 0.55, ease: "power3.in" }, 1.35);
+
+    if (reduced) {
+      if (mode === "enter") tl.progress(1);
+      else tl.progress(0);
+      arrived.current();
+      return () => tl.kill();
+    }
+
+    const finish = () => {
+      if (!done.current) {
+        done.current = true;
+        arrived.current();
+      }
+    };
+
+    if (mode === "enter") {
+      tl.eventCallback("onComplete", finish);
+      tl.play(0);
+    } else {
+      tl.progress(1);
+      tl.eventCallback("onReverseComplete", finish);
+      tl.reverse();
+    }
+
     return () => {
       tl.kill();
     };
-  }, [camera, entering, onArrived]);
+  }, [camera, mode]);
 
   useFrame(() => {
     camera.lookAt(look.current.x, look.current.y, look.current.z);
@@ -60,26 +70,32 @@ function CameraRig({
 }
 
 function Room() {
+  const wood = useMemo(() => woodAlbedo(), []);
+  const concrete = useMemo(() => concreteAlbedo(), []);
   return (
     <>
-      <mesh position={[0, 0.9, -1.35]} receiveShadow>
-        <planeGeometry args={[8, 4]} />
-        <meshStandardMaterial color="#2a2a2c" roughness={0.95} />
+      <mesh position={[0, 0.85, -1.15]} receiveShadow>
+        <planeGeometry args={[6, 3.2]} />
+        <meshStandardMaterial map={concrete} roughness={0.94} metalness={0.02} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0.12]} receiveShadow>
-        <boxGeometry args={[2.6, 1.5, 0.06]} />
-        <meshStandardMaterial color="#c9ae86" roughness={0.78} metalness={0.04} />
+      <mesh position={[0, 0.025, 0.1]} receiveShadow castShadow>
+        <boxGeometry args={[1.72, 0.05, 0.92]} />
+        <meshStandardMaterial map={wood} roughness={0.72} metalness={0.04} />
+      </mesh>
+      <mesh position={[0, -0.01, 0.1]}>
+        <boxGeometry args={[1.7, 0.02, 0.9]} />
+        <meshStandardMaterial color="#8a6d45" roughness={0.8} />
       </mesh>
     </>
   );
 }
 
 export function ArcadeScene({
-  entering,
-  onEntered,
+  mode,
+  onArrived,
 }: {
-  entering: boolean;
-  onEntered: () => void;
+  mode: "idle" | "enter" | "exit";
+  onArrived: () => void;
 }) {
   const reduced = prefersReducedMotion();
 
@@ -88,28 +104,28 @@ export function ArcadeScene({
       shadows
       dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-      camera={{ fov: 36, near: 0.05, far: 16, position: [0.12, 1.05, 1.72] }}
+      camera={{ fov: 34, near: 0.05, far: 16, position: [0.12, 1.05, 1.72] }}
       style={{ width: "100%", height: "100%" }}
     >
       <color attach="background" args={["#1c1c1e"]} />
-      <hemisphereLight args={["#c8c4bc", "#3a3228", 0.55]} />
+      <hemisphereLight args={["#d2cdc4", "#3a3228", 0.5]} />
       <directionalLight
-        position={[0.6, 2.4, 1.4]}
-        intensity={1.25}
+        position={[0.55, 2.2, 1.35]}
+        intensity={1.2}
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
-      <ambientLight intensity={0.22} />
+      <ambientLight intensity={0.2} />
       <Room />
       <PcCase reduced={reduced} />
       <Monitor reduced={reduced} />
-      <Speaker position={[-0.48, 0.1, -0.08]} />
-      <Speaker position={[0.52, 0.1, -0.08]} />
+      <Speaker position={[-0.5, 0.12, -0.08]} />
+      <Speaker position={[0.54, 0.12, -0.08]} />
       <Keyboard reduced={reduced} />
       <MousePad />
       <Mouse reduced={reduced} />
-      <ContactShadows position={[0, 0.032, 0.12]} opacity={0.35} scale={3.4} blur={2.6} far={1.6} />
-      <CameraRig entering={entering} onArrived={onEntered} />
+      <ContactShadows position={[0, 0.052, 0.1]} opacity={0.38} scale={2.4} blur={2.4} far={1.2} />
+      <CameraRig mode={mode} onArrived={onArrived} />
     </Canvas>
   );
 }

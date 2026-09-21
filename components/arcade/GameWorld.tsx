@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { trackEvent } from "@/lib/analytics/client";
 import { arcadeGames, futureCabinets } from "@/lib/arcade/registry";
+import { ARCADE_EXIT_FLAG } from "@/lib/arcade/portal";
 import type { ArcadeGameId } from "@/lib/arcade/gameTypes";
 
 const RockPaperScissors = dynamic(() =>
@@ -22,6 +23,7 @@ export function GameWorld() {
   const [game, setGame] = useState<ArcadeGameId | null>(null);
 
   const exit = useCallback(() => {
+    sessionStorage.setItem(ARCADE_EXIT_FLAG, "exit");
     router.push("/#arcade");
   }, [router]);
 

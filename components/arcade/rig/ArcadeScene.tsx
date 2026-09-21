@@ -114,7 +114,7 @@ export function ArcadeScene({
   return (
     <Canvas
       shadows
-      dpr={[1, 1.5]}
+      dpr={[1, 2]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       camera={{ fov: 34, near: 0.05, far: 16, position: [0.12, 1.05, 1.72] }}
       style={{ width: "100%", height: "100%" }}
@@ -123,16 +123,16 @@ export function ArcadeScene({
       <hemisphereLight args={["#d2cdc4", "#3a3228", 0.5]} />
       <directionalLight
         position={[0.55, 2.2, 1.35]}
-        intensity={1.2}
+        intensity={1.15}
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[2048, 2048]}
       />
-      <ambientLight intensity={0.2} />
+      <ambientLight intensity={0.22} />
       <Room />
       <PcCase reduced={reduced} />
       <Monitor reduced={reduced} />
-      <Speaker position={[-0.5, 0.12, -0.08]} />
-      <Speaker position={[0.54, 0.12, -0.08]} />
+      <Speaker position={[-0.48, 0.148, -0.05]} />
+      <Speaker position={[0.26, 0.148, -0.05]} />
       <Keyboard reduced={reduced} />
       <MousePad />
       <Mouse reduced={reduced} />

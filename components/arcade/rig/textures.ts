@@ -22,46 +22,48 @@ function wrap(tex: CanvasTexture, repeat = 2) {
 }
 
 export function woodAlbedo() {
-  const { node, ctx } = canvas(512);
-  ctx.fillStyle = "#c9ae82";
-  ctx.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 90; i += 1) {
-    const y = (i / 90) * 512;
-    ctx.strokeStyle = `rgba(90, 60, 28, ${0.04 + (i % 7) * 0.012})`;
-    ctx.lineWidth = 1 + (i % 3);
+  const size = 1024;
+  const { node, ctx } = canvas(size);
+  ctx.fillStyle = "#cbb086";
+  ctx.fillRect(0, 0, size, size);
+  for (let i = 0; i < 160; i += 1) {
+    const y = (i / 160) * size;
+    ctx.strokeStyle = `rgba(92, 58, 24, ${0.035 + (i % 9) * 0.01})`;
+    ctx.lineWidth = 1 + (i % 4) * 0.4;
     ctx.beginPath();
     ctx.moveTo(0, y);
-    ctx.bezierCurveTo(120, y + 4, 280, y - 5, 512, y + 2);
+    ctx.bezierCurveTo(size * 0.25, y + 6, size * 0.6, y - 7, size, y + 3);
     ctx.stroke();
   }
-  for (let i = 0; i < 400; i += 1) {
-    ctx.fillStyle = `rgba(70, 45, 20, ${Math.random() * 0.06})`;
-    ctx.fillRect(Math.random() * 512, Math.random() * 512, 1.2, 6);
+  for (let i = 0; i < 1200; i += 1) {
+    ctx.fillStyle = `rgba(70, 42, 16, ${Math.random() * 0.07})`;
+    ctx.fillRect(Math.random() * size, Math.random() * size, 1.4, 8);
+  }
+  return wrap(new CanvasTexture(node), 2.4);
+}
+
+export function concreteAlbedo() {
+  const size = 1024;
+  const { node, ctx } = canvas(size);
+  ctx.fillStyle = "#2d2d30";
+  ctx.fillRect(0, 0, size, size);
+  for (let i = 0; i < 6000; i += 1) {
+    const n = 38 + Math.random() * 48;
+    ctx.fillStyle = `rgb(${n},${n},${n + 5})`;
+    ctx.fillRect(Math.random() * size, Math.random() * size, 2, 2);
   }
   return wrap(new CanvasTexture(node), 3);
 }
 
-export function concreteAlbedo() {
-  const { node, ctx } = canvas(512);
-  ctx.fillStyle = "#2c2c2e";
-  ctx.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 1800; i += 1) {
-    const n = 40 + Math.random() * 40;
-    ctx.fillStyle = `rgb(${n},${n},${n + 4})`;
-    ctx.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
-  }
-  return wrap(new CanvasTexture(node), 4);
-}
-
 export function hexPadAlbedo() {
-  const { node, ctx } = canvas(256);
-  ctx.fillStyle = "#0b0c12";
-  ctx.fillRect(0, 0, 256, 256);
-  ctx.strokeStyle = "rgba(168, 85, 247, 0.55)";
-  ctx.lineWidth = 2;
-  const s = 22;
-  for (let y = 0; y < 280; y += s * 1.6) {
-    for (let x = 0; x < 280; x += s * 1.8) {
+  const { node, ctx } = canvas(512);
+  ctx.fillStyle = "#090a10";
+  ctx.fillRect(0, 0, 512, 512);
+  ctx.strokeStyle = "rgba(168, 85, 247, 0.62)";
+  ctx.lineWidth = 2.2;
+  const s = 28;
+  for (let y = 0; y < 560; y += s * 1.6) {
+    for (let x = 0; x < 560; x += s * 1.8) {
       const ox = (Math.floor(y / (s * 1.6)) % 2) * (s * 0.9);
       ctx.beginPath();
       for (let i = 0; i < 6; i += 1) {
@@ -79,31 +81,47 @@ export function hexPadAlbedo() {
 }
 
 export function metalAlbedo() {
-  const { node, ctx } = canvas(256);
-  const g = ctx.createLinearGradient(0, 0, 256, 0);
-  g.addColorStop(0, "#1a1b22");
-  g.addColorStop(0.5, "#2a2c34");
-  g.addColorStop(1, "#17181e");
+  const { node, ctx } = canvas(512);
+  const g = ctx.createLinearGradient(0, 0, 512, 0);
+  g.addColorStop(0, "#14151b");
+  g.addColorStop(0.5, "#2c2e36");
+  g.addColorStop(1, "#121318");
   ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 80; i += 1) {
-    ctx.fillStyle = `rgba(255,255,255,${0.02 + Math.random() * 0.03})`;
-    ctx.fillRect(0, i * 3.2, 256, 1);
+  ctx.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 170; i += 1) {
+    ctx.fillStyle = `rgba(255,255,255,${0.015 + Math.random() * 0.03})`;
+    ctx.fillRect(0, i * 3, 512, 1);
   }
-  return wrap(new CanvasTexture(node), 2);
+  return wrap(new CanvasTexture(node), 1.6);
 }
 
 export function grilleAlbedo() {
-  const { node, ctx } = canvas(128);
-  ctx.fillStyle = "#111216";
-  ctx.fillRect(0, 0, 128, 128);
-  ctx.fillStyle = "#2a2b32";
-  for (let y = 4; y < 128; y += 8) {
-    for (let x = 4; x < 128; x += 8) {
+  const { node, ctx } = canvas(256);
+  ctx.fillStyle = "#101114";
+  ctx.fillRect(0, 0, 256, 256);
+  ctx.fillStyle = "#2c2d35";
+  for (let y = 5; y < 256; y += 9) {
+    for (let x = 5; x < 256; x += 9) {
       ctx.beginPath();
-      ctx.arc(x, y, 2.1, 0, Math.PI * 2);
+      ctx.arc(x, y, 2.4, 0, Math.PI * 2);
       ctx.fill();
     }
   }
   return wrap(new CanvasTexture(node), 2);
+}
+
+export function pcbAlbedo() {
+  const { node, ctx } = canvas(512);
+  ctx.fillStyle = "#0d2a18";
+  ctx.fillRect(0, 0, 512, 512);
+  ctx.strokeStyle = "rgba(34, 197, 94, 0.28)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 40; i += 1) {
+    ctx.strokeRect(12 + (i % 8) * 60, 18 + Math.floor(i / 8) * 90, 48, 22);
+  }
+  ctx.fillStyle = "#c9a227";
+  for (let i = 0; i < 80; i += 1) {
+    ctx.fillRect(20 + (i % 16) * 30, 40 + Math.floor(i / 16) * 90, 4, 4);
+  }
+  return wrap(new CanvasTexture(node), 1);
 }

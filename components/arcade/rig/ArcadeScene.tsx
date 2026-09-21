@@ -6,9 +6,10 @@ import { ContactShadows } from "@react-three/drei";
 import { prefersReducedMotion } from "@/lib/motion/engine";
 import { buildArcadePortalTimeline } from "@/lib/arcade/portal";
 import { Keyboard } from "./Keyboard";
-import { Monitor, Speaker } from "./Monitor";
+import { Monitor } from "./Monitor";
 import { Mouse, MousePad } from "./Mouse";
 import { PcCase } from "./PcCase";
+import { Speaker } from "./Speakers";
 import { concreteAlbedo, woodAlbedo } from "./textures";
 
 function CameraRig({
@@ -82,6 +83,17 @@ function Room() {
         <boxGeometry args={[1.72, 0.05, 0.92]} />
         <meshStandardMaterial map={wood} roughness={0.72} metalness={0.04} />
       </mesh>
+      {[
+        [-0.78, -0.12, 0.48],
+        [0.78, -0.12, 0.48],
+        [-0.78, -0.12, -0.28],
+        [0.78, -0.12, -0.28],
+      ].map((p) => (
+        <mesh key={p.join(",")} position={p as [number, number, number]}>
+          <boxGeometry args={[0.05, 0.22, 0.05]} />
+          <meshStandardMaterial color="#5c4630" roughness={0.75} />
+        </mesh>
+      ))}
       <mesh position={[0, -0.01, 0.1]}>
         <boxGeometry args={[1.7, 0.02, 0.9]} />
         <meshStandardMaterial color="#8a6d45" roughness={0.8} />

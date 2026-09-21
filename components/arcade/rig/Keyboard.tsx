@@ -47,6 +47,10 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
         <boxGeometry args={[0.46, 0.018, 0.16]} />
         <meshStandardMaterial color="#0e0f14" metalness={0.4} roughness={0.48} />
       </mesh>
+      <mesh position={[0, 0.01, 0]}>
+        <boxGeometry args={[0.438, 0.002, 0.138]} />
+        <meshStandardMaterial color="#7c3aed" emissive="#a855f7" emissiveIntensity={0.55} />
+      </mesh>
       <instancedMesh ref={mesh} args={[undefined, undefined, layout.length]} castShadow>
         <boxGeometry args={[0.022, 0.01, 0.02]} />
         <meshStandardMaterial color="#14151a" roughness={0.5} metalness={0.15} />

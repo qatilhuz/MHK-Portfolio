@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { ShaderMaterial } from "three";
-import { grilleAlbedo, metalAlbedo } from "./textures";
+import { metalAlbedo } from "./textures";
 
 const vertex = `
 varying vec2 vUv;
@@ -61,6 +61,10 @@ export function Monitor({ reduced }: { reduced?: boolean }) {
         <planeGeometry args={[0.9, 0.5]} />
         <meshPhysicalMaterial color="#9ecfff" transparent opacity={0.07} roughness={0.04} metalness={0} />
       </mesh>
+      <mesh position={[0, 0.01, -0.028]}>
+        <boxGeometry args={[0.9, 0.5, 0.04]} />
+        <meshStandardMaterial map={metal} color="#0c0d12" metalness={0.5} roughness={0.42} />
+      </mesh>
       <mesh position={[0, -0.248, 0.0178]}>
         <planeGeometry args={[0.9, 0.03]} />
         <meshStandardMaterial color="#15161c" />
@@ -74,31 +78,6 @@ export function Monitor({ reduced }: { reduced?: boolean }) {
         <meshStandardMaterial map={metal} color="#24252c" metalness={0.5} roughness={0.4} />
       </mesh>
       <pointLight position={[0, 0.04, 0.32]} intensity={0.6} distance={1.7} color="#c026d3" />
-    </group>
-  );
-}
-
-export function Speaker({ position }: { position: [number, number, number] }) {
-  const grille = useMemo(() => grilleAlbedo(), []);
-  const metal = useMemo(() => metalAlbedo(), []);
-  return (
-    <group position={position}>
-      <mesh castShadow>
-        <boxGeometry args={[0.078, 0.14, 0.078]} />
-        <meshStandardMaterial map={metal} color="#14151b" roughness={0.48} metalness={0.28} />
-      </mesh>
-      <mesh position={[0, 0.018, 0.04]}>
-        <circleGeometry args={[0.026, 24]} />
-        <meshStandardMaterial map={grille} color="#1a1b22" roughness={0.7} />
-      </mesh>
-      <mesh position={[0, 0.018, 0.041]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.022, 0.0032, 10, 24]} />
-        <meshStandardMaterial color="#a855f7" emissive="#c084fc" emissiveIntensity={1.15} />
-      </mesh>
-      <mesh position={[0, -0.04, 0.04]}>
-        <circleGeometry args={[0.01, 16]} />
-        <meshStandardMaterial color="#0ea5e9" emissive="#22d3ee" emissiveIntensity={0.8} />
-      </mesh>
     </group>
   );
 }

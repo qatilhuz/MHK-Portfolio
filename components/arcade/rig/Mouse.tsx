@@ -8,9 +8,9 @@ import { hexPadAlbedo } from "./textures";
 export function MousePad() {
   const hex = useMemo(() => hexPadAlbedo(), []);
   return (
-    <mesh position={[0.36, 0.037, 0.29]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-      <planeGeometry args={[0.32, 0.24]} />
-      <meshStandardMaterial map={hex} roughness={0.88} metalness={0.04} />
+    <mesh position={[0.34, 0.052, 0.28]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <planeGeometry args={[0.34, 0.26]} />
+      <meshStandardMaterial map={hex} roughness={0.9} metalness={0.03} />
     </mesh>
   );
 }
@@ -20,34 +20,40 @@ export function Mouse({ reduced }: { reduced?: boolean }) {
 
   useFrame((state) => {
     if (!led.current || reduced) return;
-    led.current.emissiveIntensity = 0.6 + 0.5 * (0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 2.1));
+    led.current.emissiveIntensity = 0.65 + 0.45 * (0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 2));
   });
 
   return (
-    <group position={[0.36, 0.062, 0.29]} rotation={[0.12, -0.38, 0]} scale={1.72}>
+    <group position={[0.34, 0.078, 0.27]} rotation={[0.16, -0.42, 0.04]} scale={1.9}>
       <mesh castShadow>
-        <capsuleGeometry args={[0.02, 0.058, 7, 16]} />
-        <meshStandardMaterial color="#1c1016" roughness={0.48} metalness={0.16} />
+        <sphereGeometry args={[0.028, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.62]} />
+        <meshStandardMaterial color="#1a1218" roughness={0.52} metalness={0.12} />
       </mesh>
-      <mesh position={[-0.01, 0.012, 0.012]} castShadow>
-        <boxGeometry args={[0.018, 0.006, 0.03]} />
-        <meshStandardMaterial color="#2a141c" roughness={0.38} />
+      <mesh position={[0, 0.004, 0.01]} scale={[1.05, 0.55, 1.35]} castShadow>
+        <sphereGeometry args={[0.022, 18, 14]} />
+        <meshStandardMaterial color="#24141c" roughness={0.48} metalness={0.1} />
       </mesh>
-      <mesh position={[0.01, 0.012, 0.012]} castShadow>
-        <boxGeometry args={[0.018, 0.006, 0.03]} />
-        <meshStandardMaterial color="#2a141c" roughness={0.38} />
+      <mesh position={[-0.011, 0.012, 0.012]}>
+        <boxGeometry args={[0.018, 0.005, 0.028]} />
+        <meshStandardMaterial color="#2c1820" roughness={0.36} />
+      </mesh>
+      <mesh position={[0.011, 0.012, 0.012]}>
+        <boxGeometry args={[0.018, 0.005, 0.028]} />
+        <meshStandardMaterial color="#2c1820" roughness={0.36} />
       </mesh>
       <mesh position={[0, 0.016, 0.01]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.0055, 0.0055, 0.014, 14]} />
-        <meshStandardMaterial color="#3a3b44" metalness={0.55} roughness={0.28} />
+        <cylinderGeometry args={[0.006, 0.006, 0.016, 16]} />
+        <meshStandardMaterial color="#3f414c" metalness={0.58} roughness={0.26} />
       </mesh>
-      <mesh position={[-0.02, 0.002, 0.004]}>
-        <boxGeometry args={[0.005, 0.012, 0.014]} />
-        <meshStandardMaterial color="#1a1b22" roughness={0.55} />
-      </mesh>
-      <mesh position={[0, -0.018, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.018, 0.0018, 8, 22]} />
-        <meshStandardMaterial ref={led} color="#ef4444" emissive="#f43f5e" emissiveIntensity={0.9} />
+      {[-0.022, -0.022].map((x, i) => (
+        <mesh key={i} position={[x, 0.002, 0.002 - i * 0.012]}>
+          <boxGeometry args={[0.005, 0.01, 0.01]} />
+          <meshStandardMaterial color="#1a1b22" roughness={0.6} />
+        </mesh>
+      ))}
+      <mesh position={[0, -0.012, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.02, 0.002, 8, 24]} />
+        <meshStandardMaterial ref={led} color="#fb7185" emissive="#fb7185" emissiveIntensity={0.95} />
       </mesh>
     </group>
   );

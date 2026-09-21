@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
 import { prefersReducedMotion } from "@/lib/motion/engine";
 import { buildArcadePortalTimeline } from "@/lib/arcade/portal";
+import { DESK_SIZE, SPEAKER_LEFT, SPEAKER_RIGHT } from "@/lib/arcade/layout";
 import { Keyboard } from "./Keyboard";
 import { Monitor } from "./Monitor";
 import { Mouse, MousePad } from "./Mouse";
@@ -80,14 +81,14 @@ function Room() {
         <meshStandardMaterial map={concrete} roughness={0.94} metalness={0.02} />
       </mesh>
       <mesh position={[0, 0.025, 0.1]} receiveShadow castShadow>
-        <boxGeometry args={[1.72, 0.05, 0.92]} />
+        <boxGeometry args={DESK_SIZE} />
         <meshStandardMaterial map={wood} roughness={0.72} metalness={0.04} />
       </mesh>
       {[
-        [-0.78, -0.12, 0.48],
-        [0.78, -0.12, 0.48],
-        [-0.78, -0.12, -0.28],
-        [0.78, -0.12, -0.28],
+        [-0.9, -0.12, 0.5],
+        [0.9, -0.12, 0.5],
+        [-0.9, -0.12, -0.28],
+        [0.9, -0.12, -0.28],
       ].map((p) => (
         <mesh key={p.join(",")} position={p as [number, number, number]}>
           <boxGeometry args={[0.05, 0.22, 0.05]} />
@@ -95,7 +96,7 @@ function Room() {
         </mesh>
       ))}
       <mesh position={[0, -0.01, 0.1]}>
-        <boxGeometry args={[1.7, 0.02, 0.9]} />
+        <boxGeometry args={[1.98, 0.02, 0.96]} />
         <meshStandardMaterial color="#8a6d45" roughness={0.8} />
       </mesh>
     </>
@@ -131,8 +132,8 @@ export function ArcadeScene({
       <Room />
       <PcCase reduced={reduced} />
       <Monitor reduced={reduced} />
-      <Speaker position={[-0.48, 0.148, -0.05]} />
-      <Speaker position={[0.26, 0.148, -0.05]} />
+      <Speaker position={SPEAKER_LEFT} />
+      <Speaker position={SPEAKER_RIGHT} />
       <Keyboard reduced={reduced} />
       <MousePad />
       <Mouse reduced={reduced} />

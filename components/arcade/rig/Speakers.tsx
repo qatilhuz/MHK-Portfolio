@@ -9,40 +9,50 @@ export function Speaker({ position }: { position: [number, number, number] }) {
 
   return (
     <group position={position}>
-      <mesh castShadow position={[0, 0.01, -0.006]} scale={[1, 1, 0.92]}>
-        <boxGeometry args={[0.08, 0.168, 0.092]} />
-        <meshStandardMaterial map={metal} color="#17181e" roughness={0.5} metalness={0.22} />
+      <mesh castShadow>
+        <boxGeometry args={[0.088, 0.175, 0.1]} />
+        <meshStandardMaterial map={metal} color="#18191f" roughness={0.52} metalness={0.18} />
       </mesh>
-      <mesh position={[0, 0.034, 0.046]}>
-        <circleGeometry args={[0.03, 32]} />
-        <meshStandardMaterial map={grille} color="#1b1c22" roughness={0.78} />
+      <mesh position={[0, 0.004, 0.042]}>
+        <boxGeometry args={[0.076, 0.15, 0.018]} />
+        <meshStandardMaterial color="#101114" roughness={0.7} metalness={0.08} />
       </mesh>
-      <mesh position={[0, 0.034, 0.047]}>
-        <circleGeometry args={[0.012, 20]} />
+      <mesh position={[0, 0.028, 0.052]}>
+        <circleGeometry args={[0.028, 32]} />
+        <meshStandardMaterial map={grille} color="#1c1d24" roughness={0.82} />
+      </mesh>
+      <mesh position={[0, 0.028, 0.054]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.016, 0.01, 24]} />
         <meshStandardMaterial color="#111827" roughness={0.55} />
       </mesh>
-      <mesh position={[0, 0.034, 0.048]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.026, 0.0028, 10, 28]} />
-        <meshStandardMaterial color="#a855f7" emissive="#c084fc" emissiveIntensity={0.95} />
+      <mesh position={[0, 0.028, 0.053]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.026, 0.0024, 10, 28]} />
+        <meshStandardMaterial color="#374151" metalness={0.4} roughness={0.35} />
       </mesh>
-      <mesh position={[0, -0.038, 0.046]}>
-        <circleGeometry args={[0.015, 24]} />
-        <meshStandardMaterial map={grille} color="#22232a" roughness={0.7} />
+      <mesh position={[0, -0.042, 0.052]}>
+        <circleGeometry args={[0.013, 24]} />
+        <meshStandardMaterial map={grille} color="#25262e" roughness={0.75} />
       </mesh>
-      <mesh position={[0, -0.038, 0.048]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.013, 0.002, 8, 20]} />
-        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.7} />
+      <mesh position={[0, -0.042, 0.054]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.007, 0.007, 16]} />
+        <meshStandardMaterial color="#0f172a" roughness={0.5} />
       </mesh>
-      <mesh position={[0, -0.09, 0]}>
-        <boxGeometry args={[0.086, 0.012, 0.096]} />
-        <meshStandardMaterial color="#0b0c10" roughness={0.82} />
+      <mesh position={[0, 0.078, 0.051]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.03, 0.0018, 8, 24]} />
+        <meshStandardMaterial color="#a855f7" emissive="#c084fc" emissiveIntensity={0.7} />
       </mesh>
-      {[-0.028, 0.028].map((x) => (
-        <mesh key={x} position={[x, -0.098, 0.02]}>
-          <cylinderGeometry args={[0.006, 0.007, 0.008, 10]} />
-          <meshStandardMaterial color="#111827" roughness={0.7} />
-        </mesh>
-      ))}
+      <mesh position={[0, -0.094, 0]}>
+        <boxGeometry args={[0.094, 0.012, 0.104]} />
+        <meshStandardMaterial color="#0b0c10" roughness={0.85} />
+      </mesh>
+      {[-0.03, 0.03].map((x) =>
+        [-0.03, 0.03].map((z) => (
+          <mesh key={`${x}${z}`} position={[x, -0.102, z]}>
+            <cylinderGeometry args={[0.006, 0.007, 0.008, 10]} />
+            <meshStandardMaterial color="#111827" roughness={0.75} />
+          </mesh>
+        )),
+      )}
     </group>
   );
 }

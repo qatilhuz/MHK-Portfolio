@@ -4,45 +4,44 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { MeshStandardMaterial } from "three";
 
+export function MousePad() {
+  return (
+    <mesh position={[0.38, 0.034, 0.3]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <planeGeometry args={[0.28, 0.22]} />
+      <meshStandardMaterial color="#0b0c12" roughness={0.85} metalness={0.05} />
+    </mesh>
+  );
+}
+
 export function Mouse({ reduced }: { reduced?: boolean }) {
   const led = useRef<MeshStandardMaterial>(null);
 
   useFrame((state) => {
     if (!led.current || reduced) return;
-    const t = (Math.sin(state.clock.elapsedTime * 2) + 1) / 2;
-    led.current.emissiveIntensity = 0.5 + t * 0.8;
+    led.current.emissiveIntensity = 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 2.2));
   });
 
   return (
-    <group position={[0.48, 0.028, 0.22]} rotation={[0.08, -0.35, 0]}>
+    <group position={[0.38, 0.052, 0.3]} rotation={[0.1, -0.4, 0]}>
       <mesh castShadow>
-        <capsuleGeometry args={[0.018, 0.052, 6, 14]} />
-        <meshStandardMaterial color="#14151b" roughness={0.55} metalness={0.2} />
+        <capsuleGeometry args={[0.017, 0.05, 6, 14]} />
+        <meshStandardMaterial color="#1a0f14" roughness={0.5} metalness={0.18} />
       </mesh>
-      <mesh position={[-0.008, 0.01, 0.012]} castShadow>
-        <boxGeometry args={[0.016, 0.006, 0.028]} />
-        <meshStandardMaterial color="#1a1b22" roughness={0.45} />
+      <mesh position={[-0.008, 0.01, 0.01]}>
+        <boxGeometry args={[0.015, 0.005, 0.026]} />
+        <meshStandardMaterial color="#221218" roughness={0.4} />
       </mesh>
-      <mesh position={[0.008, 0.01, 0.012]} castShadow>
-        <boxGeometry args={[0.016, 0.006, 0.028]} />
-        <meshStandardMaterial color="#1a1b22" roughness={0.45} />
+      <mesh position={[0.008, 0.01, 0.01]}>
+        <boxGeometry args={[0.015, 0.005, 0.026]} />
+        <meshStandardMaterial color="#221218" roughness={0.4} />
       </mesh>
-      <mesh position={[0, 0.014, 0.01]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.005, 0.005, 0.012, 12]} />
-        <meshStandardMaterial color="#2a2b32" metalness={0.5} roughness={0.35} />
+      <mesh position={[0, 0.013, 0.008]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.0045, 0.0045, 0.011, 12]} />
+        <meshStandardMaterial color="#2a2b32" metalness={0.5} roughness={0.3} />
       </mesh>
-      <mesh position={[-0.018, 0, 0]}>
-        <boxGeometry args={[0.004, 0.01, 0.012]} />
-        <meshStandardMaterial color="#1f2028" />
-      </mesh>
-      <mesh position={[0, -0.016, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.016, 0.0016, 8, 24]} />
-        <meshStandardMaterial
-          ref={led}
-          color="#22d3ee"
-          emissive="#22d3ee"
-          emissiveIntensity={0.9}
-        />
+      <mesh position={[0, -0.015, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.015, 0.0015, 8, 20]} />
+        <meshStandardMaterial ref={led} color="#ef4444" emissive="#ef4444" emissiveIntensity={0.8} />
       </mesh>
     </group>
   );

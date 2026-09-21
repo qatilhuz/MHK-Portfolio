@@ -4,78 +4,69 @@ import { CoolingFan } from "./CoolingFan";
 
 export function PcCase({ reduced }: { reduced?: boolean }) {
   return (
-    <group position={[-0.58, 0.27, -0.08]}>
+    <group position={[0.72, 0.29, -0.06]} rotation={[0, -0.18, 0]}>
       <mesh castShadow receiveShadow>
-        <boxGeometry args={[0.3, 0.52, 0.44]} />
-        <meshStandardMaterial color="#17181e" metalness={0.72} roughness={0.38} />
+        <boxGeometry args={[0.28, 0.56, 0.46]} />
+        <meshStandardMaterial color="#15161c" metalness={0.68} roughness={0.36} />
       </mesh>
-      <mesh position={[0.152, 0.02, 0]} castShadow>
-        <boxGeometry args={[0.006, 0.46, 0.4]} />
+      <mesh position={[-0.142, 0.02, 0]}>
+        <boxGeometry args={[0.006, 0.5, 0.42]} />
         <meshPhysicalMaterial
-          color="#9ecfff"
-          metalness={0.05}
-          roughness={0.04}
-          transmission={0.72}
-          thickness={0.04}
+          color="#b8dcff"
+          metalness={0.04}
+          roughness={0.06}
+          transmission={0.78}
+          thickness={0.03}
           transparent
-          opacity={0.55}
+          opacity={0.42}
           ior={1.45}
         />
       </mesh>
-      <mesh position={[0, 0.255, 0]}>
-        <boxGeometry args={[0.3, 0.012, 0.44]} />
-        <meshStandardMaterial color="#101114" metalness={0.8} roughness={0.32} />
-      </mesh>
-      <group position={[0, -0.24, 0.18]} rotation={[Math.PI / 2, 0, 0]}>
-        <CoolingFan radius={0.05} speed={7} reduced={reduced} />
+      <group position={[0.142, 0.1, 0.08]} rotation={[0, Math.PI / 2, 0]}>
+        <CoolingFan radius={0.058} speed={7.2} reduced={reduced} />
       </group>
-      <group position={[0, -0.02, 0.18]} rotation={[Math.PI / 2, 0, 0]}>
-        <CoolingFan radius={0.05} speed={9} reduced={reduced} />
+      <group position={[0.142, -0.08, 0.08]} rotation={[0, Math.PI / 2, 0]}>
+        <CoolingFan radius={0.058} speed={8.4} reduced={reduced} />
       </group>
-      <group position={[0, 0.2, -0.2]} rotation={[Math.PI / 2, 0, 0]}>
-        <CoolingFan radius={0.042} speed={-6.5} reduced={reduced} />
-      </group>
-
-      <mesh position={[0.02, 0.02, -0.02]}>
-        <boxGeometry args={[0.22, 0.28, 0.28]} />
-        <meshStandardMaterial color="#102418" roughness={0.7} metalness={0.15} />
+      <mesh position={[0.145, -0.22, 0.08]}>
+        <boxGeometry args={[0.01, 0.05, 0.08]} />
+        <meshStandardMaterial color="#050608" emissive="#22d3ee" emissiveIntensity={0.35} />
       </mesh>
-      <mesh position={[0.08, 0.12, -0.02]}>
-        <boxGeometry args={[0.018, 0.08, 0.12]} />
-        <meshStandardMaterial color="#3b82f6" emissive="#2563eb" emissiveIntensity={0.35} />
+      <mesh position={[0.02, 0.06, -0.02]}>
+        <boxGeometry args={[0.2, 0.26, 0.3]} />
+        <meshStandardMaterial color="#0f2418" roughness={0.72} metalness={0.12} />
       </mesh>
-      <mesh position={[0.1, 0.12, 0.04]}>
-        <boxGeometry args={[0.012, 0.07, 0.028]} />
-        <meshStandardMaterial color="#c4c4cc" metalness={0.4} roughness={0.4} />
+      <mesh position={[0.04, 0.14, 0.04]}>
+        <boxGeometry args={[0.012, 0.07, 0.03]} />
+        <meshStandardMaterial color="#c9c9d1" metalness={0.45} roughness={0.35} />
       </mesh>
-      <mesh position={[0.1, 0.12, 0.075]}>
-        <boxGeometry args={[0.012, 0.07, 0.028]} />
-        <meshStandardMaterial color="#c4c4cc" metalness={0.4} roughness={0.4} />
+      <mesh position={[0.04, 0.14, 0.08]}>
+        <boxGeometry args={[0.012, 0.07, 0.03]} />
+        <meshStandardMaterial color="#c9c9d1" metalness={0.45} roughness={0.35} />
       </mesh>
-
-      <group position={[0.02, -0.06, 0.02]}>
+      <group position={[0.0, -0.04, 0.02]}>
         <mesh>
-          <boxGeometry args={[0.24, 0.05, 0.3]} />
-          <meshStandardMaterial color="#0d0e12" metalness={0.55} roughness={0.4} />
+          <boxGeometry args={[0.22, 0.05, 0.28]} />
+          <meshStandardMaterial color="#0c0d12" metalness={0.5} roughness={0.4} />
         </mesh>
-        <group position={[0.08, 0.028, 0.04]} rotation={[Math.PI / 2, 0, 0]}>
-          <CoolingFan radius={0.028} speed={11} reduced={reduced} />
-        </group>
-        <group position={[0.08, 0.028, -0.05]} rotation={[Math.PI / 2, 0, 0]}>
-          <CoolingFan radius={0.028} speed={10} reduced={reduced} />
+        <group position={[0.08, 0.03, 0.04]} rotation={[Math.PI / 2, 0, 0]}>
+          <CoolingFan radius={0.026} speed={12} reduced={reduced} />
         </group>
       </group>
-
-      <mesh position={[0, -0.2, 0]}>
-        <boxGeometry args={[0.28, 0.08, 0.4]} />
-        <meshStandardMaterial color="#121318" metalness={0.5} roughness={0.5} />
+      <mesh position={[0, -0.22, 0]}>
+        <boxGeometry args={[0.26, 0.1, 0.42]} />
+        <meshStandardMaterial color="#101114" metalness={0.45} roughness={0.5} />
       </mesh>
-      <mesh position={[0, 0.02, 0.221]}>
-        <boxGeometry args={[0.22, 0.008, 0.004]} />
-        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={1.2} />
+      <mesh position={[0.02, 0.29, -0.16]}>
+        <cylinderGeometry args={[0.004, 0.004, 0.12, 8]} />
+        <meshStandardMaterial color="#1a1b20" />
       </mesh>
-      <pointLight position={[0.08, 0.04, 0]} intensity={0.55} distance={0.7} color="#22d3ee" />
-      <pointLight position={[-0.04, -0.04, 0.05]} intensity={0.35} distance={0.55} color="#c084fc" />
+      <mesh position={[-0.02, 0.29, -0.16]}>
+        <cylinderGeometry args={[0.004, 0.004, 0.12, 8]} />
+        <meshStandardMaterial color="#1a1b20" />
+      </mesh>
+      <pointLight position={[0, 0.05, 0]} intensity={0.7} distance={0.8} color="#c084fc" />
+      <pointLight position={[0.1, 0.08, 0.1]} intensity={0.45} distance={0.6} color="#22d3ee" />
     </group>
   );
 }

@@ -10,34 +10,31 @@ const tint = new Color();
 export function Keyboard({ reduced }: { reduced?: boolean }) {
   const mesh = useRef<InstancedMesh>(null);
   const layout = useMemo(() => {
-    const keys: [number, number, number, number][] = [];
-    const rows = [14, 14, 13, 12, 1];
+    const keys: [number, number][] = [];
+    const rows = [15, 14, 13, 12];
     rows.forEach((count, row) => {
-      const z = 0.055 - row * 0.026;
-      if (row === 4) {
-        keys.push([0, 0.012, 0.08, 0.034]);
-        return;
-      }
-      const width = 0.4;
-      const start = -width / 2 + 0.014;
+      const z = 0.058 - row * 0.024;
+      const start = -0.2 + (15 - count) * 0.013;
       for (let col = 0; col < count; col += 1) {
-        keys.push([start + col * 0.028, z, 0.022, 0.02]);
-        i += 1;
+        keys.push([start + col * 0.027, z]);
       }
     });
+    keys.push([0, -0.048]);
     return keys;
   }, []);
 
   useFrame((state) => {
     const node = mesh.current;
     if (!node) return;
+    const t = state.clock.elapsedTime;
     layout.forEach((key, index) => {
-      dummy.position.set(key[0], 0.012, key[1]);
-      dummy.scale.set(1, 1, 1);
+      const isSpace = index === layout.length - 1;
+      dummy.position.set(key[0], 0.011, key[1]);
+      dummy.scale.set(isSpace ? 4.2 : 1, 1, isSpace ? 1.15 : 1);
       dummy.updateMatrix();
       node.setMatrixAt(index, dummy.matrix);
-      const wave = reduced ? 0.3 : 0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 1.6 + index * 0.28);
-      tint.setHSL((0.52 + wave * 0.18) % 1, 0.75, 0.48);
+      const wave = reduced ? 0.45 : 0.5 + 0.5 * Math.sin(t * 1.8 + key[0] * 14 + key[1] * 10);
+      tint.setHSL((0.72 + wave * 0.22) % 1, 0.85, 0.52);
       node.setColorAt(index, tint);
     });
     node.instanceMatrix.needsUpdate = true;
@@ -45,20 +42,16 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
   });
 
   return (
-    <group position={[0.18, 0.02, 0.22]}>
+    <group position={[0.02, 0.042, 0.28]} rotation={[0.04, 0, 0]}>
       <mesh receiveShadow castShadow>
-        <boxGeometry args={[0.46, 0.016, 0.16]} />
-        <meshStandardMaterial color="#121318" metalness={0.35} roughness={0.55} />
-      </mesh>
-      <mesh position={[0, 0.009, 0.072]}>
-        <boxGeometry args={[0.46, 0.004, 0.016]} />
-        <meshStandardMaterial color="#0c0d11" roughness={0.6} />
+        <boxGeometry args={[0.46, 0.018, 0.16]} />
+        <meshStandardMaterial color="#0e0f14" metalness={0.4} roughness={0.48} />
       </mesh>
       <instancedMesh ref={mesh} args={[undefined, undefined, layout.length]} castShadow>
-        <boxGeometry args={[0.02, 0.012, 0.018]} />
-        <meshStandardMaterial color="#16171c" roughness={0.55} metalness={0.12} />
+        <boxGeometry args={[0.022, 0.01, 0.02]} />
+        <meshStandardMaterial color="#14151a" roughness={0.5} metalness={0.15} />
       </instancedMesh>
-      <pointLight position={[0, 0.04, 0]} intensity={0.28} distance={0.5} color="#60a5fa" />
+      <pointLight position={[0, 0.03, 0]} intensity={0.4} distance={0.55} color="#c084fc" />
     </group>
   );
 }

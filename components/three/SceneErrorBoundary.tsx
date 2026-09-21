@@ -8,7 +8,7 @@ interface State {
 }
 
 export class SceneErrorBoundary extends Component<
-  { children: ReactNode },
+  { children: ReactNode; fallback?: ReactNode },
   State
 > {
   state: State = { failed: false };
@@ -17,9 +17,13 @@ export class SceneErrorBoundary extends Component<
     return { failed: true };
   }
 
+  componentDidCatch(error: Error) {
+    console.error("[3D scene]", error);
+  }
+
   render() {
     if (this.state.failed) {
-      return <WorkspaceFallback />;
+      return this.props.fallback ?? <WorkspaceFallback />;
     }
     return this.props.children;
   }

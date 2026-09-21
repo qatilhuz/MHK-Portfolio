@@ -5,9 +5,13 @@ import { useEffect, useState } from "react";
 export function detectWebGL(): boolean {
   try {
     const canvas = document.createElement("canvas");
-    return Boolean(
-      canvas.getContext("webgl2") || canvas.getContext("webgl"),
-    );
+    const gl =
+      canvas.getContext("webgl2", { failIfMajorPerformanceCaveat: false }) ||
+      canvas.getContext("webgl", { failIfMajorPerformanceCaveat: false });
+    const ok = Boolean(gl);
+    const lose = gl?.getExtension("WEBGL_lose_context");
+    lose?.loseContext();
+    return ok;
   } catch {
     return false;
   }

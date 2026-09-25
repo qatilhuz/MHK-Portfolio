@@ -10,6 +10,8 @@ import { Keyboard } from "./Keyboard";
 import { Monitor } from "./Monitor";
 import { Mouse, MousePad } from "./Mouse";
 import { PcCase } from "./PcCase";
+import { DeskAccessories } from "./DeskAccessories";
+import { HeadsetStand } from "./HeadsetStand";
 import { Speaker } from "./Speakers";
 import { concreteAlbedo, woodAlbedo } from "./textures";
 
@@ -78,7 +80,7 @@ function Room() {
     <>
       <mesh position={[0, 0.85, -1.15]} receiveShadow>
         <planeGeometry args={[6, 3.2]} />
-        <meshStandardMaterial map={concrete} roughness={0.94} metalness={0.02} />
+        <meshStandardMaterial map={concrete} color="#5c5874" roughness={0.88} metalness={0.05} />
       </mesh>
       <mesh position={[0, 0.025, 0.1]} receiveShadow castShadow>
         <boxGeometry args={DESK_SIZE} />
@@ -120,7 +122,7 @@ export function ArcadeScene({
       camera={{ fov: 34, near: 0.05, far: 16, position: [0.12, 1.05, 1.72] }}
       style={{ width: "100%", height: "100%" }}
     >
-      <color attach="background" args={["#1c1c1e"]} />
+      <color attach="background" args={["#3e3e52"]} />
       <hemisphereLight args={["#d2cdc4", "#3a3228", 0.5]} />
       <directionalLight
         position={[0.55, 2.2, 1.35]}
@@ -137,6 +139,8 @@ export function ArcadeScene({
       <Keyboard reduced={reduced} />
       <MousePad />
       <Mouse reduced={reduced} />
+      <DeskAccessories />
+      <HeadsetStand reduced={reduced} />
       <ContactShadows position={[0, 0.052, 0.1]} opacity={0.38} scale={2.4} blur={2.4} far={1.2} />
       <CameraRig mode={mode} onArrived={onArrived} />
     </Canvas>

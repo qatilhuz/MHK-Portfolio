@@ -2,8 +2,76 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { MeshStandardMaterial } from "three";
+import { Color, ExtrudeGeometry, Shape, type MeshStandardMaterial, type PointLight } from "three";
 import { hexPadAlbedo } from "./textures";
+
+/**
+ * World: -Z monitor, +Z user.
+ * Shape XY then rotateX(-90): shape +Y → world -Z (nose).
+ * Thin nose / tall palm. Wheel in the front gap between clicks.
+ */
+const RGB_STOPS = [
+  new Color("#22d3ee"),
+  new Color("#3b82f6"),
+  new Color("#a855f7"),
+  new Color("#e879f9"),
+  new Color("#22d3ee"),
+];
+
+function rgbAt(t: number, out: Color) {
+  const u = ((t % 1) + 1) % 1;
+  const scaled = u * (RGB_STOPS.length - 1);
+  const i = Math.floor(scaled);
+  return out.lerpColors(RGB_STOPS[i], RGB_STOPS[i + 1], scaled - i);
+}
+
+function extrudeY(shape: Shape, depth: number, y: number, z = 0) {
+  const g = new ExtrudeGeometry(shape, {
+    depth,
+    steps: 2,
+    curveSegments: 48,
+    bevelEnabled: true,
+    bevelThickness: 0.005,
+    bevelSize: 0.005,
+    bevelSegments: 8,
+  });
+  g.rotateX(-Math.PI / 2);
+  g.translate(0, y, z);
+  g.computeVertexNormals();
+  return g;
+}
+
+function baseShape() {
+  const s = new Shape();
+  s.moveTo(0, 0.056);
+  s.bezierCurveTo(0.016, 0.056, 0.028, 0.036, 0.03, 0.008);
+  s.bezierCurveTo(0.031, -0.02, 0.026, -0.046, 0.01, -0.054);
+  s.lineTo(-0.01, -0.054);
+  s.bezierCurveTo(-0.026, -0.046, -0.031, -0.02, -0.03, 0.008);
+  s.bezierCurveTo(-0.028, 0.036, -0.016, 0.056, 0, 0.056);
+  return s;
+}
+
+function palmShape() {
+  const s = new Shape();
+  s.moveTo(0.02, -0.004);
+  s.bezierCurveTo(0.024, -0.02, 0.02, -0.044, 0.008, -0.05);
+  s.lineTo(-0.008, -0.05);
+  s.bezierCurveTo(-0.02, -0.044, -0.024, -0.02, -0.02, -0.004);
+  s.closePath();
+  return s;
+}
+
+function clickShape(side: -1 | 1) {
+  const s = new Shape();
+  const gap = 0.006 * side;
+  s.moveTo(gap, 0.054);
+  s.lineTo(0.026 * side, 0.042);
+  s.lineTo(0.026 * side, 0.012);
+  s.lineTo(gap, 0.008);
+  s.closePath();
+  return s;
+}
 
 export function MousePad() {
   const hex = useMemo(() => hexPadAlbedo(), []);
@@ -16,70 +84,105 @@ export function MousePad() {
 }
 
 export function Mouse({ reduced }: { reduced?: boolean }) {
-  const led = useRef<MeshStandardMaterial>(null);
+  const rgbL = useRef<MeshStandardMaterial>(null);
+  const rgbR = useRef<MeshStandardMaterial>(null);
+  const wheelLed = useRef<MeshStandardMaterial>(null);
+  const glow = useRef<PointLight>(null);
+  const color = useMemo(() => new Color(), []);
+  const base = useMemo(() => extrudeY(baseShape(), 0.006, 0.001), []);
+  const palm = useMemo(() => extrudeY(palmShape(), 0.02, 0.008), []);
+  const left = useMemo(() => extrudeY(clickShape(-1), 0.0025, 0.01), []);
+  const right = useMemo(() => extrudeY(clickShape(1), 0.0025, 0.01), []);
 
   useFrame((state) => {
-    if (!led.current || reduced) return;
-    led.current.emissiveIntensity = 0.4 + 0.3 * (0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 1.5));
+    if (reduced) return;
+    rgbAt(state.clock.elapsedTime * 0.12, color);
+    const pulse = 0.7 + 0.2 * Math.sin(state.clock.elapsedTime * 1.05);
+    for (const mat of [rgbL.current, rgbR.current, wheelLed.current]) {
+      if (!mat) continue;
+      mat.emissive.copy(color);
+      mat.color.copy(color);
+      mat.emissiveIntensity = pulse;
+    }
+    if (glow.current) {
+      glow.current.color.copy(color);
+      glow.current.intensity = 0.14 + 0.04 * Math.sin(state.clock.elapsedTime * 1.05);
+    }
   });
 
   return (
-    <group position={[0.34, 0.068, 0.27]} rotation={[0.06, -0.32, 0]} scale={1.2}>
-      <mesh castShadow position={[0, 0.01, -0.01]} scale={[0.88, 0.58, 1.42]}>
-        <sphereGeometry args={[0.033, 28, 20]} />
-        <meshStandardMaterial color="#1c1d24" roughness={0.64} metalness={0.07} />
+    <group position={[0.34, 0.066, 0.27]} rotation={[0.05, -0.22, 0]} scale={1.22}>
+      <mesh geometry={base} castShadow>
+        <meshStandardMaterial color="#3a3d46" roughness={0.5} metalness={0.18} envMapIntensity={1.15} />
       </mesh>
-      <mesh castShadow position={[0.001, 0.02, -0.022]} scale={[0.72, 0.5, 0.68]}>
-        <sphereGeometry args={[0.032, 24, 18]} />
-        <meshStandardMaterial color="#15161c" roughness={0.6} metalness={0.06} />
+      <mesh geometry={palm} castShadow>
+        <meshStandardMaterial color="#32353e" roughness={0.58} metalness={0.1} envMapIntensity={0.85} />
       </mesh>
-      <mesh position={[0, 0.008, 0.02]} scale={[0.7, 0.34, 0.52]}>
-        <sphereGeometry args={[0.03, 20, 16]} />
-        <meshStandardMaterial color="#22232b" roughness={0.5} metalness={0.09} />
+      <mesh geometry={left} castShadow>
+        <meshStandardMaterial color="#4a4e58" roughness={0.36} metalness={0.18} />
       </mesh>
-      <mesh position={[-0.02, 0.002, -0.002]} scale={[0.32, 0.4, 0.9]} rotation={[0, 0, 0.42]}>
-        <sphereGeometry args={[0.03, 18, 14]} />
-        <meshStandardMaterial color="#101114" roughness={0.78} metalness={0.03} />
+      <mesh geometry={right} castShadow>
+        <meshStandardMaterial color="#4a4e58" roughness={0.36} metalness={0.18} />
       </mesh>
-      <mesh position={[-0.013, 0.017, 0.012]} rotation={[0.18, 0.02, -0.06]}>
-        <boxGeometry args={[0.021, 0.0055, 0.034]} />
-        <meshStandardMaterial color="#2a2b33" roughness={0.4} />
+      <mesh position={[0, 0.012, -0.028]}>
+        <boxGeometry args={[0.0022, 0.006, 0.04]} />
+        <meshStandardMaterial color="#15161c" roughness={0.7} />
       </mesh>
-      <mesh position={[0.013, 0.017, 0.012]} rotation={[0.18, -0.02, 0.06]}>
-        <boxGeometry args={[0.021, 0.0055, 0.034]} />
-        <meshStandardMaterial color="#2a2b33" roughness={0.4} />
+      <mesh position={[-0.014, 0.011, -0.02]} rotation={[0, 0, 0.08]}>
+        <boxGeometry args={[0.0016, 0.005, 0.036]} />
+        <meshStandardMaterial color="#15161c" roughness={0.7} />
       </mesh>
-      <mesh position={[0, 0.021, 0.01]} rotation={[1.2, 0, 0]}>
-        <cylinderGeometry args={[0.0062, 0.0062, 0.015, 20]} />
-        <meshStandardMaterial color="#4b5563" metalness={0.42} roughness={0.28} />
+      <mesh position={[0.014, 0.011, -0.02]} rotation={[0, 0, -0.08]}>
+        <boxGeometry args={[0.0016, 0.005, 0.036]} />
+        <meshStandardMaterial color="#15161c" roughness={0.7} />
       </mesh>
-      {[0, 0.4, 0.8, 1.2].map((a) => (
-        <mesh key={a} position={[0, 0.021, 0.01]} rotation={[1.2, a, 0]}>
-          <boxGeometry args={[0.011, 0.001, 0.002]} />
-          <meshStandardMaterial color="#9ca3af" metalness={0.5} roughness={0.25} />
+      {/* wheel in the front gap, between L/R, proud of the thin clicks */}
+      <mesh position={[0, 0.016, -0.046]}>
+        <boxGeometry args={[0.01, 0.01, 0.014]} />
+        <meshStandardMaterial color="#111318" roughness={0.5} />
+      </mesh>
+      <group position={[0, 0.021, -0.046]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh>
+          <torusGeometry args={[0.007, 0.0036, 12, 24]} />
+          <meshStandardMaterial color="#1a1c22" roughness={0.78} />
         </mesh>
-      ))}
-      <mesh position={[-0.026, 0.006, 0.002]}>
-        <boxGeometry args={[0.006, 0.011, 0.013]} />
-        <meshStandardMaterial color="#111827" roughness={0.55} />
+        {Array.from({ length: 14 }, (_, i) => (
+          <mesh key={i} rotation={[(i / 14) * Math.PI * 2, 0, 0]}>
+            <boxGeometry args={[0.013, 0.001, 0.0014]} />
+            <meshStandardMaterial color="#4b5160" roughness={0.4} />
+          </mesh>
+        ))}
+        <mesh>
+          <torusGeometry args={[0.0074, 0.0008, 8, 22]} />
+          <meshStandardMaterial ref={wheelLed} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.8} roughness={0.22} />
+        </mesh>
+      </group>
+      <mesh position={[-0.03, 0.01, 0.004]} rotation={[0.05, 0, 0.4]}>
+        <boxGeometry args={[0.006, 0.01, 0.012]} />
+        <meshStandardMaterial color="#2a2d35" roughness={0.72} />
       </mesh>
-      <mesh position={[-0.026, 0.006, -0.012]}>
-        <boxGeometry args={[0.006, 0.01, 0.01]} />
-        <meshStandardMaterial color="#111827" roughness={0.55} />
+      <mesh position={[-0.03, 0.009, 0.018]} rotation={[0.05, 0, 0.4]}>
+        <boxGeometry args={[0.006, 0.009, 0.01]} />
+        <meshStandardMaterial color="#2a2d35" roughness={0.72} />
       </mesh>
-      <mesh position={[0, -0.01, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.017, 0.0015, 8, 24]} />
-        <meshStandardMaterial ref={led} color="#fb7185" emissive="#fb7185" emissiveIntensity={0.55} />
+      <mesh position={[-0.026, 0.008, 0.004]} rotation={[0.12, 0, -0.2]}>
+        <boxGeometry args={[0.0025, 0.0025, 0.08]} />
+        <meshStandardMaterial ref={rgbL} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.7} roughness={0.22} />
       </mesh>
+      <mesh position={[0.026, 0.008, 0.004]} rotation={[0.12, 0, 0.2]}>
+        <boxGeometry args={[0.0025, 0.0025, 0.08]} />
+        <meshStandardMaterial ref={rgbR} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.7} roughness={0.22} />
+      </mesh>
+      <pointLight ref={glow} position={[0, 0.02, 0.02]} distance={0.14} intensity={0.14} color="#22d3ee" />
       {[
-        [-0.012, -0.016, 0.018],
-        [0.012, -0.016, 0.018],
-        [-0.012, -0.016, -0.022],
-        [0.012, -0.016, -0.022],
+        [-0.015, -0.002, -0.04],
+        [0.015, -0.002, -0.04],
+        [-0.015, -0.002, 0.04],
+        [0.015, -0.002, 0.04],
       ].map((p) => (
         <mesh key={p.join(",")} position={p as [number, number, number]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.0042, 0.0042, 0.0014, 12]} />
-          <meshStandardMaterial color="#e5e7eb" roughness={0.32} metalness={0.18} />
+          <cylinderGeometry args={[0.005, 0.005, 0.0015, 12]} />
+          <meshStandardMaterial color="#e5e7eb" roughness={0.32} />
         </mesh>
       ))}
     </group>

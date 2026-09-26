@@ -2,6 +2,7 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { RoundedBox } from "@react-three/drei";
 import type { ShaderMaterial } from "three";
 import { metalAlbedo } from "./textures";
 
@@ -49,34 +50,30 @@ export function Monitor({ reduced }: { reduced?: boolean }) {
 
   return (
     <group position={[0.02, 0.445, -0.16]}>
-      <mesh castShadow>
-        <boxGeometry args={[0.96, 0.56, 0.032]} />
-        <meshStandardMaterial map={metal} color="#121318" metalness={0.62} roughness={0.28} />
-      </mesh>
+      <RoundedBox args={[0.96, 0.56, 0.032]} radius={0.007} smoothness={4} castShadow receiveShadow>
+        <meshStandardMaterial map={metal} color="#474c59" metalness={0.66} roughness={0.26} />
+      </RoundedBox>
       <mesh position={[0, 0.012, 0.0175]}>
         <planeGeometry args={[0.9, 0.5]} />
         <shaderMaterial ref={mat} vertexShader={vertex} fragmentShader={fragment} uniforms={uniforms} />
       </mesh>
       <mesh position={[0, 0.012, 0.019]}>
         <planeGeometry args={[0.9, 0.5]} />
-        <meshPhysicalMaterial color="#9ecfff" transparent opacity={0.07} roughness={0.04} metalness={0} />
+        <meshPhysicalMaterial color="#9ecfff" transparent opacity={0.07} roughness={0.04} metalness={0} clearcoat={1} clearcoatRoughness={0.02} />
       </mesh>
-      <mesh position={[0, 0.01, -0.028]}>
-        <boxGeometry args={[0.9, 0.5, 0.04]} />
-        <meshStandardMaterial map={metal} color="#0c0d12" metalness={0.5} roughness={0.42} />
-      </mesh>
+      <RoundedBox args={[0.9, 0.5, 0.04]} radius={0.008} smoothness={4} position={[0, 0.01, -0.028]}>
+        <meshStandardMaterial map={metal} color="#3c414d" metalness={0.55} roughness={0.4} />
+      </RoundedBox>
       <mesh position={[0, -0.248, 0.0178]}>
         <planeGeometry args={[0.9, 0.03]} />
-        <meshStandardMaterial color="#15161c" />
+        <meshStandardMaterial color="#1e2129" />
       </mesh>
-      <mesh position={[0, -0.36, 0.01]}>
-        <boxGeometry args={[0.07, 0.16, 0.045]} />
-        <meshStandardMaterial map={metal} color="#1a1b22" metalness={0.55} roughness={0.38} />
-      </mesh>
-      <mesh position={[0, -0.445, 0.05]} castShadow>
-        <boxGeometry args={[0.3, 0.02, 0.16]} />
-        <meshStandardMaterial map={metal} color="#24252c" metalness={0.5} roughness={0.4} />
-      </mesh>
+      <RoundedBox args={[0.07, 0.16, 0.045]} radius={0.007} smoothness={4} position={[0, -0.36, 0.01]} castShadow>
+        <meshStandardMaterial map={metal} color="#474c59" metalness={0.58} roughness={0.36} />
+      </RoundedBox>
+      <RoundedBox args={[0.3, 0.02, 0.16]} radius={0.008} smoothness={4} position={[0, -0.445, 0.05]} castShadow>
+        <meshStandardMaterial map={metal} color="#525763" metalness={0.52} roughness={0.38} />
+      </RoundedBox>
       <pointLight position={[0, 0.04, 0.32]} intensity={0.6} distance={1.7} color="#c026d3" />
     </group>
   );

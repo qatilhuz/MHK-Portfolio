@@ -21,14 +21,14 @@ function speakerConeMap() {
   const ctx = node.getContext("2d");
   if (!ctx) throw new Error("2d");
   const g = ctx.createRadialGradient(size / 2, size / 2, 20, size / 2, size / 2, size / 2);
-  g.addColorStop(0, "#3a3d46");
-  g.addColorStop(0.35, "#252830");
-  g.addColorStop(0.72, "#1a1c22");
-  g.addColorStop(1, "#121318");
+  g.addColorStop(0, "#d2d7e0");
+  g.addColorStop(0.35, "#b3b9c6");
+  g.addColorStop(0.72, "#959baa");
+  g.addColorStop(1, "#7c8290");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, size, size);
-  ctx.strokeStyle = "rgba(90,96,110,0.28)";
-  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = "rgba(230,235,245,0.4)";
+  ctx.lineWidth = 1.4;
   for (let r = 40; r < 500; r += 18) {
     ctx.beginPath();
     ctx.arc(size / 2, size / 2, r, 0, Math.PI * 2);
@@ -108,7 +108,7 @@ export function Speaker({ position }: { position: [number, number, number] }) {
       <group position={[0, 0.018, 0.05]}>
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.004]}>
           <cylinderGeometry args={[0.034, 0.034, 0.008, 36]} />
-          <meshStandardMaterial color="#1c1e24" roughness={0.7} />
+          <meshStandardMaterial color="#282c34" roughness={0.7} />
         </mesh>
         <mesh position={[0, 0, -0.001]}>
           <torusGeometry args={[0.03, 0.0024, 10, 36]} />
@@ -116,7 +116,7 @@ export function Speaker({ position }: { position: [number, number, number] }) {
         </mesh>
         <mesh position={[0, 0, 0]}>
           <torusGeometry args={[0.024, 0.0044, 12, 36]} />
-          <meshStandardMaterial color="#1a1b20" roughness={0.88} metalness={0.02} />
+          <meshStandardMaterial color="#272a33" roughness={0.88} metalness={0.02} />
         </mesh>
         {/* RGB channel nested in the surround inner lip — XY torus, hole +Z */}
         <mesh position={[0, 0, -0.0008]}>

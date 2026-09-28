@@ -76,10 +76,28 @@ function clickShape(side: -1 | 1) {
 export function MousePad() {
   const hex = useMemo(() => hexPadAlbedo(), []);
   return (
-    <mesh position={[0.34, 0.052, 0.28]} rotation={[-Math.PI / 2, 0, 0.08]} receiveShadow>
-      <planeGeometry args={[0.34, 0.26]} />
-      <meshStandardMaterial map={hex} roughness={0.9} metalness={0.03} />
-    </mesh>
+    <group position={[0.08, 0.0525, 0.35]} rotation={[-Math.PI / 2, 0, 0.015]}>
+      <mesh receiveShadow>
+        <planeGeometry args={[1.18, 0.36]} />
+        <meshStandardMaterial map={hex} color="#111827" roughness={0.9} metalness={0.03} />
+      </mesh>
+      <mesh position={[0, 0.182, 0.002]}>
+        <boxGeometry args={[1.18, 0.006, 0.004]} />
+        <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.55} roughness={0.25} />
+      </mesh>
+      <mesh position={[0, -0.182, 0.002]}>
+        <boxGeometry args={[1.18, 0.006, 0.004]} />
+        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.55} roughness={0.25} />
+      </mesh>
+      <mesh position={[-0.592, 0, 0.002]}>
+        <boxGeometry args={[0.006, 0.36, 0.004]} />
+        <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.5} roughness={0.25} />
+      </mesh>
+      <mesh position={[0.592, 0, 0.002]}>
+        <boxGeometry args={[0.006, 0.36, 0.004]} />
+        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.5} roughness={0.25} />
+      </mesh>
+    </group>
   );
 }
 
@@ -111,7 +129,7 @@ export function Mouse({ reduced }: { reduced?: boolean }) {
   });
 
   return (
-    <group position={[0.34, 0.066, 0.27]} rotation={[0.05, -0.22, 0]} scale={1.22}>
+    <group position={[0.53, 0.067, 0.35]} rotation={[0.045, -0.2, 0]} scale={1.18}>
       <mesh geometry={base} castShadow>
         <meshStandardMaterial color="#3a3d46" roughness={0.5} metalness={0.18} envMapIntensity={1.15} />
       </mesh>

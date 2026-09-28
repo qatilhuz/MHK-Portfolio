@@ -97,7 +97,7 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
   const pcb = useMemo(() => pcPcbMaps(), []);
 
   return (
-    <group position={PC_POS} rotation={[0, PC_YAW, 0]}>
+    <group position={PC_POS} rotation={[0, PC_YAW, 0]} scale={1.25}>
       {/* chassis rails */}
       <mesh position={[0, -0.258, 0]} castShadow>
         <boxGeometry args={[0.28, 0.036, 0.46]} />

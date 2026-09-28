@@ -3,7 +3,6 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Color, type MeshStandardMaterial, type PointLight } from "three";
-import { SPEAKER_Z } from "@/lib/arcade/layout";
 
 const RGB_STOPS = [
   new Color("#22d3ee"),
@@ -53,7 +52,7 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
   };
 
   return (
-    <group position={[-0.76, 0.05, SPEAKER_Z - 0.14]} rotation={[0, 0.12, 0]} scale={1.18}>
+    <group position={[-0.84, 0.05, 0.16]} rotation={[0, 0.08, 0]} scale={1.12}>
       <mesh position={[0, 0.007, 0]} castShadow>
         <cylinderGeometry args={[0.055, 0.068, 0.014, 32]} />
         <meshStandardMaterial {...SHELL} />

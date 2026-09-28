@@ -1,8 +1,8 @@
 import gsap from "gsap";
 import type { Camera } from "three";
 
-export const PORTAL_START_POS = { x: 0.12, y: 1.05, z: 1.72 };
-export const PORTAL_START_LOOK = { x: 0.08, y: 0.28, z: 0.02 };
+export const PORTAL_START_POS = { x: 0.0, y: 0.9, z: 1.95 };
+export const PORTAL_START_LOOK = { x: 0.03, y: 0.42, z: -0.08 };
 
 type Look = { x: number; y: number; z: number };
 

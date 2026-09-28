@@ -116,7 +116,7 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
   });
 
   return (
-    <group position={[0.02, 0.061, 0.26]} rotation={[0.1, 0, 0]}>
+    <group position={[-0.02, 0.065, 0.33]} rotation={[0.085, 0, 0]} scale={1.18}>
       <RoundedBox args={[chassisW, 0.016, chassisD]} radius={0.006} smoothness={4} castShadow receiveShadow>
         <meshStandardMaterial color="#3a3d46" metalness={0.42} roughness={0.44} envMapIntensity={0.9} />
       </RoundedBox>

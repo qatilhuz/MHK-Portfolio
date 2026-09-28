@@ -142,7 +142,7 @@ export function DeskAccessories() {
 
   return (
     <group>
-      <group position={[-0.84, 0.05, 0.2]}>
+      <group position={[-1.03, 0.05, 0.12]} rotation={[0, -0.08, 0]} scale={1.22}>
         <mesh position={[0, 0.007, 0]} castShadow>
           <cylinderGeometry args={[0.055, 0.058, 0.014, 40]} />
           <meshStandardMaterial {...MATTE} />
@@ -203,7 +203,7 @@ export function DeskAccessories() {
         </group>
       </group>
 
-      <group position={[-0.62, 0.05, 0.28]} rotation={[0, 0.22, 0]}>
+      <group position={[-0.56, 0.05, 0.36]} rotation={[0, 0.12, 0]}>
         <mesh position={[0, 0.004, 0]} castShadow>
           <boxGeometry args={[0.11, 0.008, 0.14]} />
           <meshStandardMaterial color="#d8c9a8" roughness={0.82} />
@@ -218,7 +218,7 @@ export function DeskAccessories() {
         </mesh>
       </group>
 
-      <group position={[-0.54, 0.057, 0.3]} rotation={[0, 0.55, Math.PI / 2]}>
+      <group position={[-0.48, 0.057, 0.38]} rotation={[0, 0.42, Math.PI / 2]}>
         <mesh castShadow>
           <cylinderGeometry args={[0.004, 0.004, 0.1, 6]} />
           <meshStandardMaterial color="#c9a227" roughness={0.55} metalness={0.05} />
@@ -245,7 +245,7 @@ export function DeskAccessories() {
         </mesh>
       </group>
 
-      <mesh position={[0.52, 0.053, 0.32]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0.72, 0.053, 0.28]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.038, 24]} />
         <meshStandardMaterial color="#2a2d35" roughness={0.75} />
       </mesh>

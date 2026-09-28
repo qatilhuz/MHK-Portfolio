@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows } from "@react-three/drei";
+import { ContactShadows, Text } from "@react-three/drei";
 import { prefersReducedMotion } from "@/lib/motion/engine";
 import { buildArcadePortalTimeline } from "@/lib/arcade/portal";
 import { DESK_SIZE, SPEAKER_LEFT, SPEAKER_RIGHT } from "@/lib/arcade/layout";
@@ -15,6 +15,8 @@ import { HeadsetStand } from "./HeadsetStand";
 import { Speaker } from "./Speakers";
 import { concreteAlbedo, woodAlbedo } from "./textures";
 
+type Vec3 = [number, number, number];
+
 function CameraRig({
   mode,
   onArrived,
@@ -23,7 +25,7 @@ function CameraRig({
   onArrived: () => void;
 }) {
   const { camera } = useThree();
-  const look = useRef({ x: 0.08, y: 0.28, z: 0.02 });
+  const look = useRef({ x: 0.03, y: 0.42, z: -0.08 });
   const done = useRef(false);
   const arrived = useRef(onArrived);
   arrived.current = onArrived;
@@ -73,34 +75,167 @@ function CameraRig({
   return null;
 }
 
+function AcousticTile({
+  position,
+  accent,
+}: {
+  position: Vec3;
+  accent: "cyan" | "magenta";
+}) {
+  const glow = accent === "cyan" ? "#22d3ee" : "#c084fc";
+  return (
+    <group position={position}>
+      <mesh receiveShadow>
+        <boxGeometry args={[0.22, 0.22, 0.025]} />
+        <meshStandardMaterial color="#11131b" roughness={0.92} metalness={0.02} />
+      </mesh>
+      <mesh position={[-0.034, 0.034, 0.016]} rotation={[0, 0, Math.PI / 4]}>
+        <boxGeometry args={[0.128, 0.018, 0.012]} />
+        <meshStandardMaterial color="#1d2030" roughness={0.88} />
+      </mesh>
+      <mesh position={[0.034, -0.034, 0.017]} rotation={[0, 0, Math.PI / 4]}>
+        <boxGeometry args={[0.128, 0.018, 0.012]} />
+        <meshStandardMaterial color="#080a10" roughness={0.95} />
+      </mesh>
+      <mesh position={[0, 0, -0.004]}>
+        <boxGeometry args={[0.24, 0.24, 0.006]} />
+        <meshStandardMaterial color={glow} emissive={glow} emissiveIntensity={0.28} roughness={0.5} />
+      </mesh>
+    </group>
+  );
+}
+
+function MiniArcade({ position, color }: { position: Vec3; color: string }) {
+  return (
+    <group position={position}>
+      <mesh castShadow>
+        <boxGeometry args={[0.075, 0.15, 0.052]} />
+        <meshStandardMaterial color="#202431" roughness={0.52} metalness={0.18} />
+      </mesh>
+      <mesh position={[0, 0.025, 0.028]}>
+        <planeGeometry args={[0.048, 0.04]} />
+        <meshStandardMaterial color="#061018" emissive={color} emissiveIntensity={0.75} roughness={0.25} />
+      </mesh>
+      <mesh position={[0, -0.045, 0.029]}>
+        <boxGeometry args={[0.055, 0.018, 0.004]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} roughness={0.35} />
+      </mesh>
+    </group>
+  );
+}
+
+function ReferenceWall() {
+  const leftTiles: Vec3[] = [
+    [-1.05, 0.58, -1.108],
+    [-0.8, 0.58, -1.108],
+    [-1.05, 0.84, -1.108],
+    [-0.8, 0.84, -1.108],
+    [-0.8, 1.1, -1.108],
+    [-0.55, 1.1, -1.108],
+  ];
+  const rightTiles: Vec3[] = [
+    [0.78, 0.64, -1.108],
+    [1.03, 0.64, -1.108],
+    [0.78, 0.9, -1.108],
+    [1.03, 0.9, -1.108],
+    [0.78, 1.16, -1.108],
+    [1.03, 1.16, -1.108],
+  ];
+
+  return (
+    <group>
+      {leftTiles.map((p, i) => (
+        <AcousticTile key={`left-${p.join("-")}`} position={p} accent={i < 4 ? "cyan" : "magenta"} />
+      ))}
+      {rightTiles.map((p) => (
+        <AcousticTile key={`right-${p.join("-")}`} position={p} accent="cyan" />
+      ))}
+
+      <mesh position={[0.02, 0.98, -1.075]} castShadow>
+        <boxGeometry args={[0.78, 0.026, 0.07]} />
+        <meshStandardMaterial color="#08090e" roughness={0.55} metalness={0.35} />
+      </mesh>
+      <mesh position={[0.02, 0.998, -1.035]}>
+        <boxGeometry args={[0.8, 0.006, 0.01]} />
+        <meshStandardMaterial color="#111827" emissive="#c084fc" emissiveIntensity={0.22} roughness={0.4} />
+      </mesh>
+      <MiniArcade position={[-0.26, 1.08, -1.045]} color="#22d3ee" />
+      <MiniArcade position={[-0.14, 1.08, -1.045]} color="#84cc16" />
+      {[0.02, 0.12, 0.23, 0.36].map((x, i) => (
+        <mesh key={x} position={[x, 1.045, -1.035]} castShadow>
+          <boxGeometry args={[0.062, 0.09, 0.035]} />
+          <meshStandardMaterial
+            color={i % 2 ? "#303548" : "#4a2d46"}
+            emissive={i % 2 ? "#22d3ee" : "#c084fc"}
+            emissiveIntensity={0.08}
+            roughness={0.58}
+            metalness={0.12}
+          />
+        </mesh>
+      ))}
+
+      <Text
+        position={[-0.31, 0.845, -1.055]}
+        fontSize={0.07}
+        lineHeight={0.82}
+        letterSpacing={0.03}
+        color="#f0abfc"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {"INSERT\nCOIN"}
+      </Text>
+      <Text
+        position={[0.39, 0.85, -1.055]}
+        fontSize={0.07}
+        lineHeight={0.82}
+        letterSpacing={0.03}
+        color="#67e8f9"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {"GAME\nOVER"}
+      </Text>
+
+      <pointLight position={[-0.96, 0.78, -0.78]} intensity={1.6} distance={1.0} color="#22d3ee" />
+      <pointLight position={[-0.65, 1.1, -0.8]} intensity={1.25} distance={0.95} color="#c084fc" />
+      <pointLight position={[0.9, 0.92, -0.78]} intensity={1.55} distance={1.05} color="#22d3ee" />
+      <pointLight position={[0.02, 0.64, -0.74]} intensity={1.1} distance={1.35} color="#a855f7" />
+    </group>
+  );
+}
+
 function Room() {
   const wood = useMemo(() => woodAlbedo(), []);
   const concrete = useMemo(() => concreteAlbedo(), []);
   return (
     <>
-      <mesh position={[0, 0.85, -1.15]} receiveShadow>
+      <mesh position={[0, 0.83, -1.16]} receiveShadow>
         <planeGeometry args={[6, 3.2]} />
-        <meshStandardMaterial map={concrete} color="#5c5874" roughness={0.88} metalness={0.05} />
+        <meshStandardMaterial map={concrete} color="#33384d" roughness={0.92} metalness={0.03} />
       </mesh>
-      <mesh position={[0, 0.025, 0.1]} receiveShadow castShadow>
+      <ReferenceWall />
+      <mesh position={[0, 0.025, 0.12]} receiveShadow castShadow>
         <boxGeometry args={DESK_SIZE} />
-        <meshStandardMaterial map={wood} roughness={0.72} metalness={0.04} />
+        <meshStandardMaterial map={wood} color="#7d8491" roughness={0.68} metalness={0.04} />
       </mesh>
       {[
-        [-0.9, -0.12, 0.5],
-        [0.9, -0.12, 0.5],
-        [-0.9, -0.12, -0.28],
-        [0.9, -0.12, -0.28],
+        [-1.08, -0.12, 0.5],
+        [1.08, -0.12, 0.5],
+        [-1.08, -0.12, -0.3],
+        [1.08, -0.12, -0.3],
       ].map((p) => (
-        <mesh key={p.join(",")} position={p as [number, number, number]}>
-          <boxGeometry args={[0.05, 0.22, 0.05]} />
-          <meshStandardMaterial color="#5c4630" roughness={0.75} />
+        <mesh key={p.join(",")} position={p as Vec3}>
+          <boxGeometry args={[0.052, 0.24, 0.052]} />
+          <meshStandardMaterial color="#151822" roughness={0.78} metalness={0.18} />
         </mesh>
       ))}
-      <mesh position={[0, -0.01, 0.1]}>
-        <boxGeometry args={[1.98, 0.02, 0.96]} />
-        <meshStandardMaterial color="#8a6d45" roughness={0.8} />
+      <mesh position={[0, -0.01, 0.12]}>
+        <boxGeometry args={[2.38, 0.026, 0.98]} />
+        <meshStandardMaterial color="#161923" roughness={0.82} metalness={0.12} />
       </mesh>
+      <pointLight position={[0, 0.08, 0.62]} intensity={0.7} distance={1.8} color="#22d3ee" />
+      <pointLight position={[0.6, 0.11, 0.42]} intensity={0.45} distance={1.0} color="#c084fc" />
     </>
   );
 }
@@ -119,29 +254,31 @@ export function ArcadeScene({
       shadows
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-      camera={{ fov: 34, near: 0.05, far: 16, position: [0.12, 1.05, 1.72] }}
+      camera={{ fov: 40, near: 0.05, far: 16, position: [0, 0.9, 1.95] }}
       style={{ width: "100%", height: "100%" }}
     >
-      <color attach="background" args={["#3e3e52"]} />
-      <hemisphereLight args={["#d2cdc4", "#3a3228", 0.5]} />
+      <color attach="background" args={["#111522"]} />
+      <hemisphereLight args={["#dbeafe", "#15101f", 0.42]} />
       <directionalLight
-        position={[0.55, 2.2, 1.35]}
-        intensity={1.15}
+        position={[0.42, 2.35, 1.55]}
+        intensity={0.92}
         castShadow
         shadow-mapSize={[2048, 2048]}
       />
-      <ambientLight intensity={0.22} />
-      <Room />
-      <PcCase reduced={reduced} />
-      <Monitor reduced={reduced} />
-      <Speaker position={SPEAKER_LEFT} />
-      <Speaker position={SPEAKER_RIGHT} />
-      <Keyboard reduced={reduced} />
-      <MousePad />
-      <Mouse reduced={reduced} />
-      <DeskAccessories />
-      <HeadsetStand reduced={reduced} />
-      <ContactShadows position={[0, 0.052, 0.1]} opacity={0.38} scale={2.4} blur={2.4} far={1.2} />
+      <ambientLight intensity={0.16} />
+      <Suspense fallback={null}>
+        <Room />
+        <PcCase reduced={reduced} />
+        <Monitor reduced={reduced} />
+        <Speaker position={SPEAKER_LEFT} />
+        <Speaker position={SPEAKER_RIGHT} />
+        <Keyboard reduced={reduced} />
+        <MousePad />
+        <Mouse reduced={reduced} />
+        <DeskAccessories />
+        <HeadsetStand reduced={reduced} />
+        <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} />
+      </Suspense>
       <CameraRig mode={mode} onArrived={onArrived} />
     </Canvas>
   );

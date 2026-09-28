@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
+import { RoundedBox, Text } from "@react-three/drei";
 import type { ShaderMaterial } from "three";
 import { metalAlbedo } from "./textures";
 
@@ -72,7 +73,114 @@ function PortraitScreen({ side }: { side: -1 | 1 }) {
   );
 }
 
-export function Monitor({ reduced }: { reduced?: boolean }) {
+function MonitorEnterButton({
+  enabled,
+  onEnter,
+}: {
+  enabled: boolean;
+  onEnter: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const active = enabled;
+  const accent = hovered && active ? "#f0abfc" : "#22d3ee";
+  const secondary = hovered && active ? "#22d3ee" : "#c084fc";
+  const emissive = hovered && active ? 1.35 : 0.78;
+
+  useEffect(() => {
+    if (!active || !hovered) {
+      document.body.style.cursor = "";
+      return;
+    }
+    document.body.style.cursor = "pointer";
+    return () => {
+      document.body.style.cursor = "";
+    };
+  }, [active, hovered]);
+
+  return (
+    <group
+      position={[0, -0.11, 0.031]}
+      scale={hovered && active ? [1.035, 1.035, 1] : [1, 1, 1]}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        if (active) setHovered(true);
+      }}
+      onPointerOut={(event) => {
+        event.stopPropagation();
+        setHovered(false);
+      }}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+      }}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (active) onEnter();
+      }}
+    >
+      <RoundedBox args={[0.39, 0.078, 0.012]} radius={0.016} smoothness={5}>
+        <meshStandardMaterial
+          color={hovered && active ? "#28112d" : "#071521"}
+          emissive={secondary}
+          emissiveIntensity={hovered && active ? 0.44 : 0.22}
+          roughness={0.28}
+          metalness={0.18}
+          transparent
+          opacity={0.94}
+        />
+      </RoundedBox>
+      <mesh position={[0, 0, 0.008]}>
+        <planeGeometry args={[0.355, 0.052]} />
+        <meshStandardMaterial
+          color="#020617"
+          emissive={accent}
+          emissiveIntensity={hovered && active ? 0.28 : 0.12}
+          transparent
+          opacity={0.74}
+          roughness={0.2}
+        />
+      </mesh>
+      <mesh position={[0, 0.0415, 0.011]}>
+        <boxGeometry args={[0.305, 0.004, 0.004]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={emissive} roughness={0.18} />
+      </mesh>
+      <mesh position={[0, -0.0415, 0.011]}>
+        <boxGeometry args={[0.305, 0.004, 0.004]} />
+        <meshStandardMaterial color={secondary} emissive={secondary} emissiveIntensity={emissive} roughness={0.18} />
+      </mesh>
+      <Text
+        position={[0, 0.006, 0.018]}
+        fontSize={0.026}
+        letterSpacing={0.07}
+        anchorX="center"
+        anchorY="middle"
+        color="#f8fafc"
+      >
+        ENTER ARCADE
+      </Text>
+      <Text
+        position={[0, -0.023, 0.018]}
+        fontSize={0.0105}
+        letterSpacing={0.18}
+        anchorX="center"
+        anchorY="middle"
+        color={accent}
+      >
+        PRESS START
+      </Text>
+      <pointLight position={[0, 0, 0.08]} intensity={hovered && active ? 0.62 : 0.32} distance={0.5} color={accent} />
+    </group>
+  );
+}
+
+export function Monitor({
+  reduced,
+  enterEnabled,
+  onEnter,
+}: {
+  reduced?: boolean;
+  enterEnabled: boolean;
+  onEnter: () => void;
+}) {
   const mat = useRef<ShaderMaterial>(null);
   const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
   const metal = useMemo(() => metalAlbedo(), []);
@@ -96,6 +204,7 @@ export function Monitor({ reduced }: { reduced?: boolean }) {
           <planeGeometry args={[1.105, 0.37]} />
           <meshPhysicalMaterial color="#d6f3ff" transparent opacity={0.075} roughness={0.035} metalness={0} />
         </mesh>
+        <MonitorEnterButton enabled={enterEnabled} onEnter={onEnter} />
         <mesh position={[0, -0.215, 0.02]}>
           <planeGeometry args={[1.12, 0.018]} />
           <meshStandardMaterial color="#222631" metalness={0.28} roughness={0.42} />

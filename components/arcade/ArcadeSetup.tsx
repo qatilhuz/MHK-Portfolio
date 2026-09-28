@@ -69,16 +69,10 @@ export function ArcadeSetup() {
         </div>
       ) : (
         <SceneErrorBoundary fallback={<ArcadeFallback onEnter={goArcade} />}>
-          <ArcadeScene mode={mode} onArrived={onArrived} />
+          <ArcadeScene mode={mode} onEnter={() => setMode("enter")} onArrived={onArrived} />
         </SceneErrorBoundary>
       )}
-      {webgl && mode === "idle" ? (
-        <div className="pointer-events-none absolute inset-x-0 top-[38%] z-10 flex justify-center">
-          <button type="button" className="arcade-enter pointer-events-auto" onClick={() => setMode("enter")}>
-            Enter the Arcade
-          </button>
-        </div>
-      ) : null}
+
     </div>
   );
 }

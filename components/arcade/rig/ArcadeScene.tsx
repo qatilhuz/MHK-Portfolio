@@ -301,9 +301,11 @@ function Room() {
 
 export function ArcadeScene({
   mode,
+  onEnter,
   onArrived,
 }: {
   mode: "idle" | "enter" | "exit";
+  onEnter: () => void;
   onArrived: () => void;
 }) {
   const reduced = prefersReducedMotion();
@@ -328,7 +330,7 @@ export function ArcadeScene({
       <Suspense fallback={null}>
         <Room />
         <PcCase reduced={reduced} />
-        <Monitor reduced={reduced} />
+        <Monitor reduced={reduced} enterEnabled={mode === "idle"} onEnter={onEnter} />
         <Speaker position={SPEAKER_LEFT} />
         <Speaker position={SPEAKER_RIGHT} />
         <Keyboard reduced={reduced} />

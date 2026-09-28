@@ -2,9 +2,13 @@
 
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Text } from "@react-three/drei";
+import { ContactShadows, OrbitControls, Text } from "@react-three/drei";
 import { prefersReducedMotion } from "@/lib/motion/engine";
-import { buildArcadePortalTimeline } from "@/lib/arcade/portal";
+import {
+  PORTAL_START_LOOK,
+  PORTAL_START_POS,
+  buildArcadePortalTimeline,
+} from "@/lib/arcade/portal";
 import { DESK_SIZE, SPEAKER_LEFT, SPEAKER_RIGHT } from "@/lib/arcade/layout";
 import { Keyboard } from "./Keyboard";
 import { Monitor } from "./Monitor";
@@ -17,6 +21,31 @@ import { concreteAlbedo, woodAlbedo } from "./textures";
 
 type Vec3 = [number, number, number];
 
+const DEFAULT_CAMERA_POSITION: Vec3 = [
+  PORTAL_START_POS.x,
+  PORTAL_START_POS.y,
+  PORTAL_START_POS.z,
+];
+const DEFAULT_LOOK_TARGET: Vec3 = [
+  PORTAL_START_LOOK.x,
+  PORTAL_START_LOOK.y,
+  PORTAL_START_LOOK.z,
+];
+const DEFAULT_CAMERA_VECTOR = {
+  x: DEFAULT_CAMERA_POSITION[0] - DEFAULT_LOOK_TARGET[0],
+  y: DEFAULT_CAMERA_POSITION[1] - DEFAULT_LOOK_TARGET[1],
+  z: DEFAULT_CAMERA_POSITION[2] - DEFAULT_LOOK_TARGET[2],
+};
+const DEFAULT_CAMERA_DISTANCE = Math.hypot(
+  DEFAULT_CAMERA_VECTOR.x,
+  DEFAULT_CAMERA_VECTOR.y,
+  DEFAULT_CAMERA_VECTOR.z,
+);
+const DEFAULT_AZIMUTH = Math.atan2(DEFAULT_CAMERA_VECTOR.x, DEFAULT_CAMERA_VECTOR.z);
+const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANCE);
+const ORBIT_VARIANCE = Math.PI / 14;
+const MIN_CAMERA_DISTANCE = 0.72;
+
 function CameraRig({
   mode,
   onArrived,
@@ -25,7 +54,11 @@ function CameraRig({
   onArrived: () => void;
 }) {
   const { camera } = useThree();
-  const look = useRef({ x: 0.03, y: 0.42, z: -0.08 });
+  const look = useRef({
+    x: DEFAULT_LOOK_TARGET[0],
+    y: DEFAULT_LOOK_TARGET[1],
+    z: DEFAULT_LOOK_TARGET[2],
+  });
   const done = useRef(false);
   const arrived = useRef(onArrived);
   arrived.current = onArrived;
@@ -37,6 +70,7 @@ function CameraRig({
 
     if (mode === "idle") {
       tl.progress(0);
+      camera.lookAt(look.current.x, look.current.y, look.current.z);
       return () => tl.kill();
     }
 
@@ -69,10 +103,35 @@ function CameraRig({
   }, [camera, mode]);
 
   useFrame(() => {
-    camera.lookAt(look.current.x, look.current.y, look.current.z);
+    if (mode !== "idle") {
+      camera.lookAt(look.current.x, look.current.y, look.current.z);
+    }
   });
 
   return null;
+}
+
+function StrictOrbitControls({ mode }: { mode: "idle" | "enter" | "exit" }) {
+  return (
+    <OrbitControls
+      makeDefault
+      enabled={mode === "idle"}
+      target={DEFAULT_LOOK_TARGET}
+      enablePan={false}
+      enableZoom
+      enableRotate
+      enableDamping
+      dampingFactor={0.08}
+      rotateSpeed={0.42}
+      zoomSpeed={0.72}
+      minDistance={MIN_CAMERA_DISTANCE}
+      maxDistance={DEFAULT_CAMERA_DISTANCE}
+      minAzimuthAngle={DEFAULT_AZIMUTH - ORBIT_VARIANCE}
+      maxAzimuthAngle={DEFAULT_AZIMUTH + ORBIT_VARIANCE}
+      minPolarAngle={DEFAULT_POLAR - ORBIT_VARIANCE}
+      maxPolarAngle={DEFAULT_POLAR + ORBIT_VARIANCE}
+    />
+  );
 }
 
 function AcousticTile({
@@ -254,7 +313,7 @@ export function ArcadeScene({
       shadows
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-      camera={{ fov: 40, near: 0.05, far: 16, position: [0, 0.9, 1.95] }}
+      camera={{ fov: 40, near: 0.05, far: 16, position: DEFAULT_CAMERA_POSITION }}
       style={{ width: "100%", height: "100%" }}
     >
       <color attach="background" args={["#111522"]} />
@@ -280,6 +339,7 @@ export function ArcadeScene({
         <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} />
       </Suspense>
       <CameraRig mode={mode} onArrived={onArrived} />
+      <StrictOrbitControls mode={mode} />
     </Canvas>
   );
 }

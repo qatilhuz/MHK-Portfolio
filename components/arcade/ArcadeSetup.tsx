@@ -35,15 +35,19 @@ function ArcadeFallback({ onEnter }: { onEnter: () => void }) {
   );
 }
 
+function getInitialMode(): "idle" | "exit" {
+  if (typeof window === "undefined") return "idle";
+  return sessionStorage.getItem(ARCADE_EXIT_FLAG) === "exit" ? "exit" : "idle";
+}
+
 export function ArcadeSetup() {
   const router = useRouter();
   const webgl = useWebGLSupport();
-  const [mode, setMode] = useState<"idle" | "enter" | "exit">("idle");
+  const [mode, setMode] = useState<"idle" | "enter" | "exit">(getInitialMode);
 
   useEffect(() => {
     if (sessionStorage.getItem(ARCADE_EXIT_FLAG) === "exit") {
       sessionStorage.removeItem(ARCADE_EXIT_FLAG);
-      setMode("exit");
     }
   }, []);
 
@@ -72,7 +76,6 @@ export function ArcadeSetup() {
           <ArcadeScene mode={mode} onEnter={() => setMode("enter")} onArrived={onArrived} />
         </SceneErrorBoundary>
       )}
-
     </div>
   );
 }

@@ -1,13 +1,18 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, Text } from "@react-three/drei";
+import type { Camera } from "three";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { prefersReducedMotion } from "@/lib/motion/engine";
 import {
   PORTAL_START_LOOK,
   PORTAL_START_POS,
   buildArcadePortalTimeline,
+  getDefaultArcadePortalView,
+  type ArcadePortalPoint,
+  type ArcadePortalView,
 } from "@/lib/arcade/portal";
 import { DESK_SIZE, SPEAKER_LEFT, SPEAKER_RIGHT } from "@/lib/arcade/layout";
 import { Keyboard } from "./Keyboard";
@@ -46,11 +51,48 @@ const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANC
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
 
+type LookRef = ArcadePortalPoint;
+
+function captureCurrentPortalView(
+  camera: Camera,
+  controls: OrbitControlsImpl | null,
+  fallbackLook: LookRef,
+): ArcadePortalView {
+  const target = controls?.target ?? fallbackLook;
+
+  return {
+    position: {
+      x: camera.position.x,
+      y: camera.position.y,
+      z: camera.position.z,
+    },
+    look: {
+      x: target.x,
+      y: target.y,
+      z: target.z,
+    },
+  };
+}
+
+function syncControlsToView(
+  controls: OrbitControlsImpl | null,
+  view: ArcadePortalView,
+  enabled: boolean,
+) {
+  if (!controls) return;
+  controls.enabled = enabled;
+  controls.target.set(view.look.x, view.look.y, view.look.z);
+  controls.update();
+  controls.saveState();
+}
+
 function CameraRig({
   mode,
+  controlsRef,
   onArrived,
 }: {
   mode: "idle" | "enter" | "exit";
+  controlsRef: RefObject<OrbitControlsImpl | null>;
   onArrived: () => void;
 }) {
   const { camera } = useThree();
@@ -63,23 +105,34 @@ function CameraRig({
   const arrived = useRef(onArrived);
   arrived.current = onArrived;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     done.current = false;
     const reduced = prefersReducedMotion();
-    const tl = buildArcadePortalTimeline(camera, look.current);
+    const controls = controlsRef.current;
+    const defaultView = getDefaultArcadePortalView();
 
     if (mode === "idle") {
+      const tl = buildArcadePortalTimeline(camera, look.current, defaultView);
       tl.progress(0);
       camera.lookAt(look.current.x, look.current.y, look.current.z);
+      syncControlsToView(controls, defaultView, true);
       return () => tl.kill();
     }
 
-    if (reduced) {
-      if (mode === "enter") tl.progress(1);
-      else tl.progress(0);
-      arrived.current();
-      return () => tl.kill();
+    controls?.update();
+    const startView = mode === "enter"
+      ? captureCurrentPortalView(camera, controls, look.current)
+      : defaultView;
+
+    if (controls) {
+      controls.enabled = false;
+      controls.update();
     }
+
+    const tl = buildArcadePortalTimeline(camera, look.current, startView);
+    const orientCamera = () => camera.lookAt(look.current.x, look.current.y, look.current.z);
+    tl.eventCallback("onUpdate", orientCamera);
+    orientCamera();
 
     const finish = () => {
       if (!done.current) {
@@ -88,11 +141,20 @@ function CameraRig({
       }
     };
 
+    if (reduced) {
+      if (mode === "enter") tl.progress(1);
+      else tl.progress(0);
+      orientCamera();
+      finish();
+      return () => tl.kill();
+    }
+
     if (mode === "enter") {
       tl.eventCallback("onComplete", finish);
       tl.play(0);
     } else {
       tl.progress(1);
+      orientCamera();
       tl.eventCallback("onReverseComplete", finish);
       tl.reverse();
     }
@@ -100,7 +162,7 @@ function CameraRig({
     return () => {
       tl.kill();
     };
-  }, [camera, mode]);
+  }, [camera, controlsRef, mode]);
 
   useFrame(() => {
     if (mode !== "idle") {
@@ -111,9 +173,16 @@ function CameraRig({
   return null;
 }
 
-function StrictOrbitControls({ mode }: { mode: "idle" | "enter" | "exit" }) {
+function StrictOrbitControls({
+  mode,
+  controlsRef,
+}: {
+  mode: "idle" | "enter" | "exit";
+  controlsRef: RefObject<OrbitControlsImpl | null>;
+}) {
   return (
     <OrbitControls
+      ref={controlsRef}
       makeDefault
       enabled={mode === "idle"}
       target={DEFAULT_LOOK_TARGET}
@@ -309,6 +378,7 @@ export function ArcadeScene({
   onArrived: () => void;
 }) {
   const reduced = prefersReducedMotion();
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
 
   return (
     <Canvas
@@ -340,8 +410,8 @@ export function ArcadeScene({
         <HeadsetStand reduced={reduced} />
         <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} />
       </Suspense>
-      <CameraRig mode={mode} onArrived={onArrived} />
-      <StrictOrbitControls mode={mode} />
+      <CameraRig mode={mode} controlsRef={controlsRef} onArrived={onArrived} />
+      <StrictOrbitControls mode={mode} controlsRef={controlsRef} />
     </Canvas>
   );
 }

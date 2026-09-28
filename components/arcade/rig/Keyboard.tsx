@@ -70,6 +70,8 @@ function rgbWave(t: number, x: number, out: Color) {
 export function Keyboard({ reduced }: { reduced?: boolean }) {
   const mesh = useRef<InstancedMesh>(null);
   const under = useRef<MeshStandardMaterial>(null);
+  const wideGlow = useRef<(MeshStandardMaterial | null)[]>([]);
+  const underLamp = useRef<PointLight>(null);
   const lamp = useRef<PointLight>(null);
   const layout = useMemo(() => buildLayout(), []);
   const color = useMemo(() => new Color(), []);
@@ -85,6 +87,9 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
   );
   const chassisW = layout.span + 0.04;
   const chassisD = layout.depth + 0.036;
+  const setWideGlow = (index: number) => (material: MeshStandardMaterial | null) => {
+    wideGlow.current[index] = material;
+  };
 
   useFrame((state) => {
     const node = mesh.current;
@@ -103,9 +108,22 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
     }
     rgbWave(t, 0, color);
     if (under.current) {
+      under.current.color.copy(color);
       under.current.emissive.copy(color);
-      under.current.emissiveIntensity = 0.3 + 0.1 * Math.sin(t * 1.05);
+      under.current.emissiveIntensity = 0.3 + 0.1 * Math.sin(t * 0.9);
     }
+    if (underLamp.current) {
+      underLamp.current.color.copy(color);
+      underLamp.current.intensity = 0.22 + 0.05 * Math.sin(t * 0.9);
+    }
+    wideGlow.current.forEach((mat, index) => {
+      if (!mat) return;
+      const key = layout.wide[index];
+      rgbWave(t + index * 0.08, key?.x ?? 0, color);
+      mat.color.copy(color);
+      mat.emissive.copy(color);
+      mat.emissiveIntensity = 0.18 + 0.08 * Math.sin(t * 0.76 + index * 0.5);
+    });
     rimMat.emissive.copy(color);
     rimMat.color.copy(color);
     rimMat.emissiveIntensity = 0.55 + 0.15 * Math.sin(t * 1.05);
@@ -141,7 +159,7 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
       <mesh position={[-chassisW / 2, 0.001, 0]} material={rimMat}>
         <boxGeometry args={[0.006, 0.004, chassisD]} />
       </mesh>
-      <pointLight position={[0, -0.018, 0]} intensity={0.28} distance={0.42} color="#a78bfa" />
+      <pointLight ref={underLamp} position={[0, -0.018, 0]} intensity={0.28} distance={0.42} color="#a78bfa" />
       {[-chassisW * 0.38, chassisW * 0.38].map((x) =>
         [-chassisD * 0.38, chassisD * 0.38].map((z) => (
           <mesh key={`${x}${z}`} position={[x, -0.01, z]}>
@@ -156,7 +174,7 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
         <meshStandardMaterial color="#3a3d46" roughness={0.52} metalness={0.08} />
       </instancedMesh>
 
-      {layout.wide.map((key) => (
+      {layout.wide.map((key, index) => (
         <group key={`${key.x}-${key.z}`} position={[key.x, 0.012, key.z]}>
           <mesh castShadow>
             <boxGeometry args={[key.w, 0.01, U * 0.9]} />
@@ -164,7 +182,13 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
           </mesh>
           <mesh position={[0, -0.005, 0]}>
             <boxGeometry args={[key.w * 0.9, 0.0025, U * 0.6]} />
-            <meshStandardMaterial color="#22d3ee" emissive="#7c3aed" emissiveIntensity={0.24} roughness={0.35} />
+            <meshStandardMaterial
+              ref={setWideGlow(index)}
+              color="#22d3ee"
+              emissive="#7c3aed"
+              emissiveIntensity={0.24}
+              roughness={0.35}
+            />
           </mesh>
         </group>
       ))}

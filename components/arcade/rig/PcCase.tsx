@@ -1,7 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
-import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
+import { useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import {
+  CatmullRomCurve3,
+  Color,
+  TubeGeometry,
+  Vector3,
+  type MeshPhysicalMaterial,
+  type MeshStandardMaterial,
+  type PointLight,
+} from "three";
+import { arcadeBreath, arcadeRgbAt } from "@/lib/arcade/rgb";
 import { PC_POS, PC_YAW } from "@/lib/arcade/layout";
 import { CoolingFan } from "./CoolingFan";
 import { pcBrushedMetal, pcHexMesh, pcPcbMaps } from "./pcTextures";
@@ -95,6 +105,63 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
   const metal = useMemo(() => pcBrushedMetal(), []);
   const hex = useMemo(() => pcHexMesh(), []);
   const pcb = useMemo(() => pcPcbMaps(), []);
+  const pumpBadge = useRef<MeshStandardMaterial>(null);
+  const gpuStrip = useRef<MeshStandardMaterial>(null);
+  const ramRgb = useRef<(MeshPhysicalMaterial | null)[]>([]);
+  const interiorMagenta = useRef<PointLight>(null);
+  const interiorCyan = useRef<PointLight>(null);
+  const interiorViolet = useRef<PointLight>(null);
+  const colorA = useMemo(() => new Color(), []);
+  const colorB = useMemo(() => new Color(), []);
+  const colorC = useMemo(() => new Color(), []);
+
+  useFrame((state) => {
+    if (reduced) return;
+    const t = state.clock.elapsedTime;
+
+    arcadeRgbAt(t * 0.052, colorA, 0.08);
+    const pumpPulse = arcadeBreath(t * 0.72, 0.12, 0.48, 0.82);
+    if (pumpBadge.current) {
+      pumpBadge.current.color.copy(colorA);
+      pumpBadge.current.emissive.copy(colorA);
+      pumpBadge.current.emissiveIntensity = pumpPulse;
+    }
+
+    ramRgb.current.forEach((mat, index) => {
+      if (!mat) return;
+      arcadeRgbAt(t * 0.058, colorB, 0.22 + index * 0.18);
+      mat.color.copy(colorB);
+      mat.emissive.copy(colorB);
+      mat.emissiveIntensity = arcadeBreath(t * 0.68, index * 0.15, 0.62, 0.95);
+    });
+
+    arcadeRgbAt(t * 0.048, colorC, 0.44);
+    if (gpuStrip.current) {
+      gpuStrip.current.color.copy(colorC);
+      gpuStrip.current.emissive.copy(colorC);
+      gpuStrip.current.emissiveIntensity = arcadeBreath(t * 0.78, 0.36, 0.55, 0.88);
+    }
+
+    if (interiorMagenta.current) {
+      arcadeRgbAt(t * 0.04, colorA, 0.32);
+      interiorMagenta.current.color.copy(colorA);
+      interiorMagenta.current.intensity = arcadeBreath(t * 0.6, 0.08, 0.82, 1.08);
+    }
+    if (interiorCyan.current) {
+      arcadeRgbAt(t * 0.04, colorB, 0.72);
+      interiorCyan.current.color.copy(colorB);
+      interiorCyan.current.intensity = arcadeBreath(t * 0.58, 0.36, 0.44, 0.64);
+    }
+    if (interiorViolet.current) {
+      arcadeRgbAt(t * 0.036, colorC, 0.52);
+      interiorViolet.current.color.copy(colorC);
+      interiorViolet.current.intensity = arcadeBreath(t * 0.52, 0.58, 0.26, 0.42);
+    }
+  });
+
+  const setRamRgb = (index: number) => (material: MeshPhysicalMaterial | null) => {
+    ramRgb.current[index] = material;
+  };
 
   return (
     <group position={PC_POS} rotation={[0, PC_YAW, 0]} scale={1.25}>
@@ -254,10 +321,10 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
       </mesh>
       <mesh position={[0.02, 0.112, -0.1]}>
         <cylinderGeometry args={[0.018, 0.018, 0.006, 18]} />
-        <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.55} roughness={0.28} />
+        <meshStandardMaterial ref={pumpBadge} color="#c084fc" emissive="#c084fc" emissiveIntensity={0.55} roughness={0.28} />
       </mesh>
       <group position={[0.02, 0.092, -0.068]} rotation={[Math.PI / 2, 0, 0]}>
-        <CoolingFan radius={0.026} speed={9.4} reduced={reduced} rgb="#c084fc" depth={0.014} />
+        <CoolingFan radius={0.026} speed={9.4} reduced={reduced} rgb="#c084fc" phase={0.12} depth={0.014} />
       </group>
       {[-0.018, 0.018].flatMap((x) =>
         [-0.018, 0.018].map((z) => (
@@ -284,6 +351,7 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
           <mesh position={[0.0052, 0.004, 0]}>
             <boxGeometry args={[0.002, 0.04, 0.024]} />
             <meshPhysicalMaterial
+              ref={setRamRgb(i)}
               color={i ? "#c084fc" : "#22d3ee"}
               emissive={i ? "#c084fc" : "#22d3ee"}
               emissiveIntensity={0.85}
@@ -322,7 +390,7 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
         </group>
         {[-0.062, 0, 0.062].map((z, i) => (
           <group key={z} position={[0.055, 0.03, z]} rotation={[Math.PI / 2, 0, 0]}>
-            <CoolingFan radius={0.024} speed={10.4 + i} reduced={reduced} rgb={i === 1 ? "#c084fc" : "#22d3ee"} depth={0.012} />
+            <CoolingFan radius={0.024} speed={10.4 + i} reduced={reduced} rgb={i === 1 ? "#c084fc" : "#22d3ee"} phase={0.22 + i * 0.14} depth={0.012} />
           </group>
         ))}
         <mesh position={[-0.108, 0.004, 0.03]}>
@@ -345,7 +413,7 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
         </mesh>
         <mesh position={[0.0, 0.03, 0.052]}>
           <boxGeometry args={[0.16, 0.004, 0.003]} />
-          <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.55} roughness={0.25} />
+          <meshStandardMaterial ref={gpuStrip} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.55} roughness={0.25} />
         </mesh>
       </group>
 
@@ -360,10 +428,10 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
         </group>
         {/* Fans lie in XZ (axis +Y) on the radiator — not standing on edge. */}
         <group position={[-0.048, 0.02, 0]}>
-          <CoolingFan radius={0.03} speed={8.2} reduced={reduced} depth={0.016} />
+          <CoolingFan radius={0.03} speed={8.2} reduced={reduced} phase={0.55} depth={0.016} />
         </group>
         <group position={[0.048, 0.02, 0]}>
-          <CoolingFan radius={0.03} speed={7.6} reduced={reduced} rgb="#c084fc" depth={0.016} />
+          <CoolingFan radius={0.03} speed={7.6} reduced={reduced} rgb="#c084fc" phase={0.68} depth={0.016} />
         </group>
       </group>
 
@@ -391,13 +459,13 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
 
       {/* intake / exhaust */}
       <group position={[-0.02, 0.08, 0.175]} rotation={[Math.PI / 2, 0, 0]}>
-        <CoolingFan radius={0.046} speed={7.1} reduced={reduced} />
+        <CoolingFan radius={0.046} speed={7.1} reduced={reduced} phase={0.78} />
       </group>
       <group position={[-0.02, -0.07, 0.175]} rotation={[Math.PI / 2, 0, 0]}>
-        <CoolingFan radius={0.046} speed={8} reduced={reduced} rgb="#c084fc" />
+        <CoolingFan radius={0.046} speed={8} reduced={reduced} rgb="#c084fc" phase={0.9} />
       </group>
       <group position={[0.02, 0.1, -0.2]} rotation={[Math.PI / 2, 0, 0]}>
-        <CoolingFan radius={0.038} speed={-6.6} reduced={reduced} />
+        <CoolingFan radius={0.038} speed={-6.6} reduced={reduced} phase={0.04} />
       </group>
 
       {/* sleeved cables */}
@@ -411,9 +479,9 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
         <meshStandardMaterial color="#111827" roughness={0.72} metalness={0.08} />
       </mesh>
 
-      <pointLight position={[-0.04, 0.05, 0.04]} intensity={1.05} distance={0.95} color="#c084fc" />
-      <pointLight position={[0.05, 0.0, 0.08]} intensity={0.55} distance={0.72} color="#22d3ee" />
-      <pointLight position={[0.02, 0.1, -0.1]} intensity={0.35} distance={0.4} color="#a78bfa" />
+      <pointLight ref={interiorMagenta} position={[-0.04, 0.05, 0.04]} intensity={1.05} distance={0.95} color="#c084fc" />
+      <pointLight ref={interiorCyan} position={[0.05, 0.0, 0.08]} intensity={0.55} distance={0.72} color="#22d3ee" />
+      <pointLight ref={interiorViolet} position={[0.02, 0.1, -0.1]} intensity={0.35} distance={0.4} color="#a78bfa" />
     </group>
   );
 }

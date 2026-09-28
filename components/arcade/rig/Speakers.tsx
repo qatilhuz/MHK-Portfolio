@@ -50,7 +50,15 @@ function rgbAt(t: number, out: Color) {
   return out.lerpColors(RGB_STOPS[i], RGB_STOPS[i + 1], scaled - i);
 }
 
-export function Speaker({ position }: { position: [number, number, number] }) {
+export function Speaker({
+  position,
+  reduced,
+  phase = 0,
+}: {
+  position: [number, number, number];
+  reduced?: boolean;
+  phase?: number;
+}) {
   const cone = useMemo(() => speakerConeMap(), []);
   const ringMat = useRef<MeshStandardMaterial>(null);
   const stripMat = useRef<MeshStandardMaterial>(null);
@@ -59,23 +67,27 @@ export function Speaker({ position }: { position: [number, number, number] }) {
   const color = useMemo(() => new Color(), []);
 
   useFrame((state) => {
-    rgbAt(state.clock.elapsedTime * 0.12, color);
+    if (reduced) return;
+    const t = state.clock.elapsedTime;
+    rgbAt(t * 0.085 + phase, color);
+    const pulse = 0.5 + 0.5 * Math.sin(t * 0.78 + phase * Math.PI * 2);
     if (ringMat.current) {
       ringMat.current.emissive.copy(color);
       ringMat.current.color.copy(color);
-      ringMat.current.emissiveIntensity = 0.85 + 0.2 * Math.sin(state.clock.elapsedTime * 1.1);
+      ringMat.current.emissiveIntensity = 0.76 + 0.2 * pulse;
     }
     if (stripMat.current) {
+      stripMat.current.color.copy(color);
       stripMat.current.emissive.copy(color);
-      stripMat.current.emissiveIntensity = 0.55 + 0.15 * Math.sin(state.clock.elapsedTime * 1.1);
+      stripMat.current.emissiveIntensity = 0.48 + 0.14 * pulse;
     }
     if (glowA.current) {
       glowA.current.color.copy(color);
-      glowA.current.intensity = 0.38 + 0.1 * Math.sin(state.clock.elapsedTime * 1.1);
+      glowA.current.intensity = 0.3 + 0.1 * pulse;
     }
     if (glowB.current) {
       glowB.current.color.copy(color);
-      glowB.current.intensity = 0.16;
+      glowB.current.intensity = 0.12 + 0.04 * pulse;
     }
   });
 

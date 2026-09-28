@@ -28,8 +28,10 @@ const LEATHER = { color: "#1c1e24", metalness: 0.06, roughness: 0.72 };
  */
 export function HeadsetStand({ reduced }: { reduced?: boolean }) {
   const strips = useRef<(MeshStandardMaterial | null)[]>([]);
+  const earRings = useRef<(MeshStandardMaterial | null)[]>([]);
   const glow = useRef<PointLight>(null);
   const color = useMemo(() => new Color(), []);
+  const earColor = useMemo(() => new Color(), []);
 
   useFrame((state) => {
     if (reduced) return;
@@ -41,6 +43,13 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
       mat.color.copy(color);
       mat.emissiveIntensity = pulse;
     }
+    earRings.current.forEach((mat, index) => {
+      if (!mat) return;
+      rgbAt(state.clock.elapsedTime * 0.09 + index * 0.18, earColor);
+      mat.emissive.copy(earColor);
+      mat.color.copy(earColor);
+      mat.emissiveIntensity = 0.42 + 0.12 * Math.sin(state.clock.elapsedTime * 0.72 + index);
+    });
     if (glow.current) {
       glow.current.color.copy(color);
       glow.current.intensity = 0.1 + 0.03 * Math.sin(state.clock.elapsedTime * 0.85);
@@ -49,6 +58,10 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
 
   const setStrip = (i: number) => (el: MeshStandardMaterial | null) => {
     strips.current[i] = el;
+  };
+
+  const setEarRing = (i: number) => (el: MeshStandardMaterial | null) => {
+    earRings.current[i] = el;
   };
 
   return (
@@ -122,6 +135,16 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
           <mesh position={[-0.014 * side, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
             <torusGeometry args={[0.026, 0.01, 14, 28]} />
             <meshStandardMaterial {...LEATHER} />
+          </mesh>
+          <mesh position={[-0.015 * side, 0, 0.001]} rotation={[0, Math.PI / 2, 0]}>
+            <torusGeometry args={[0.0275, 0.0015, 10, 32]} />
+            <meshStandardMaterial
+              ref={setEarRing(side < 0 ? 0 : 1)}
+              color={side < 0 ? "#22d3ee" : "#c084fc"}
+              emissive={side < 0 ? "#22d3ee" : "#c084fc"}
+              emissiveIntensity={0.42}
+              roughness={0.24}
+            />
           </mesh>
           <mesh position={[-0.008 * side, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
             <circleGeometry args={[0.017, 22]} />

@@ -73,8 +73,27 @@ function clickShape(side: -1 | 1) {
   return s;
 }
 
-export function MousePad() {
+export function MousePad({ reduced }: { reduced?: boolean }) {
   const hex = useMemo(() => hexPadAlbedo(), []);
+  const edges = useRef<(MeshStandardMaterial | null)[]>([]);
+  const color = useMemo(() => new Color(), []);
+
+  useFrame((state) => {
+    if (reduced) return;
+    const t = state.clock.elapsedTime;
+    edges.current.forEach((mat, index) => {
+      if (!mat) return;
+      rgbAt(t * 0.07 + index * 0.14, color);
+      mat.color.copy(color);
+      mat.emissive.copy(color);
+      mat.emissiveIntensity = 0.42 + 0.11 * Math.sin(t * 0.72 + index * 0.55);
+    });
+  });
+
+  const setEdge = (index: number) => (material: MeshStandardMaterial | null) => {
+    edges.current[index] = material;
+  };
+
   return (
     <group position={[0.08, 0.0525, 0.35]} rotation={[-Math.PI / 2, 0, 0.015]}>
       <mesh receiveShadow>
@@ -83,19 +102,19 @@ export function MousePad() {
       </mesh>
       <mesh position={[0, 0.182, 0.002]}>
         <boxGeometry args={[1.18, 0.006, 0.004]} />
-        <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.55} roughness={0.25} />
+        <meshStandardMaterial ref={setEdge(0)} color="#c084fc" emissive="#c084fc" emissiveIntensity={0.55} roughness={0.25} />
       </mesh>
       <mesh position={[0, -0.182, 0.002]}>
         <boxGeometry args={[1.18, 0.006, 0.004]} />
-        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.55} roughness={0.25} />
+        <meshStandardMaterial ref={setEdge(1)} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.55} roughness={0.25} />
       </mesh>
       <mesh position={[-0.592, 0, 0.002]}>
         <boxGeometry args={[0.006, 0.36, 0.004]} />
-        <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.5} roughness={0.25} />
+        <meshStandardMaterial ref={setEdge(2)} color="#c084fc" emissive="#c084fc" emissiveIntensity={0.5} roughness={0.25} />
       </mesh>
       <mesh position={[0.592, 0, 0.002]}>
         <boxGeometry args={[0.006, 0.36, 0.004]} />
-        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.5} roughness={0.25} />
+        <meshStandardMaterial ref={setEdge(3)} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.5} roughness={0.25} />
       </mesh>
     </group>
   );

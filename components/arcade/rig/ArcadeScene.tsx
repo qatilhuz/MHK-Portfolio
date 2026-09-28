@@ -401,10 +401,10 @@ export function ArcadeScene({
         <Room />
         <PcCase reduced={reduced} />
         <Monitor reduced={reduced} enterEnabled={mode === "idle"} onEnter={onEnter} />
-        <Speaker position={SPEAKER_LEFT} />
-        <Speaker position={SPEAKER_RIGHT} />
+        <Speaker position={SPEAKER_LEFT} reduced={reduced} phase={0.08} />
+        <Speaker position={SPEAKER_RIGHT} reduced={reduced} phase={0.58} />
         <Keyboard reduced={reduced} />
-        <MousePad />
+        <MousePad reduced={reduced} />
         <Mouse reduced={reduced} />
         <DeskAccessories />
         <HeadsetStand reduced={reduced} />

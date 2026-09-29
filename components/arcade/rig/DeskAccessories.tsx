@@ -142,7 +142,7 @@ export function DeskAccessories() {
 
   return (
     <group>
-      <group position={[-1.03, 0.05, 0.12]} rotation={[0, -0.08, 0]} scale={1.22}>
+      <group position={[-1.08, 0.05, 0.025]} rotation={[0, -0.16, 0]} scale={1.16}>
         <mesh position={[0, 0.007, 0]} castShadow>
           <cylinderGeometry args={[0.055, 0.058, 0.014, 40]} />
           <meshStandardMaterial {...MATTE} />

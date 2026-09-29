@@ -110,6 +110,68 @@ export function grilleAlbedo() {
   return wrap(new CanvasTexture(node), 2);
 }
 
+export function brushedMetalMaps() {
+  const albedo = metalAlbedo();
+  const { node, ctx } = canvas(512);
+  const grad = ctx.createLinearGradient(0, 0, 512, 0);
+  grad.addColorStop(0, "#5f6672");
+  grad.addColorStop(0.5, "#b9c0ca");
+  grad.addColorStop(1, "#6f7783");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 512, 512);
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  for (let y = 0; y < 512; y += 4) {
+    ctx.beginPath();
+    ctx.moveTo(0, y + Math.sin(y) * 0.5);
+    ctx.lineTo(512, y + Math.cos(y) * 0.5);
+    ctx.stroke();
+  }
+  return { albedo, roughness: wrap(new CanvasTexture(node), 1.8) };
+}
+
+export function leatherMaps() {
+  const { node: albedoNode, ctx: albedoCtx } = canvas(512);
+  albedoCtx.fillStyle = "#dfe5ee";
+  albedoCtx.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 2400; i += 1) {
+    const a = 0.045 + Math.random() * 0.055;
+    albedoCtx.fillStyle = `rgba(95,105,120,${a})`;
+    albedoCtx.fillRect(Math.random() * 512, Math.random() * 512, 1.5, 1.5);
+  }
+
+  const { node: roughNode, ctx: roughCtx } = canvas(512);
+  roughCtx.fillStyle = "#c8c8c8";
+  roughCtx.fillRect(0, 0, 512, 512);
+  for (let y = 0; y < 512; y += 7) {
+    roughCtx.strokeStyle = `rgba(80,80,80,${0.04 + (y % 5) * 0.012})`;
+    roughCtx.beginPath();
+    roughCtx.moveTo(0, y);
+    roughCtx.lineTo(512, y + Math.sin(y * 0.12) * 4);
+    roughCtx.stroke();
+  }
+
+  const { node: normalNode, ctx: normalCtx } = canvas(512);
+  normalCtx.fillStyle = "#8080ff";
+  normalCtx.fillRect(0, 0, 512, 512);
+  normalCtx.strokeStyle = "rgba(128,128,255,0.55)";
+  for (let y = 2; y < 512; y += 9) {
+    normalCtx.beginPath();
+    normalCtx.moveTo(0, y);
+    normalCtx.bezierCurveTo(130, y + 4, 310, y - 5, 512, y + 2);
+    normalCtx.stroke();
+  }
+
+  return {
+    albedo: wrap(new CanvasTexture(albedoNode), 2.2),
+    roughness: wrap(new CanvasTexture(roughNode), 2.2),
+    normal: wrap(new CanvasTexture(normalNode), 2.2),
+  };
+}
+
+export function driverGrilleAlbedo() {
+  return grilleAlbedo();
+}
+
 export function pcbAlbedo() {
   const { node, ctx } = canvas(512);
   ctx.fillStyle = "#0d2a18";

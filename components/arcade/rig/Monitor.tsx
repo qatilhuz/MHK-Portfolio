@@ -42,32 +42,43 @@ void main() {
 function PortraitScreen({ side }: { side: -1 | 1 }) {
   const accent = side < 0 ? "#22d3ee" : "#c084fc";
   const secondary = side < 0 ? "#c084fc" : "#22d3ee";
+  const warm = side < 0 ? "#67e8f9" : "#f0abfc";
 
   return (
-    <group position={[side * 0.665, 0.015, 0.018]} rotation={[0, side * -0.09, 0]}>
+    <group position={[side * 0.585, 0.02, 0.036]} rotation={[0, side * -0.18, 0]}>
       <mesh castShadow>
-        <boxGeometry args={[0.285, 0.55, 0.03]} />
-        <meshStandardMaterial color="#10131b" metalness={0.52} roughness={0.34} />
+        <boxGeometry args={[0.315, 0.595, 0.034]} />
+        <meshStandardMaterial color="#0c1019" metalness={0.58} roughness={0.3} />
       </mesh>
-      <mesh position={[0, 0, 0.017]}>
-        <planeGeometry args={[0.247, 0.495]} />
-        <meshStandardMaterial color="#08101a" emissive="#041421" emissiveIntensity={0.42} roughness={0.22} />
+      <mesh position={[0, 0, 0.019]}>
+        <planeGeometry args={[0.272, 0.535]} />
+        <meshStandardMaterial color="#06101c" emissive="#041421" emissiveIntensity={0.48} roughness={0.2} />
       </mesh>
-      {[-0.18, -0.11, -0.04, 0.03, 0.1].map((y, i) => (
-        <mesh key={y} position={[0, y, 0.0195]}>
-          <boxGeometry args={[0.185 - i * 0.017, 0.008, 0.003]} />
-          <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.46} roughness={0.36} />
+      <mesh position={[0, 0, 0.0205]}>
+        <planeGeometry args={[0.272, 0.535]} />
+        <meshPhysicalMaterial color="#d6f3ff" transparent opacity={0.055} roughness={0.04} metalness={0} />
+      </mesh>
+      {[-0.205, -0.13, -0.055, 0.02, 0.095].map((y, i) => (
+        <mesh key={y} position={[0, y, 0.023]}>
+          <boxGeometry args={[0.205 - i * 0.016, 0.0085, 0.0035]} />
+          <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.5} roughness={0.34} />
         </mesh>
       ))}
       {[0, 1, 2].map((i) => (
-        <mesh key={i} position={[-0.075 + i * 0.075, 0.185, 0.0195]}>
-          <circleGeometry args={[0.018 + i * 0.004, 24]} />
-          <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.55} roughness={0.3} />
+        <mesh key={i} position={[-0.084 + i * 0.084, 0.214, 0.0235]}>
+          <circleGeometry args={[0.017 + i * 0.004, 24]} />
+          <meshStandardMaterial color={i % 2 ? secondary : warm} emissive={i % 2 ? secondary : warm} emissiveIntensity={0.62} roughness={0.28} />
         </mesh>
       ))}
-      <mesh position={[0, -0.275, 0.01]}>
-        <boxGeometry args={[0.055, 0.16, 0.04]} />
-        <meshStandardMaterial color="#171a23" metalness={0.5} roughness={0.4} />
+      {[-0.104, 0.104].map((x) => (
+        <mesh key={x} position={[x, -0.242, 0.024]}>
+          <boxGeometry args={[0.048, 0.006, 0.003]} />
+          <meshStandardMaterial color={x < 0 ? accent : secondary} emissive={x < 0 ? accent : secondary} emissiveIntensity={0.42} roughness={0.26} />
+        </mesh>
+      ))}
+      <mesh position={[0, -0.306, 0.011]}>
+        <boxGeometry args={[0.058, 0.15, 0.04]} />
+        <meshStandardMaterial color="#151923" metalness={0.56} roughness={0.38} />
       </mesh>
     </group>
   );
@@ -193,24 +204,24 @@ export function Monitor({
     <group position={[0.02, 0.43, -0.17]}>
       <group>
         <mesh castShadow>
-          <boxGeometry args={[1.17, 0.43, 0.036]} />
+          <boxGeometry args={[1.035, 0.43, 0.036]} />
           <meshStandardMaterial map={metal} color="#11131a" metalness={0.64} roughness={0.27} />
         </mesh>
         <mesh position={[0, 0.008, 0.019]}>
-          <planeGeometry args={[1.105, 0.37]} />
+          <planeGeometry args={[0.972, 0.37]} />
           <shaderMaterial ref={mat} vertexShader={vertex} fragmentShader={fragment} uniforms={uniforms} />
         </mesh>
         <mesh position={[0, 0.008, 0.0205]}>
-          <planeGeometry args={[1.105, 0.37]} />
+          <planeGeometry args={[0.972, 0.37]} />
           <meshPhysicalMaterial color="#d6f3ff" transparent opacity={0.075} roughness={0.035} metalness={0} />
         </mesh>
         <MonitorEnterButton enabled={enterEnabled} onEnter={onEnter} />
         <mesh position={[0, -0.215, 0.02]}>
-          <planeGeometry args={[1.12, 0.018]} />
+          <planeGeometry args={[0.99, 0.018]} />
           <meshStandardMaterial color="#222631" metalness={0.28} roughness={0.42} />
         </mesh>
         <mesh position={[0, 0.006, -0.032]}>
-          <boxGeometry args={[1.11, 0.38, 0.045]} />
+          <boxGeometry args={[0.985, 0.38, 0.045]} />
           <meshStandardMaterial map={metal} color="#090b11" metalness={0.48} roughness={0.43} />
         </mesh>
       </group>

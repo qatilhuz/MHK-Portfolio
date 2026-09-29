@@ -1,6 +1,6 @@
-/** Full reference-inspired monitor wall: central ultrawide plus portrait wings. */
+/** Full reference-inspired monitor wall: central display plus angled portrait side screens. */
 export const MONITOR_X = 0.02;
-export const MONITOR_HALF = 0.72;
+export const MONITOR_HALF = 0.61;
 export const MONITOR_LEFT = MONITOR_X - MONITOR_HALF;
 export const MONITOR_RIGHT = MONITOR_X + MONITOR_HALF;
 
@@ -20,5 +20,5 @@ export const SPEAKER_RIGHT: [number, number, number] = [
 ];
 
 export const DESK_SIZE: [number, number, number] = [2.42, 0.05, 1.02];
-export const PC_POS: [number, number, number] = [0.96, 0.384, 0.02];
+export const PC_POS: [number, number, number] = [0.98, 0.384, 0.02];
 export const PC_YAW = 0.18;

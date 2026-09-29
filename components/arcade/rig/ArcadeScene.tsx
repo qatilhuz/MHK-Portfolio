@@ -211,24 +211,53 @@ function AcousticTile({
   accent: "cyan" | "magenta";
 }) {
   const glow = accent === "cyan" ? "#22d3ee" : "#c084fc";
+  const dimGlow = accent === "cyan" ? "#155e75" : "#581c87";
+
   return (
     <group position={position}>
+      <mesh position={[0, 0, -0.014]} receiveShadow>
+        <boxGeometry args={[0.248, 0.248, 0.01]} />
+        <meshStandardMaterial color={glow} emissive={glow} emissiveIntensity={0.25} transparent opacity={0.42} roughness={0.4} />
+      </mesh>
       <mesh receiveShadow>
-        <boxGeometry args={[0.22, 0.22, 0.025]} />
-        <meshStandardMaterial color="#11131b" roughness={0.92} metalness={0.02} />
+        <boxGeometry args={[0.22, 0.22, 0.028]} />
+        <meshStandardMaterial color="#0b0d14" roughness={0.94} metalness={0.03} />
       </mesh>
-      <mesh position={[-0.034, 0.034, 0.016]} rotation={[0, 0, Math.PI / 4]}>
-        <boxGeometry args={[0.128, 0.018, 0.012]} />
-        <meshStandardMaterial color="#1d2030" roughness={0.88} />
+      <mesh position={[0, 0, 0.0175]}>
+        <boxGeometry args={[0.182, 0.182, 0.006]} />
+        <meshStandardMaterial color="#11131b" roughness={0.96} metalness={0.02} />
       </mesh>
-      <mesh position={[0.034, -0.034, 0.017]} rotation={[0, 0, Math.PI / 4]}>
-        <boxGeometry args={[0.128, 0.018, 0.012]} />
-        <meshStandardMaterial color="#080a10" roughness={0.95} />
+      {[
+        [0, 0.113, 0.026, 0.225, 0.006],
+        [0, -0.113, 0.026, 0.225, 0.006],
+        [-0.113, 0, 0.026, 0.006, 0.225],
+        [0.113, 0, 0.026, 0.006, 0.225],
+      ].map(([x, y, z, w, h], i) => (
+        <mesh key={`edge-${i}`} position={[x, y, z]}>
+          <boxGeometry args={[w, h, 0.006]} />
+          <meshStandardMaterial color={glow} emissive={glow} emissiveIntensity={0.72} roughness={0.22} />
+        </mesh>
+      ))}
+      {[
+        [-0.046, 0.046, 0.018, 0.082, 0.012, Math.PI / 4],
+        [0.046, -0.046, 0.018, 0.082, 0.012, Math.PI / 4],
+        [0.046, 0.046, 0.019, 0.082, 0.012, -Math.PI / 4],
+        [-0.046, -0.046, 0.019, 0.082, 0.012, -Math.PI / 4],
+      ].map(([x, y, z, w, h, r], i) => (
+        <mesh key={`fold-${i}`} position={[x, y, z]} rotation={[0, 0, r]}>
+          <boxGeometry args={[w, h, 0.01]} />
+          <meshStandardMaterial color={i % 2 ? "#0f1118" : "#1a1d29"} roughness={0.9} metalness={0.04} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0, 0.031]} rotation={[0, 0, Math.PI / 4]}>
+        <boxGeometry args={[0.12, 0.006, 0.005]} />
+        <meshStandardMaterial color={dimGlow} emissive={glow} emissiveIntensity={0.36} roughness={0.36} />
       </mesh>
-      <mesh position={[0, 0, -0.004]}>
-        <boxGeometry args={[0.24, 0.24, 0.006]} />
-        <meshStandardMaterial color={glow} emissive={glow} emissiveIntensity={0.28} roughness={0.5} />
+      <mesh position={[0, 0, 0.032]} rotation={[0, 0, -Math.PI / 4]}>
+        <boxGeometry args={[0.12, 0.006, 0.005]} />
+        <meshStandardMaterial color={dimGlow} emissive={glow} emissiveIntensity={0.36} roughness={0.36} />
       </mesh>
+      <pointLight position={[0, 0, 0.12]} intensity={0.18} distance={0.32} color={glow} />
     </group>
   );
 }
@@ -253,82 +282,108 @@ function MiniArcade({ position, color }: { position: Vec3; color: string }) {
 }
 
 function ReferenceWall() {
-  const leftTiles: Vec3[] = [
-    [-1.05, 0.58, -1.108],
-    [-0.8, 0.58, -1.108],
-    [-1.05, 0.84, -1.108],
-    [-0.8, 0.84, -1.108],
-    [-0.8, 1.1, -1.108],
-    [-0.55, 1.1, -1.108],
+  const leftTiles: { position: Vec3; accent: "cyan" | "magenta" }[] = [
+    { position: [-1.18, 0.64, -1.108], accent: "cyan" },
+    { position: [-0.93, 0.64, -1.108], accent: "cyan" },
+    { position: [-1.18, 0.89, -1.108], accent: "cyan" },
+    { position: [-0.93, 0.89, -1.108], accent: "magenta" },
+    { position: [-0.93, 1.14, -1.108], accent: "magenta" },
+    { position: [-0.68, 1.14, -1.108], accent: "magenta" },
   ];
-  const rightTiles: Vec3[] = [
-    [0.78, 0.64, -1.108],
-    [1.03, 0.64, -1.108],
-    [0.78, 0.9, -1.108],
-    [1.03, 0.9, -1.108],
-    [0.78, 1.16, -1.108],
-    [1.03, 1.16, -1.108],
+  const rightTiles: { position: Vec3; accent: "cyan" | "magenta" }[] = [
+    { position: [0.83, 0.76, -1.108], accent: "cyan" },
+    { position: [1.08, 0.76, -1.108], accent: "cyan" },
+    { position: [0.83, 1.01, -1.108], accent: "cyan" },
+    { position: [1.08, 1.01, -1.108], accent: "cyan" },
+    { position: [0.83, 1.26, -1.108], accent: "cyan" },
+    { position: [1.08, 1.26, -1.108], accent: "cyan" },
+  ];
+  const shelfItems: { x: number; w: number; h: number; color: string; accent: string }[] = [
+    { x: -0.3, w: 0.07, h: 0.17, color: "#8a5f2e", accent: "#22d3ee" },
+    { x: -0.18, w: 0.075, h: 0.18, color: "#263248", accent: "#84cc16" },
+    { x: -0.03, w: 0.046, h: 0.105, color: "#3a3d46", accent: "#c084fc" },
+    { x: 0.08, w: 0.056, h: 0.12, color: "#4a5568", accent: "#22d3ee" },
+    { x: 0.22, w: 0.084, h: 0.086, color: "#2c3140", accent: "#f0abfc" },
+    { x: 0.4, w: 0.12, h: 0.072, color: "#52525b", accent: "#67e8f9" },
   ];
 
   return (
     <group>
-      {leftTiles.map((p, i) => (
-        <AcousticTile key={`left-${p.join("-")}`} position={p} accent={i < 4 ? "cyan" : "magenta"} />
+      {leftTiles.map(({ position, accent }) => (
+        <AcousticTile key={`left-${position.join("-")}`} position={position} accent={accent} />
       ))}
-      {rightTiles.map((p) => (
-        <AcousticTile key={`right-${p.join("-")}`} position={p} accent="cyan" />
-      ))}
-
-      <mesh position={[0.02, 0.98, -1.075]} castShadow>
-        <boxGeometry args={[0.78, 0.026, 0.07]} />
-        <meshStandardMaterial color="#08090e" roughness={0.55} metalness={0.35} />
-      </mesh>
-      <mesh position={[0.02, 0.998, -1.035]}>
-        <boxGeometry args={[0.8, 0.006, 0.01]} />
-        <meshStandardMaterial color="#111827" emissive="#c084fc" emissiveIntensity={0.22} roughness={0.4} />
-      </mesh>
-      <MiniArcade position={[-0.26, 1.08, -1.045]} color="#22d3ee" />
-      <MiniArcade position={[-0.14, 1.08, -1.045]} color="#84cc16" />
-      {[0.02, 0.12, 0.23, 0.36].map((x, i) => (
-        <mesh key={x} position={[x, 1.045, -1.035]} castShadow>
-          <boxGeometry args={[0.062, 0.09, 0.035]} />
-          <meshStandardMaterial
-            color={i % 2 ? "#303548" : "#4a2d46"}
-            emissive={i % 2 ? "#22d3ee" : "#c084fc"}
-            emissiveIntensity={0.08}
-            roughness={0.58}
-            metalness={0.12}
-          />
-        </mesh>
+      {rightTiles.map(({ position, accent }) => (
+        <AcousticTile key={`right-${position.join("-")}`} position={position} accent={accent} />
       ))}
 
-      <Text
-        position={[-0.31, 0.845, -1.055]}
-        fontSize={0.07}
-        lineHeight={0.82}
-        letterSpacing={0.03}
-        color="#f0abfc"
-        anchorX="center"
-        anchorY="middle"
-      >
+      {/* Black display shelf with collectible arcade boxes, cartridges, and a retro controller. */}
+      <mesh position={[0.04, 1.075, -1.075]} castShadow>
+        <boxGeometry args={[0.94, 0.028, 0.074]} />
+        <meshStandardMaterial color="#07090f" roughness={0.52} metalness={0.38} />
+      </mesh>
+      <mesh position={[0.04, 1.095, -1.032]}>
+        <boxGeometry args={[0.96, 0.006, 0.012]} />
+        <meshStandardMaterial color="#111827" emissive="#c084fc" emissiveIntensity={0.26} roughness={0.4} />
+      </mesh>
+      <MiniArcade position={[-0.34, 1.195, -1.045]} color="#22d3ee" />
+      <MiniArcade position={[-0.2, 1.195, -1.045]} color="#84cc16" />
+      {shelfItems.map((item, i) => (
+        <group key={item.x} position={[item.x, 1.13 + item.h / 2, -1.038]}>
+          <mesh castShadow>
+            <boxGeometry args={[item.w, item.h, 0.034]} />
+            <meshStandardMaterial color={item.color} emissive={item.accent} emissiveIntensity={0.06} roughness={0.58} metalness={0.14} />
+          </mesh>
+          <mesh position={[0, item.h * 0.2, 0.019]}>
+            <boxGeometry args={[item.w * 0.58, 0.01, 0.004]} />
+            <meshStandardMaterial color={item.accent} emissive={item.accent} emissiveIntensity={0.52} roughness={0.28} />
+          </mesh>
+          {i === shelfItems.length - 1 ? (
+            <>
+              <mesh position={[-0.032, 0.002, 0.021]}>
+                <circleGeometry args={[0.011, 16]} />
+                <meshStandardMaterial color="#111827" emissive="#22d3ee" emissiveIntensity={0.38} roughness={0.36} />
+              </mesh>
+              <mesh position={[0.032, 0.002, 0.021]}>
+                <circleGeometry args={[0.011, 16]} />
+                <meshStandardMaterial color="#111827" emissive="#c084fc" emissiveIntensity={0.38} roughness={0.36} />
+              </mesh>
+            </>
+          ) : null}
+        </group>
+      ))}
+
+      <mesh position={[0.04, 0.925, -1.048]}>
+        <boxGeometry args={[0.7, 0.006, 0.008]} />
+        <meshStandardMaterial color="#e5e7eb" emissive="#f8fafc" emissiveIntensity={0.22} roughness={0.35} />
+      </mesh>
+      <mesh position={[0.04, 0.91, -1.046]}>
+        <boxGeometry args={[0.46, 0.006, 0.008]} />
+        <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.36} roughness={0.35} />
+      </mesh>
+
+      <Text position={[-0.315, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
         {"INSERT\nCOIN"}
       </Text>
-      <Text
-        position={[0.39, 0.85, -1.055]}
-        fontSize={0.07}
-        lineHeight={0.82}
-        letterSpacing={0.03}
-        color="#67e8f9"
-        anchorX="center"
-        anchorY="middle"
-      >
+      <Text position={[-0.322, 0.847, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
+        {"INSERT\nCOIN"}
+      </Text>
+      <Text position={[-0.302, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
+        {"INSERT\nCOIN"}
+      </Text>
+      <Text position={[0.445, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
+        {"GAME\nOVER"}
+      </Text>
+      <Text position={[0.435, 0.848, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
+        {"GAME\nOVER"}
+      </Text>
+      <Text position={[0.457, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
         {"GAME\nOVER"}
       </Text>
 
-      <pointLight position={[-0.96, 0.78, -0.78]} intensity={1.6} distance={1.0} color="#22d3ee" />
-      <pointLight position={[-0.65, 1.1, -0.8]} intensity={1.25} distance={0.95} color="#c084fc" />
-      <pointLight position={[0.9, 0.92, -0.78]} intensity={1.55} distance={1.05} color="#22d3ee" />
-      <pointLight position={[0.02, 0.64, -0.74]} intensity={1.1} distance={1.35} color="#a855f7" />
+      <pointLight position={[-1.15, 0.88, -0.78]} intensity={1.75} distance={1.05} color="#22d3ee" />
+      <pointLight position={[-0.72, 1.12, -0.8]} intensity={1.55} distance={0.95} color="#c084fc" />
+      <pointLight position={[0.96, 1.04, -0.78]} intensity={1.7} distance={1.08} color="#22d3ee" />
+      <pointLight position={[0.06, 0.72, -0.74]} intensity={1.15} distance={1.35} color="#a855f7" />
     </group>
   );
 }

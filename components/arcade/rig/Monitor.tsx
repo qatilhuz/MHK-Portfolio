@@ -45,7 +45,7 @@ function PortraitScreen({ side }: { side: -1 | 1 }) {
   const warm = side < 0 ? "#67e8f9" : "#f0abfc";
 
   return (
-    <group position={[side * 0.585, 0.02, 0.036]} rotation={[0, side * -0.18, 0]}>
+    <group position={[side * 0.575, 0.02, 0.052]} rotation={[0, side * -0.31, 0]}>
       <mesh castShadow>
         <boxGeometry args={[0.315, 0.595, 0.034]} />
         <meshStandardMaterial color="#0c1019" metalness={0.58} roughness={0.3} />
@@ -56,8 +56,43 @@ function PortraitScreen({ side }: { side: -1 | 1 }) {
       </mesh>
       <mesh position={[0, 0, 0.0205]}>
         <planeGeometry args={[0.272, 0.535]} />
-        <meshPhysicalMaterial color="#d6f3ff" transparent opacity={0.055} roughness={0.04} metalness={0} />
+        <meshPhysicalMaterial
+          color="#d6f3ff"
+          emissive={accent}
+          emissiveIntensity={0.035}
+          transparent
+          opacity={0.088}
+          roughness={0.025}
+          metalness={0}
+          clearcoat={0.9}
+          clearcoatRoughness={0.1}
+        />
       </mesh>
+      {[
+        [0, 0.274, 0.026, 0.302, 0.006],
+        [0, -0.274, 0.026, 0.302, 0.006],
+        [-0.153, 0, 0.026, 0.006, 0.565],
+        [0.153, 0, 0.026, 0.006, 0.565],
+      ].map(([x, y, z, w, h], index) => (
+        <mesh key={`portrait-trim-${index}`} position={[x, y, z]}>
+          <boxGeometry args={[w, h, 0.004]} />
+          <meshStandardMaterial
+            color={index % 2 ? secondary : accent}
+            emissive={index % 2 ? secondary : accent}
+            emissiveIntensity={0.52}
+            roughness={0.2}
+            metalness={0.16}
+          />
+        </mesh>
+      ))}
+      {[-0.128, 0.128].map((x) =>
+        [-0.25, 0.25].map((y) => (
+          <mesh key={`screw-${x}-${y}`} position={[x, y, 0.03]}>
+            <circleGeometry args={[0.006, 14]} />
+            <meshStandardMaterial color="#94a3b8" metalness={0.78} roughness={0.26} />
+          </mesh>
+        )),
+      )}
       {side < 0 ? (
         <>
           {[-0.084, 0.084].map((x, i) => (

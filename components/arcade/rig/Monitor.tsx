@@ -79,11 +79,25 @@ function PortraitScreen({ side, reduced }: { side: -1 | 1; reduced?: boolean }) 
   });
 
   return (
-    <group position={[side * 0.585, 0.024, 0.056]} rotation={[0, side * -0.37, 0]}>
+    <group position={[side * 0.706, 0.024, 0.056]} rotation={[0, side * -0.37, 0]}>
       {/* Invisible-mounted flagship side OLED: rear shell, micro edge, emissive display, and reflective glass only. */}
       <RoundedBox args={[0.334, 0.622, 0.024]} radius={0.013} smoothness={8} position={[0, 0, 0]} castShadow>
         <meshStandardMaterial color="#080c13" metalness={0.38} roughness={0.46} />
       </RoundedBox>
+      <RoundedBox args={[0.124, 0.152, 0.008]} radius={0.006} smoothness={5} position={[0, 0.012, -0.018]} castShadow>
+        <meshStandardMaterial color="#05070c" metalness={0.78} roughness={0.26} />
+      </RoundedBox>
+      {[
+        [-0.041, 0.052],
+        [0.041, 0.052],
+        [-0.041, -0.028],
+        [0.041, -0.028],
+      ].map(([x, y]) => (
+        <mesh key={`rear-vesa-${x}-${y}`} position={[x, y, -0.023]}>
+          <circleGeometry args={[0.006, 18]} />
+          <meshStandardMaterial color="#111827" metalness={0.82} roughness={0.2} />
+        </mesh>
+      ))}
       <RoundedBox args={[0.326, 0.612, 0.012]} radius={0.011} smoothness={8} position={[0, 0, 0.013]}>
         <meshStandardMaterial color="#020611" emissive="#020b16" emissiveIntensity={0.42} roughness={0.24} metalness={0.08} />
       </RoundedBox>
@@ -203,6 +217,87 @@ function PortraitScreen({ side, reduced }: { side: -1 | 1; reduced?: boolean }) 
     </group>
   );
 }
+function MountRod({
+  position,
+  rotation,
+  length,
+  radius = 0.011,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  length: number;
+  radius?: number;
+}) {
+  return (
+    <mesh position={position} rotation={rotation} castShadow receiveShadow>
+      <cylinderGeometry args={[radius, radius, length, 32]} />
+      <meshStandardMaterial color="#05070b" metalness={0.86} roughness={0.2} envMapIntensity={1.2} />
+    </mesh>
+  );
+}
+
+function MountClamp({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
+  return (
+    <group position={position} scale={scale}>
+      <RoundedBox args={[0.086, 0.058, 0.032]} radius={0.01} smoothness={5} castShadow receiveShadow>
+        <meshStandardMaterial color="#06080d" metalness={0.82} roughness={0.22} />
+      </RoundedBox>
+      <mesh position={[0, 0, 0.019]}>
+        <boxGeometry args={[0.058, 0.034, 0.004]} />
+        <meshStandardMaterial color="#151923" metalness={0.72} roughness={0.18} />
+      </mesh>
+      {[-0.021, 0.021].map((x) => (
+        <mesh key={x} position={[x, 0, 0.022]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.004, 0.004, 0.004, 16]} />
+          <meshStandardMaterial color="#2f3542" metalness={0.9} roughness={0.18} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function TripleMonitorMount() {
+  return (
+    <group>
+      {/* Single heavy-duty black triple-monitor arm. All rods sit behind the display glass/back shells. */}
+      <MountRod position={[0, -0.134, -0.112]} length={0.56} radius={0.015} />
+      <MountRod position={[0, 0.052, -0.112]} rotation={[0, 0, Math.PI / 2]} length={1.47} radius={0.0115} />
+      <MountRod position={[0, -0.006, -0.118]} rotation={[0, 0, Math.PI / 2]} length={1.22} radius={0.0075} />
+      <RoundedBox args={[0.19, 0.105, 0.04]} radius={0.016} smoothness={6} position={[0, 0.028, -0.106]} castShadow receiveShadow>
+        <meshStandardMaterial color="#06080d" metalness={0.86} roughness={0.21} envMapIntensity={1.25} />
+      </RoundedBox>
+      <MountClamp position={[0, 0.028, -0.071]} scale={1.14} />
+      <MountRod position={[0, 0.028, -0.089]} rotation={[Math.PI / 2, 0, 0]} length={0.044} radius={0.0105} />
+      <RoundedBox args={[0.24, 0.168, 0.014]} radius={0.012} smoothness={5} position={[0, 0.018, -0.064]} castShadow receiveShadow>
+        <meshStandardMaterial color="#070a10" metalness={0.78} roughness={0.27} />
+      </RoundedBox>
+      {[-0.071, 0.071].map((x) =>
+        [-0.047, 0.047].map((y) => (
+          <mesh key={`center-vesa-${x}-${y}`} position={[x, 0.018 + y, -0.0555]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.006, 0.006, 0.004, 18]} />
+            <meshStandardMaterial color="#1f2633" metalness={0.88} roughness={0.16} />
+          </mesh>
+        )),
+      )}
+      {[-1, 1].map((side) => (
+        <group key={`side-mount-${side}`}>
+          <MountClamp position={[side * 0.665, 0.052, -0.103]} scale={0.82} />
+          <MountRod position={[side * 0.69, 0.052, -0.044]} rotation={[Math.PI / 2, 0, 0]} length={0.132} radius={0.0078} />
+          <MountRod position={[side * 0.69, -0.006, -0.046]} rotation={[Math.PI / 2, 0, 0]} length={0.118} radius={0.0058} />
+          <MountClamp position={[side * 0.704, 0.036, 0.019]} scale={0.7} />
+        </group>
+      ))}
+      <RoundedBox args={[0.25, 0.024, 0.15]} radius={0.014} smoothness={6} position={[0, -0.405, -0.104]} castShadow receiveShadow>
+        <meshStandardMaterial color="#05070b" metalness={0.84} roughness={0.24} envMapIntensity={1.05} />
+      </RoundedBox>
+      <mesh position={[0, -0.383, -0.104]}>
+        <boxGeometry args={[0.13, 0.026, 0.088]} />
+        <meshStandardMaterial color="#090c12" metalness={0.78} roughness={0.28} />
+      </mesh>
+    </group>
+  );
+}
+
 function MonitorEnterButton({
   enabled,
   onEnter,
@@ -321,6 +416,7 @@ export function Monitor({
 
   return (
     <group position={[0.02, 0.43, -0.17]}>
+      <TripleMonitorMount />
       <group>
         <mesh castShadow>
           <boxGeometry args={[1.035, 0.43, 0.036]} />
@@ -348,14 +444,6 @@ export function Monitor({
       <PortraitScreen side={-1} />
       <PortraitScreen side={1} />
 
-      <mesh position={[0, -0.335, 0.012]}>
-        <boxGeometry args={[0.085, 0.18, 0.048]} />
-        <meshStandardMaterial map={metal} color="#171923" metalness={0.58} roughness={0.38} />
-      </mesh>
-      <mesh position={[0, -0.43, 0.05]} castShadow>
-        <boxGeometry args={[0.34, 0.024, 0.16]} />
-        <meshStandardMaterial map={metal} color="#242733" metalness={0.52} roughness={0.38} />
-      </mesh>
       <pointLight position={[0, 0.04, 0.32]} intensity={0.82} distance={1.9} color="#c026d3" />
       <pointLight position={[-0.5, 0.03, 0.24]} intensity={0.35} distance={0.7} color="#22d3ee" />
       <pointLight position={[0.5, 0.03, 0.24]} intensity={0.28} distance={0.7} color="#c084fc" />

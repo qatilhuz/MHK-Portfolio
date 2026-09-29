@@ -6,6 +6,8 @@ import { RoundedBox, Text } from "@react-three/drei";
 import type { ShaderMaterial } from "three";
 import { metalAlbedo } from "./textures";
 
+const ARCADE_TEXT_FONT = "/fonts/Charmonman-Bold.woff2";
+
 const vertex = `
 varying vec2 vUv;
 void main() {
@@ -373,6 +375,7 @@ function MonitorEnterButton({
         <meshStandardMaterial color={secondary} emissive={secondary} emissiveIntensity={emissive} roughness={0.18} />
       </mesh>
       <Text
+        font={ARCADE_TEXT_FONT}
         position={[0, 0.006, 0.018]}
         fontSize={0.026}
         letterSpacing={0.07}
@@ -383,6 +386,7 @@ function MonitorEnterButton({
         ENTER ARCADE
       </Text>
       <Text
+        font={ARCADE_TEXT_FONT}
         position={[0, -0.023, 0.018]}
         fontSize={0.0105}
         letterSpacing={0.18}

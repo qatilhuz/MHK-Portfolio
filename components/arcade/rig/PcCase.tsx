@@ -16,6 +16,8 @@ import { PC_POS, PC_YAW } from "@/lib/arcade/layout";
 import { CoolingFan } from "./CoolingFan";
 import { pcBrushedMetal, pcHexMesh, pcPcbMaps } from "./pcTextures";
 
+const ARCADE_TEXT_FONT = "/fonts/Charmonman-Bold.woff2";
+
 const CASE_W = 0.43;
 const CASE_H = 0.6;
 const CASE_D = 0.54;
@@ -288,6 +290,7 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
         <meshStandardMaterial map={metal} color="#111827" metalness={0.42} roughness={0.48} />
       </mesh>
       <Text
+        font={ARCADE_TEXT_FONT}
         position={[SIDE_X - 0.024, 0.115, 0.095]}
         rotation={[0, -Math.PI / 2, 0]}
         fontSize={0.034}
@@ -299,6 +302,7 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
         Arcade
       </Text>
       <Text
+        font={ARCADE_TEXT_FONT}
         position={[0.118, 0.065, FRONT_Z + 0.026]}
         fontSize={0.032}
         letterSpacing={0.07}

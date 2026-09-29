@@ -51,6 +51,7 @@ const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANC
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
 const STUDIO_WALL_COLOR = "#1F1F1F";
+const ARCADE_TEXT_FONT = "/fonts/Charmonman-Bold.woff2";
 
 type LookRef = ArcadePortalPoint;
 
@@ -300,6 +301,7 @@ function NeonWallText({
         <meshBasicMaterial color={primary} transparent opacity={0.055} depthWrite={false} />
       </mesh>
       <Text
+        font={ARCADE_TEXT_FONT}
         position={[0.012, -0.012, -0.004]}
         fontSize={0.056}
         lineHeight={0.86}
@@ -313,6 +315,7 @@ function NeonWallText({
         {label}
       </Text>
       <Text
+        font={ARCADE_TEXT_FONT}
         position={[-0.011, 0.011, -0.002]}
         fontSize={0.056}
         lineHeight={0.86}
@@ -326,6 +329,7 @@ function NeonWallText({
         {label}
       </Text>
       <Text
+        font={ARCADE_TEXT_FONT}
         position={[0, 0, 0]}
         fontSize={0.056}
         lineHeight={0.86}

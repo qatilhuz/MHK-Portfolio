@@ -458,7 +458,7 @@ export function DeskAccessories() {
 
   return (
     <group>
-      <group position={[-1.26, 0.05, 0.015]} rotation={[0, -0.13, 0]} scale={1.22}>
+      <group position={[-1.26, 0.05, 0.205]} rotation={[0, -0.13, 0]} scale={1.22}>
         <mesh position={[0, 0.007, 0]} castShadow>
           <cylinderGeometry args={[0.055, 0.058, 0.014, 40]} />
           <meshStandardMaterial {...MATTE} />
@@ -529,16 +529,16 @@ export function DeskAccessories() {
         </group>
       </group>
 
-      <mesh position={[-0.94, 0.058, 0.16]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[-0.94, 0.058, 0.35]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.235, 64]} />
         <meshBasicMaterial color="#ffdca8" transparent opacity={0.2} depthWrite={false} />
       </mesh>
-      <mesh position={[-0.93, 0.059, 0.16]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.45, 0.62, 1]}>
+      <mesh position={[-0.93, 0.059, 0.35]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.45, 0.62, 1]}>
         <circleGeometry args={[0.18, 64]} />
         <meshBasicMaterial color="#fff1c7" transparent opacity={0.13} depthWrite={false} />
       </mesh>
       <spotLight
-        position={[-0.93, 0.36, 0.08]}
+        position={[-0.93, 0.36, 0.27]}
         angle={0.44}
         penumbra={0.86}
         intensity={1.9}
@@ -548,7 +548,7 @@ export function DeskAccessories() {
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.00016}
       />
-      <pointLight position={[-0.98, 0.16, 0.12]} intensity={0.34} distance={0.42} color="#ffedc2" />
+      <pointLight position={[-0.98, 0.16, 0.31]} intensity={0.34} distance={0.42} color="#ffedc2" />
 
       <group position={[-0.56, 0.05, 0.36]} rotation={[0, 0.12, 0]}>
         <mesh position={[0, 0.004, 0]} castShadow>

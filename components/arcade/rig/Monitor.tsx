@@ -105,7 +105,7 @@ function PortraitScreen({ side, reduced }: { side: -1 | 1; reduced?: boolean }) 
         <planeGeometry args={[0.316, 0.592]} />
         <shaderMaterial ref={oled} vertexShader={vertex} fragmentShader={sideFragment} uniforms={uniforms} />
       </mesh>
-      <mesh position={[0, 0, 0.024]}>
+      <mesh position={[0, 0, 0.031]}>
         <planeGeometry args={[0.318, 0.594]} />
         <meshPhysicalMaterial
           color="#e0f2fe"
@@ -113,8 +113,8 @@ function PortraitScreen({ side, reduced }: { side: -1 | 1; reduced?: boolean }) 
           thickness={0.025}
           ior={1.52}
           transparent
-          opacity={0.18}
-          roughness={0.012}
+          opacity={0.16}
+          roughness={0.01}
           metalness={0}
           clearcoat={1}
           clearcoatRoughness={0.045}
@@ -282,9 +282,9 @@ function TripleMonitorMount() {
       {[-1, 1].map((side) => (
         <group key={`side-mount-${side}`}>
           <MountClamp position={[side * 0.665, 0.052, -0.103]} scale={0.82} />
-          <MountRod position={[side * 0.69, 0.052, -0.044]} rotation={[Math.PI / 2, 0, 0]} length={0.132} radius={0.0078} />
-          <MountRod position={[side * 0.69, -0.006, -0.046]} rotation={[Math.PI / 2, 0, 0]} length={0.118} radius={0.0058} />
-          <MountClamp position={[side * 0.704, 0.036, 0.019]} scale={0.7} />
+          <MountRod position={[side * 0.69, 0.052, -0.038]} rotation={[Math.PI / 2, 0, 0]} length={0.144} radius={0.0078} />
+          <MountRod position={[side * 0.69, -0.006, -0.04]} rotation={[Math.PI / 2, 0, 0]} length={0.13} radius={0.0058} />
+          <MountClamp position={[side * 0.704, 0.036, 0.032]} scale={0.7} />
         </group>
       ))}
       <RoundedBox args={[0.25, 0.024, 0.15]} radius={0.014} smoothness={6} position={[0, -0.405, -0.104]} castShadow receiveShadow>

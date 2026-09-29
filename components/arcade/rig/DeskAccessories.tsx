@@ -2,7 +2,16 @@
 
 import { useMemo } from "react";
 import { Text } from "@react-three/drei";
-import { CanvasTexture, LatheGeometry, RepeatWrapping, SRGBColorSpace, Vector2 } from "three";
+import {
+  CanvasTexture,
+  CatmullRomCurve3,
+  LatheGeometry,
+  RepeatWrapping,
+  TubeGeometry,
+  SRGBColorSpace,
+  Vector2,
+  Vector3,
+} from "three";
 import { metalAlbedo } from "./textures";
 
 function brassAlbedo() {
@@ -89,6 +98,97 @@ function linerGeometry() {
   const g = new LatheGeometry(pts, 56);
   g.computeVertexNormals();
   return g;
+}
+
+function mugBodyGeometry() {
+  const pts = [
+    new Vector2(0.025, 0.0),
+    new Vector2(0.034, 0.004),
+    new Vector2(0.039, 0.017),
+    new Vector2(0.043, 0.052),
+    new Vector2(0.041, 0.085),
+    new Vector2(0.045, 0.096),
+    new Vector2(0.041, 0.104),
+  ];
+  const g = new LatheGeometry(pts, 88);
+  g.computeVertexNormals();
+  return g;
+}
+
+function mugHandleGeometry() {
+  const curve = new CatmullRomCurve3([
+    new Vector3(0.038, 0.078, 0),
+    new Vector3(0.071, 0.071, 0.002),
+    new Vector3(0.083, 0.052, 0.002),
+    new Vector3(0.078, 0.032, 0.001),
+    new Vector3(0.04, 0.025, 0),
+  ]);
+  return new TubeGeometry(curve, 44, 0.0048, 16, false);
+}
+
+function mugSteamGeometry(offset: number) {
+  const curve = new CatmullRomCurve3([
+    new Vector3(offset, 0.105, 0.002),
+    new Vector3(offset + 0.012, 0.128, 0.004),
+    new Vector3(offset - 0.009, 0.151, 0.001),
+    new Vector3(offset + 0.006, 0.176, 0.003),
+  ]);
+  return new TubeGeometry(curve, 28, 0.0012, 8, false);
+}
+
+function ModernCoffeeMug() {
+  const body = useMemo(() => mugBodyGeometry(), []);
+  const handle = useMemo(() => mugHandleGeometry(), []);
+  const steam = useMemo(() => [-0.012, 0.004, 0.017].map((offset) => mugSteamGeometry(offset)), []);
+
+  return (
+    <group position={[0.88, 0.053, 0.32]} rotation={[0, -0.18, 0]} scale={1.03}>
+      <mesh geometry={body} castShadow receiveShadow>
+        <meshPhysicalMaterial
+          color="#20242f"
+          roughness={0.48}
+          metalness={0.02}
+          clearcoat={0.42}
+          clearcoatRoughness={0.38}
+          envMapIntensity={1.15}
+        />
+      </mesh>
+      <mesh geometry={handle} castShadow>
+        <meshPhysicalMaterial
+          color="#1c202a"
+          roughness={0.44}
+          metalness={0.02}
+          clearcoat={0.45}
+          clearcoatRoughness={0.36}
+          envMapIntensity={1.15}
+        />
+      </mesh>
+      <mesh position={[0, 0.104, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.043, 0.0038, 16, 88]} />
+        <meshPhysicalMaterial color="#2b303c" roughness={0.34} metalness={0.02} clearcoat={0.56} clearcoatRoughness={0.28} />
+      </mesh>
+      <mesh position={[0, 0.101, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.0365, 72]} />
+        <meshPhysicalMaterial color="#2a140c" roughness={0.24} metalness={0} clearcoat={0.72} clearcoatRoughness={0.18} />
+      </mesh>
+      <mesh position={[0, 0.002, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.031, 0.0034, 12, 64]} />
+        <meshStandardMaterial color="#11151d" roughness={0.62} metalness={0.12} />
+      </mesh>
+      <mesh position={[0, 0.058, 0.0425]}>
+        <boxGeometry args={[0.06, 0.026, 0.002]} />
+        <meshStandardMaterial color="#a78bfa" emissive="#7c3aed" emissiveIntensity={0.24} roughness={0.5} metalness={0.08} />
+      </mesh>
+      <Text position={[0, 0.058, 0.045]} fontSize={0.015} letterSpacing={0.08} anchorX="center" anchorY="middle" color="#e9d5ff">
+        ARCADE
+      </Text>
+      {steam.map((geo, i) => (
+        <mesh key={i} geometry={geo}>
+          <meshBasicMaterial color="#f8fafc" transparent opacity={0.12 - i * 0.02} depthWrite={false} />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 
 function PivotPin({ y }: { y: number }) {
@@ -282,23 +382,7 @@ export function DeskAccessories() {
         <meshStandardMaterial color="#2a2d35" roughness={0.75} />
       </mesh>
 
-      <group position={[0.86, 0.055, 0.31]} rotation={[0, -0.2, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[0.034, 0.031, 0.072, 32, 1, true]} />
-          <meshStandardMaterial color="#12151d" roughness={0.54} metalness={0.18} />
-        </mesh>
-        <mesh position={[0, 0.037, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.032, 0.0026, 10, 32]} />
-          <meshStandardMaterial color="#2c3140" metalness={0.28} roughness={0.42} />
-        </mesh>
-        <mesh position={[0.036, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <torusGeometry args={[0.021, 0.004, 10, 28, Math.PI * 1.15]} />
-          <meshStandardMaterial color="#171a22" roughness={0.52} metalness={0.16} />
-        </mesh>
-        <Text position={[0, 0.004, 0.0345]} fontSize={0.018} anchorX="center" anchorY="middle" color="#a78bfa">
-          ARCADE
-        </Text>
-      </group>
+      <ModernCoffeeMug />
     </group>
   );
 }

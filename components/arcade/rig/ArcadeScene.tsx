@@ -399,7 +399,7 @@ function Room() {
     <>
       <mesh position={[0, 0.83, -1.16]} receiveShadow>
         <planeGeometry args={[6, 3.2]} />
-        <meshStandardMaterial map={concrete} color="#33384d" roughness={0.92} metalness={0.03} />
+        <meshStandardMaterial map={concrete} color="#4b5563" roughness={0.9} metalness={0.03} />
       </mesh>
       <ReferenceWall />
       <mesh position={[DESK_CENTER_X, 0.025, DESK_CENTER_Z]} receiveShadow castShadow>
@@ -451,7 +451,7 @@ export function ArcadeScene({
       camera={{ fov: 40, near: 0.05, far: 16, position: DEFAULT_CAMERA_POSITION }}
       style={{ width: "100%", height: "100%" }}
     >
-      <color attach="background" args={["#111522"]} />
+      <color attach="background" args={["#2f3748"]} />
       <hemisphereLight args={["#dbeafe", "#15101f", 0.42]} />
       <directionalLight
         position={[0.42, 2.35, 1.55]}

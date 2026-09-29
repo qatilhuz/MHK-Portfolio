@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { Text } from "@react-three/drei";
 import {
   CanvasTexture,
   CatmullRomCurve3,

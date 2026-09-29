@@ -50,6 +50,7 @@ const DEFAULT_AZIMUTH = Math.atan2(DEFAULT_CAMERA_VECTOR.x, DEFAULT_CAMERA_VECTO
 const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANCE);
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
+const STUDIO_WALL_COLOR = "#3f4756";
 
 type LookRef = ArcadePortalPoint;
 
@@ -399,7 +400,15 @@ function Room() {
     <>
       <mesh position={[0, 0.83, -1.16]} receiveShadow>
         <planeGeometry args={[6, 3.2]} />
-        <meshStandardMaterial map={concrete} color="#4b5563" roughness={0.9} metalness={0.03} />
+        <meshStandardMaterial map={concrete} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
+      </mesh>
+      <mesh position={[-1.62, 0.83, -0.18]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+        <planeGeometry args={[2.04, 3.2]} />
+        <meshStandardMaterial map={concrete} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
+      </mesh>
+      <mesh position={[1.62, 0.83, -0.18]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+        <planeGeometry args={[2.04, 3.2]} />
+        <meshStandardMaterial map={concrete} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
       </mesh>
       <ReferenceWall />
       <mesh position={[DESK_CENTER_X, 0.025, DESK_CENTER_Z]} receiveShadow castShadow>
@@ -451,7 +460,7 @@ export function ArcadeScene({
       camera={{ fov: 40, near: 0.05, far: 16, position: DEFAULT_CAMERA_POSITION }}
       style={{ width: "100%", height: "100%" }}
     >
-      <color attach="background" args={["#2f3748"]} />
+      <color attach="background" args={[STUDIO_WALL_COLOR]} />
       <hemisphereLight args={["#dbeafe", "#15101f", 0.42]} />
       <directionalLight
         position={[0.42, 2.35, 1.55]}

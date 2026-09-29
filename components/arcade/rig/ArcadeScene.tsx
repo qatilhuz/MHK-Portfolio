@@ -22,7 +22,7 @@ import { PcCase } from "./PcCase";
 import { DeskAccessories } from "./DeskAccessories";
 import { HeadsetStand } from "./HeadsetStand";
 import { Speaker } from "./Speakers";
-import { concreteAlbedo, woodAlbedo } from "./textures";
+import { woodAlbedo } from "./textures";
 
 type Vec3 = [number, number, number];
 
@@ -50,7 +50,7 @@ const DEFAULT_AZIMUTH = Math.atan2(DEFAULT_CAMERA_VECTOR.x, DEFAULT_CAMERA_VECTO
 const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANCE);
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
-const STUDIO_WALL_COLOR = "#3f4756";
+const STUDIO_WALL_COLOR = "#1F1F1F";
 const NEON_FONT_URL = "https://cdn.jsdelivr.net/npm/@fontsource/audiowide@5.0.20/files/audiowide-latin-400-normal.woff2";
 
 type LookRef = ArcadePortalPoint;
@@ -449,7 +449,6 @@ function ReferenceWall() {
 
 function Room() {
   const wood = useMemo(() => woodAlbedo(), []);
-  const concrete = useMemo(() => concreteAlbedo(), []);
   const legX = DESK_SIZE[0] / 2 - 0.2;
   const frontZ = DESK_CENTER_Z + DESK_SIZE[2] / 2 - 0.11;
   const backZ = DESK_CENTER_Z - DESK_SIZE[2] / 2 + 0.18;
@@ -458,15 +457,15 @@ function Room() {
     <>
       <mesh position={[0, 0.83, -1.16]} receiveShadow>
         <planeGeometry args={[6, 3.2]} />
-        <meshStandardMaterial map={concrete} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
+        <meshStandardMaterial color={STUDIO_WALL_COLOR} roughness={0.62} metalness={0.01} />
       </mesh>
       <mesh position={[-1.62, 0.83, -0.18]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[2.04, 3.2]} />
-        <meshStandardMaterial map={concrete} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
+        <meshStandardMaterial color={STUDIO_WALL_COLOR} roughness={0.62} metalness={0.01} />
       </mesh>
       <mesh position={[1.62, 0.83, -0.18]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[2.04, 3.2]} />
-        <meshStandardMaterial map={concrete} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
+        <meshStandardMaterial color={STUDIO_WALL_COLOR} roughness={0.62} metalness={0.01} />
       </mesh>
       <ReferenceWall />
       <mesh position={[DESK_CENTER_X, 0.025, DESK_CENTER_Z]} receiveShadow castShadow>

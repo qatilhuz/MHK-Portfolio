@@ -45,22 +45,18 @@ export function woodAlbedo() {
 export function concreteAlbedo() {
   const size = 1024;
   const { node, ctx } = canvas(size);
-  const base = ctx.createLinearGradient(0, 0, size, size);
-  base.addColorStop(0, "#4b5563");
-  base.addColorStop(0.5, "#3f4756");
-  base.addColorStop(1, "#343b49");
-  ctx.fillStyle = base;
+  ctx.fillStyle = "#1F1F1F";
   ctx.fillRect(0, 0, size, size);
-  for (let i = 0; i < 6000; i += 1) {
-    const n = 58 + Math.random() * 42;
-    ctx.fillStyle = `rgba(${n},${n + 5},${n + 14},${0.16 + Math.random() * 0.18})`;
-    ctx.fillRect(Math.random() * size, Math.random() * size, 2, 2);
+  for (let i = 0; i < 3600; i += 1) {
+    const n = 28 + Math.random() * 12;
+    ctx.fillStyle = `rgba(${n},${n},${n},${0.06 + Math.random() * 0.08})`;
+    ctx.fillRect(Math.random() * size, Math.random() * size, 1.5, 1.5);
   }
-  ctx.strokeStyle = "rgba(203,213,225,0.045)";
-  for (let y = 0; y < size; y += 44) {
+  ctx.strokeStyle = "rgba(255,255,255,0.018)";
+  for (let y = 0; y < size; y += 56) {
     ctx.beginPath();
     ctx.moveTo(0, y);
-    ctx.lineTo(size, y + Math.sin(y * 0.04) * 8);
+    ctx.lineTo(size, y + Math.sin(y * 0.04) * 5);
     ctx.stroke();
   }
   return wrap(new CanvasTexture(node), 3);

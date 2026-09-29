@@ -336,6 +336,10 @@ function ReferenceWall() {
 function Room() {
   const wood = useMemo(() => woodAlbedo(), []);
   const concrete = useMemo(() => concreteAlbedo(), []);
+  const legX = DESK_SIZE[0] / 2 - 0.2;
+  const frontZ = 0.12 + DESK_SIZE[2] / 2 - 0.11;
+  const backZ = 0.12 - DESK_SIZE[2] / 2 + 0.18;
+
   return (
     <>
       <mesh position={[0, 0.83, -1.16]} receiveShadow>
@@ -348,22 +352,26 @@ function Room() {
         <meshStandardMaterial map={wood} color="#7d8491" roughness={0.68} metalness={0.04} />
       </mesh>
       {[
-        [-1.08, -0.12, 0.5],
-        [1.08, -0.12, 0.5],
-        [-1.08, -0.12, -0.3],
-        [1.08, -0.12, -0.3],
+        [-legX, -0.12, frontZ],
+        [legX, -0.12, frontZ],
+        [-legX, -0.12, backZ],
+        [legX, -0.12, backZ],
       ].map((p) => (
         <mesh key={p.join(",")} position={p as Vec3}>
-          <boxGeometry args={[0.052, 0.24, 0.052]} />
+          <boxGeometry args={[0.058, 0.24, 0.058]} />
           <meshStandardMaterial color="#151822" roughness={0.78} metalness={0.18} />
         </mesh>
       ))}
       <mesh position={[0, -0.01, 0.12]}>
-        <boxGeometry args={[2.38, 0.026, 0.98]} />
+        <boxGeometry args={[DESK_SIZE[0] - 0.06, 0.026, DESK_SIZE[2] - 0.05]} />
         <meshStandardMaterial color="#161923" roughness={0.82} metalness={0.12} />
       </mesh>
-      <pointLight position={[0, 0.08, 0.62]} intensity={0.7} distance={1.8} color="#22d3ee" />
-      <pointLight position={[0.6, 0.11, 0.42]} intensity={0.45} distance={1.0} color="#c084fc" />
+      <mesh position={[0, 0.056, 0.12 + DESK_SIZE[2] / 2 + 0.004]}>
+        <boxGeometry args={[DESK_SIZE[0] - 0.12, 0.006, 0.006]} />
+        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.32} roughness={0.28} />
+      </mesh>
+      <pointLight position={[0, 0.08, 0.68]} intensity={0.9} distance={2.3} color="#22d3ee" />
+      <pointLight position={[0.72, 0.12, 0.42]} intensity={0.55} distance={1.2} color="#c084fc" />
     </>
   );
 }

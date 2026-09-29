@@ -7,7 +7,7 @@ export type ArcadePortalView = {
   look: ArcadePortalPoint;
 };
 
-export const PORTAL_START_POS = { x: 0.0, y: 0.9, z: 1.95 };
+export const PORTAL_START_POS = { x: 0.0, y: 0.92, z: 2.18 };
 export const PORTAL_START_LOOK = { x: 0.03, y: 0.42, z: -0.08 };
 
 const PORTAL_APPROACH_POS = { x: 0.02, y: 0.6, z: 0.92 };

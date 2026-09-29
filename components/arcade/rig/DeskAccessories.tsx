@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Text } from "@react-three/drei";
 import { CanvasTexture, LatheGeometry, RepeatWrapping, SRGBColorSpace, Vector2 } from "three";
 import { metalAlbedo } from "./textures";
 
@@ -142,7 +143,7 @@ export function DeskAccessories() {
 
   return (
     <group>
-      <group position={[-1.08, 0.05, 0.025]} rotation={[0, -0.16, 0]} scale={1.16}>
+      <group position={[-1.26, 0.05, 0.015]} rotation={[0, -0.13, 0]} scale={1.22}>
         <mesh position={[0, 0.007, 0]} castShadow>
           <cylinderGeometry args={[0.055, 0.058, 0.014, 40]} />
           <meshStandardMaterial {...MATTE} />
@@ -249,6 +250,24 @@ export function DeskAccessories() {
         <circleGeometry args={[0.038, 24]} />
         <meshStandardMaterial color="#2a2d35" roughness={0.75} />
       </mesh>
+
+      <group position={[0.86, 0.055, 0.31]} rotation={[0, -0.2, 0]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.034, 0.031, 0.072, 32, 1, true]} />
+          <meshStandardMaterial color="#12151d" roughness={0.54} metalness={0.18} />
+        </mesh>
+        <mesh position={[0, 0.037, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.032, 0.0026, 10, 32]} />
+          <meshStandardMaterial color="#2c3140" metalness={0.28} roughness={0.42} />
+        </mesh>
+        <mesh position={[0.036, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <torusGeometry args={[0.021, 0.004, 10, 28, Math.PI * 1.15]} />
+          <meshStandardMaterial color="#171a22" roughness={0.52} metalness={0.16} />
+        </mesh>
+        <Text position={[0, 0.004, 0.0345]} fontSize={0.018} anchorX="center" anchorY="middle" color="#a78bfa">
+          ARCADE
+        </Text>
+      </group>
     </group>
   );
 }

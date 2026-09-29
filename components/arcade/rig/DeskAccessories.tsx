@@ -68,117 +68,7 @@ function paperAlbedo() {
   return tex;
 }
 
-function premiumCeramicMaps() {
-  const size = 512;
-  const albedo = document.createElement("canvas");
-  albedo.width = size;
-  albedo.height = size;
-  const a = albedo.getContext("2d");
-  if (!a) throw new Error("2d");
-  const grad = a.createLinearGradient(0, 0, size, size);
-  grad.addColorStop(0, "#111722");
-  grad.addColorStop(0.42, "#202838");
-  grad.addColorStop(1, "#0b0f17");
-  a.fillStyle = grad;
-  a.fillRect(0, 0, size, size);
-  for (let i = 0; i < 2200; i += 1) {
-    const alpha = 0.018 + Math.random() * 0.032;
-    const tone = 150 + Math.random() * 70;
-    a.fillStyle = `rgba(${tone},${tone + 6},${tone + 18},${alpha})`;
-    a.fillRect(Math.random() * size, Math.random() * size, 1, 1);
-  }
-  a.strokeStyle = "rgba(255,255,255,0.045)";
-  for (let y = 18; y < size; y += 36) {
-    a.beginPath();
-    a.moveTo(0, y);
-    a.bezierCurveTo(size * 0.25, y - 5, size * 0.65, y + 6, size, y - 2);
-    a.stroke();
-  }
-
-  const roughness = document.createElement("canvas");
-  roughness.width = size;
-  roughness.height = size;
-  const r = roughness.getContext("2d");
-  if (!r) throw new Error("2d");
-  r.fillStyle = "#777";
-  r.fillRect(0, 0, size, size);
-  for (let i = 0; i < 1800; i += 1) {
-    r.fillStyle = `rgba(255,255,255,${Math.random() * 0.075})`;
-    r.fillRect(Math.random() * size, Math.random() * size, 2, 2);
-  }
-
-  const bump = document.createElement("canvas");
-  bump.width = size;
-  bump.height = size;
-  const b = bump.getContext("2d");
-  if (!b) throw new Error("2d");
-  b.fillStyle = "#808080";
-  b.fillRect(0, 0, size, size);
-  for (let i = 0; i < 2600; i += 1) {
-    const tone = 112 + Math.random() * 36;
-    b.fillStyle = `rgba(${tone},${tone},${tone},${0.12 + Math.random() * 0.18})`;
-    b.fillRect(Math.random() * size, Math.random() * size, 1.2, 1.2);
-  }
-  b.strokeStyle = "rgba(185,185,185,0.09)";
-  for (let y = 22; y < size; y += 42) {
-    b.beginPath();
-    b.moveTo(0, y);
-    b.bezierCurveTo(size * 0.22, y + 3, size * 0.62, y - 4, size, y + 2);
-    b.stroke();
-  }
-
-  const albedoTex = new CanvasTexture(albedo);
-  albedoTex.colorSpace = SRGBColorSpace;
-  albedoTex.anisotropy = 12;
-  albedoTex.needsUpdate = true;
-  const roughTex = new CanvasTexture(roughness);
-  roughTex.anisotropy = 12;
-  roughTex.needsUpdate = true;
-  const bumpTex = new CanvasTexture(bump);
-  bumpTex.anisotropy = 12;
-  bumpTex.needsUpdate = true;
-  return { albedo: albedoTex, roughness: roughTex, bump: bumpTex };
-}
-
-function mugEmblemTexture() {
-  const node = document.createElement("canvas");
-  node.width = 512;
-  node.height = 256;
-  const ctx = node.getContext("2d");
-  if (!ctx) throw new Error("2d");
-  ctx.clearRect(0, 0, 512, 256);
-  const g = ctx.createLinearGradient(60, 0, 452, 0);
-  g.addColorStop(0, "rgba(34,211,238,0.92)");
-  g.addColorStop(0.5, "rgba(216,180,254,0.96)");
-  g.addColorStop(1, "rgba(192,132,252,0.92)");
-  ctx.fillStyle = "rgba(8,12,20,0.58)";
-  roundRect(ctx, 74, 58, 364, 128, 34);
-  ctx.fill();
-  ctx.lineWidth = 9;
-  ctx.strokeStyle = g;
-  roundRect(ctx, 74, 58, 364, 128, 34);
-  ctx.stroke();
-  ctx.fillStyle = "rgba(248,250,252,0.95)";
-  ctx.font = "bold 54px monospace";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("ARCADE", 256, 123);
-  ctx.strokeStyle = "rgba(34,211,238,0.55)";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(124, 92);
-  ctx.lineTo(154, 92);
-  ctx.moveTo(358, 155);
-  ctx.lineTo(388, 155);
-  ctx.stroke();
-  const tex = new CanvasTexture(node);
-  tex.colorSpace = SRGBColorSpace;
-  tex.anisotropy = 8;
-  tex.needsUpdate = true;
-  return tex;
-}
-
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
@@ -190,6 +80,126 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+}
+
+function smartMugCeramicMaps() {
+  const size = 768;
+  const albedo = document.createElement("canvas");
+  albedo.width = size;
+  albedo.height = size;
+  const ctx = albedo.getContext("2d");
+  if (!ctx) throw new Error("2d");
+  const grad = ctx.createLinearGradient(0, 0, size, size);
+  grad.addColorStop(0, "#fffaf0");
+  grad.addColorStop(0.34, "#e8e1d2");
+  grad.addColorStop(0.68, "#f9f5eb");
+  grad.addColorStop(1, "#c9c1b2");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  for (let i = 0; i < 3400; i += 1) {
+    const tone = 190 + Math.random() * 52;
+    ctx.fillStyle = `rgba(${tone},${tone - 4},${tone - 14},${0.018 + Math.random() * 0.038})`;
+    ctx.fillRect(Math.random() * size, Math.random() * size, 1.2, 1.2);
+  }
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.lineWidth = 1;
+  for (let y = 22; y < size; y += 42) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.bezierCurveTo(size * 0.28, y - 5, size * 0.68, y + 5, size, y - 2);
+    ctx.stroke();
+  }
+
+  const roughness = document.createElement("canvas");
+  roughness.width = size;
+  roughness.height = size;
+  const rough = roughness.getContext("2d");
+  if (!rough) throw new Error("2d");
+  rough.fillStyle = "#9a9a9a";
+  rough.fillRect(0, 0, size, size);
+  for (let i = 0; i < 2600; i += 1) {
+    rough.fillStyle = `rgba(255,255,255,${0.02 + Math.random() * 0.065})`;
+    rough.fillRect(Math.random() * size, Math.random() * size, 1.8, 1.8);
+  }
+  rough.fillStyle = "rgba(30,30,30,0.08)";
+  for (let y = 0; y < size; y += 57) rough.fillRect(0, y, size, 1);
+
+  const bump = document.createElement("canvas");
+  bump.width = size;
+  bump.height = size;
+  const bumpCtx = bump.getContext("2d");
+  if (!bumpCtx) throw new Error("2d");
+  bumpCtx.fillStyle = "#808080";
+  bumpCtx.fillRect(0, 0, size, size);
+  for (let i = 0; i < 5200; i += 1) {
+    const tone = 118 + Math.random() * 30;
+    bumpCtx.fillStyle = `rgba(${tone},${tone},${tone},${0.1 + Math.random() * 0.16})`;
+    bumpCtx.fillRect(Math.random() * size, Math.random() * size, 1, 1);
+  }
+
+  const albedoTex = new CanvasTexture(albedo);
+  albedoTex.colorSpace = SRGBColorSpace;
+  albedoTex.wrapS = RepeatWrapping;
+  albedoTex.wrapT = RepeatWrapping;
+  albedoTex.repeat.set(1.3, 1.3);
+  albedoTex.anisotropy = 12;
+  albedoTex.needsUpdate = true;
+
+  const roughTex = new CanvasTexture(roughness);
+  roughTex.wrapS = RepeatWrapping;
+  roughTex.wrapT = RepeatWrapping;
+  roughTex.repeat.set(1.3, 1.3);
+  roughTex.anisotropy = 12;
+  roughTex.needsUpdate = true;
+
+  const bumpTex = new CanvasTexture(bump);
+  bumpTex.wrapS = RepeatWrapping;
+  bumpTex.wrapT = RepeatWrapping;
+  bumpTex.repeat.set(1.5, 1.5);
+  bumpTex.anisotropy = 12;
+  bumpTex.needsUpdate = true;
+
+  return { albedo: albedoTex, roughness: roughTex, bump: bumpTex };
+}
+
+function smartMugPanelTexture() {
+  const node = document.createElement("canvas");
+  node.width = 512;
+  node.height = 192;
+  const ctx = node.getContext("2d");
+  if (!ctx) throw new Error("2d");
+  ctx.clearRect(0, 0, 512, 192);
+  const g = ctx.createLinearGradient(0, 0, 512, 192);
+  g.addColorStop(0, "rgba(7,10,17,0.98)");
+  g.addColorStop(0.55, "rgba(20,27,39,0.98)");
+  g.addColorStop(1, "rgba(4,7,12,0.98)");
+  ctx.fillStyle = g;
+  drawRoundedRect(ctx, 54, 36, 404, 120, 42);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.22)";
+  ctx.lineWidth = 6;
+  drawRoundedRect(ctx, 54, 36, 404, 120, 42);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255,248,238,0.95)";
+  ctx.font = "bold 42px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("MHK", 254, 89);
+  ctx.fillStyle = "rgba(34,211,238,0.92)";
+  ctx.beginPath();
+  ctx.arc(394, 93, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(192,132,252,0.82)";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(132, 128);
+  ctx.lineTo(318, 128);
+  ctx.stroke();
+  const tex = new CanvasTexture(node);
+  tex.colorSpace = SRGBColorSpace;
+  tex.anisotropy = 12;
+  tex.needsUpdate = true;
+  return tex;
 }
 
 const MATTE = { color: "#1c1e24", metalness: 0.28, roughness: 0.55, envMapIntensity: 0.85 };
@@ -224,182 +234,196 @@ function linerGeometry() {
   return g;
 }
 
-function mugBodyGeometry() {
+function smartMugBodyGeometry() {
   const pts = [
-    new Vector2(0.019, 0.0),
-    new Vector2(0.03, 0.0018),
-    new Vector2(0.039, 0.008),
-    new Vector2(0.0442, 0.024),
-    new Vector2(0.0462, 0.056),
-    new Vector2(0.045, 0.083),
-    new Vector2(0.0415, 0.097),
-    new Vector2(0.0488, 0.105),
-    new Vector2(0.0505, 0.113),
-    new Vector2(0.0452, 0.120),
-    new Vector2(0.034, 0.1225),
+    new Vector2(0.001, 0.0),
+    new Vector2(0.033, 0.0),
+    new Vector2(0.043, 0.004),
+    new Vector2(0.0475, 0.018),
+    new Vector2(0.0505, 0.058),
+    new Vector2(0.0488, 0.096),
+    new Vector2(0.0455, 0.114),
+    new Vector2(0.0525, 0.122),
+    new Vector2(0.056, 0.131),
+    new Vector2(0.0505, 0.139),
+    new Vector2(0.0365, 0.1415),
   ];
-  const g = new LatheGeometry(pts, 224);
-  g.computeVertexNormals();
-  return g;
+  const geo = new LatheGeometry(pts, 256);
+  geo.computeVertexNormals();
+  return geo;
 }
 
-function mugInnerWallGeometry() {
+function smartMugInnerGeometry() {
   const pts = [
-    new Vector2(0.032, 0.025),
-    new Vector2(0.037, 0.052),
-    new Vector2(0.0388, 0.087),
-    new Vector2(0.036, 0.106),
-    new Vector2(0.0305, 0.114),
+    new Vector2(0.031, 0.024),
+    new Vector2(0.0365, 0.056),
+    new Vector2(0.0384, 0.095),
+    new Vector2(0.036, 0.122),
+    new Vector2(0.0305, 0.136),
   ];
-  const g = new LatheGeometry(pts, 224);
-  g.computeVertexNormals();
-  return g;
+  const geo = new LatheGeometry(pts, 256);
+  geo.computeVertexNormals();
+  return geo;
 }
 
-function mugHandleGeometry() {
+function smartMugHandleGeometry() {
   const curve = new CatmullRomCurve3(
     [
-      new Vector3(0.041, 0.089, 0.0015),
-      new Vector3(0.072, 0.092, 0.008),
-      new Vector3(0.101, 0.071, 0.007),
-      new Vector3(0.108, 0.049, 0.004),
-      new Vector3(0.091, 0.02, 0.002),
-      new Vector3(0.041, 0.021, 0.0005),
+      new Vector3(0.047, 0.096, 0.002),
+      new Vector3(0.078, 0.102, 0.012),
+      new Vector3(0.112, 0.078, 0.012),
+      new Vector3(0.118, 0.056, 0.007),
+      new Vector3(0.101, 0.028, 0.004),
+      new Vector3(0.048, 0.034, 0.001),
     ],
     false,
     "centripetal",
-    0.5,
+    0.44,
   );
-  return new TubeGeometry(curve, 128, 0.0062, 30, false);
+  const geo = new TubeGeometry(curve, 160, 0.0063, 34, false);
+  geo.computeVertexNormals();
+  return geo;
 }
 
-function mugSteamGeometry(offset: number) {
+function smartMugSteamGeometry(offset: number, phase: number) {
   const curve = new CatmullRomCurve3([
-    new Vector3(offset, 0.109, 0.002),
-    new Vector3(offset + 0.012, 0.132, 0.004),
-    new Vector3(offset - 0.01, 0.158, 0.001),
-    new Vector3(offset + 0.007, 0.184, 0.003),
+    new Vector3(offset, 0.132, 0.004),
+    new Vector3(offset + 0.011, 0.158, 0.006 + phase),
+    new Vector3(offset - 0.009, 0.188, 0.001),
+    new Vector3(offset + 0.006, 0.218, 0.006 - phase),
   ]);
-  return new TubeGeometry(curve, 44, 0.0011, 10, false);
+  const geo = new TubeGeometry(curve, 56, 0.001, 12, false);
+  geo.computeVertexNormals();
+  return geo;
 }
 
 function ModernCoffeeMug() {
-  const body = useMemo(() => mugBodyGeometry(), []);
-  const inner = useMemo(() => mugInnerWallGeometry(), []);
-  const handle = useMemo(() => mugHandleGeometry(), []);
-  const steam = useMemo(() => [-0.012, 0.004, 0.017].map((offset) => mugSteamGeometry(offset)), []);
-  const ceramic = useMemo(() => premiumCeramicMaps(), []);
-  const emblem = useMemo(() => mugEmblemTexture(), []);
+  const ceramic = useMemo(() => smartMugCeramicMaps(), []);
+  const panel = useMemo(() => smartMugPanelTexture(), []);
+  const body = useMemo(() => smartMugBodyGeometry(), []);
+  const inner = useMemo(() => smartMugInnerGeometry(), []);
+  const handle = useMemo(() => smartMugHandleGeometry(), []);
+  const steam = useMemo(
+    () => [
+      smartMugSteamGeometry(-0.016, 0.002),
+      smartMugSteamGeometry(0.002, -0.001),
+      smartMugSteamGeometry(0.018, 0.003),
+    ],
+    [],
+  );
 
   return (
-    <group position={[0.88, 0.053, 0.32]} rotation={[0, -0.18, 0]} scale={1.04}>
+    <group position={[0.88, 0.052, 0.32]} rotation={[0, -0.18, 0]} scale={1.08}>
       <mesh geometry={body} castShadow receiveShadow>
         <meshPhysicalMaterial
           map={ceramic.albedo}
           roughnessMap={ceramic.roughness}
           bumpMap={ceramic.bump}
-          bumpScale={0.0015}
-          color="#242c3a"
-          roughness={0.27}
-          metalness={0.03}
+          bumpScale={0.00135}
+          color="#f2ecdf"
+          metalness={0.015}
+          roughness={0.31}
           clearcoat={1}
-          clearcoatRoughness={0.1}
-          envMapIntensity={1.85}
+          clearcoatRoughness={0.085}
+          ior={1.56}
+          envMapIntensity={1.95}
         />
       </mesh>
-      <mesh geometry={inner}>
+      <mesh geometry={inner} receiveShadow>
         <meshPhysicalMaterial
           map={ceramic.albedo}
           bumpMap={ceramic.bump}
-          bumpScale={0.0009}
-          color="#151a24"
-          roughness={0.32}
-          metalness={0.02}
+          bumpScale={0.0008}
+          color="#d8d0c1"
+          metalness={0.01}
+          roughness={0.36}
           clearcoat={0.72}
-          clearcoatRoughness={0.18}
+          clearcoatRoughness={0.14}
           side={2}
+          envMapIntensity={1.3}
         />
       </mesh>
-      <mesh geometry={handle} castShadow>
+      <mesh geometry={handle} castShadow receiveShadow>
         <meshPhysicalMaterial
           map={ceramic.albedo}
           roughnessMap={ceramic.roughness}
           bumpMap={ceramic.bump}
-          bumpScale={0.0012}
-          color="#202735"
-          roughness={0.26}
-          metalness={0.03}
+          bumpScale={0.001}
+          color="#f4eee2"
+          metalness={0.015}
+          roughness={0.29}
           clearcoat={1}
-          clearcoatRoughness={0.1}
-          envMapIntensity={1.85}
+          clearcoatRoughness={0.075}
+          ior={1.56}
+          envMapIntensity={2}
         />
       </mesh>
       {[
-        [0.041, 0.086, 0.0015, 0.019, 0.014, 0.01],
-        [0.041, 0.024, 0.0005, 0.017, 0.013, 0.009],
+        [0.047, 0.094, 0.0025, 0.0185, 0.014, 0.012],
+        [0.047, 0.036, 0.0012, 0.017, 0.013, 0.0105],
       ].map(([x, y, z, sx, sy, sz], i) => (
-        <mesh key={`handle-lug-${i}`} position={[x, y, z]} scale={[sx, sy, sz]} castShadow>
-          <sphereGeometry args={[1, 36, 24]} />
+        <mesh key={`smart-handle-lug-${i}`} position={[x, y, z]} scale={[sx, sy, sz]} castShadow receiveShadow>
+          <sphereGeometry args={[1, 44, 28]} />
           <meshPhysicalMaterial
             map={ceramic.albedo}
             roughnessMap={ceramic.roughness}
             bumpMap={ceramic.bump}
-            bumpScale={0.001}
-            color="#222a38"
-            roughness={0.25}
-            metalness={0.03}
+            bumpScale={0.0008}
+            color="#f2eadc"
+            metalness={0.015}
+            roughness={0.28}
             clearcoat={1}
-            clearcoatRoughness={0.09}
-            envMapIntensity={1.9}
+            clearcoatRoughness={0.075}
+            envMapIntensity={2}
           />
         </mesh>
       ))}
-      <mesh position={[0, 0.112, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.0452, 0.0052, 32, 224]} />
-        <meshPhysicalMaterial color="#3b4352" roughness={0.14} metalness={0.04} clearcoat={1} clearcoatRoughness={0.055} envMapIntensity={2.05} />
+      <mesh position={[0, 0.1315, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.0475, 0.0048, 34, 256]} />
+        <meshPhysicalMaterial color="#fff8eb" roughness={0.16} metalness={0.01} clearcoat={1} clearcoatRoughness={0.045} ior={1.58} envMapIntensity={2.15} />
       </mesh>
-      <mesh position={[0, 0.1082, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.0362, 0.0019, 18, 180]} />
-        <meshPhysicalMaterial color="#0e1118" roughness={0.22} metalness={0.02} clearcoat={0.72} clearcoatRoughness={0.16} />
+      <mesh position={[0, 0.126, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.0372, 0.002, 20, 192]} />
+        <meshPhysicalMaterial color="#d3cab9" roughness={0.3} metalness={0.01} clearcoat={0.65} clearcoatRoughness={0.13} />
       </mesh>
-      <mesh position={[0, 0.1167, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.0456, 0.0009, 10, 224]} />
-        <meshBasicMaterial color="#fff7ed" transparent opacity={0.62} depthWrite={false} />
+      <mesh position={[0, 0.1226, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.0362, 192]} />
+        <meshPhysicalMaterial color="#2a1408" roughness={0.1} metalness={0} clearcoat={1} clearcoatRoughness={0.045} envMapIntensity={1.8} />
       </mesh>
-      <mesh position={[0, 0.1056, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.0362, 160]} />
-        <meshPhysicalMaterial color="#1b0c06" roughness={0.12} metalness={0} clearcoat={1} clearcoatRoughness={0.055} envMapIntensity={1.65} />
+      <mesh position={[0, 0.1234, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.029, 0.0007, 10, 160]} />
+        <meshBasicMaterial color="#d6a56b" transparent opacity={0.18} depthWrite={false} />
       </mesh>
-      <mesh position={[0, 0.1066, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.0305, 0.0007, 8, 160]} />
-        <meshBasicMaterial color="#c99a62" transparent opacity={0.16} depthWrite={false} />
+      <mesh position={[-0.012, 0.124, 0.014]} rotation={[-Math.PI / 2, 0, -0.3]} scale={[1.55, 0.42, 1]}>
+        <circleGeometry args={[0.0115, 56]} />
+        <meshBasicMaterial color="#fff7ed" transparent opacity={0.16} depthWrite={false} />
       </mesh>
-      <mesh position={[0, 0.1069, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.019, 0.00055, 8, 128]} />
-        <meshBasicMaterial color="#f3d2a4" transparent opacity={0.11} depthWrite={false} />
+      <mesh position={[0, 0.004, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[0.0345, 0.0046, 24, 176]} />
+        <meshPhysicalMaterial color="#202632" roughness={0.24} metalness={0.68} clearcoat={0.68} clearcoatRoughness={0.11} envMapIntensity={1.6} />
       </mesh>
-      <mesh position={[-0.012, 0.1072, 0.013]} rotation={[-Math.PI / 2, 0, -0.28]} scale={[1.45, 0.42, 1]}>
-        <circleGeometry args={[0.011, 48]} />
-        <meshBasicMaterial color="#fff7ed" transparent opacity={0.13} depthWrite={false} />
+      <mesh position={[0, 0.0125, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.044, 0.0012, 12, 176]} />
+        <meshStandardMaterial color="#c7bdab" metalness={0.26} roughness={0.2} />
       </mesh>
-      <mesh position={[0, 0.003, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.0315, 0.0048, 22, 144]} />
-        <meshPhysicalMaterial color="#10151f" roughness={0.32} metalness={0.08} clearcoat={0.78} clearcoatRoughness={0.16} envMapIntensity={1.3} />
-      </mesh>
-      <RoundedBox args={[0.08, 0.041, 0.004]} radius={0.008} smoothness={5} position={[0, 0.059, 0.047]} castShadow>
-        <meshPhysicalMaterial color="#08101b" roughness={0.22} metalness={0.18} clearcoat={0.9} clearcoatRoughness={0.1} envMapIntensity={1.45} />
+      <RoundedBox args={[0.061, 0.028, 0.006]} radius={0.011} smoothness={6} position={[0, 0.067, 0.0512]} castShadow receiveShadow>
+        <meshPhysicalMaterial color="#090d14" roughness={0.18} metalness={0.3} clearcoat={1} clearcoatRoughness={0.055} envMapIntensity={1.8} />
       </RoundedBox>
-      <mesh position={[0, 0.059, 0.0502]}>
-        <planeGeometry args={[0.072, 0.036]} />
-        <meshPhysicalMaterial map={emblem} transparent opacity={0.95} roughness={0.14} metalness={0.06} clearcoat={1} clearcoatRoughness={0.08} envMapIntensity={1.7} />
+      <mesh position={[0, 0.067, 0.055]}>
+        <planeGeometry args={[0.056, 0.021]} />
+        <meshPhysicalMaterial map={panel} transparent opacity={0.96} roughness={0.11} metalness={0.04} clearcoat={1} clearcoatRoughness={0.045} envMapIntensity={1.9} />
       </mesh>
-      <mesh position={[-0.025, 0.0975, 0.043]} rotation={[0.22, 0.12, -0.08]}>
-        <boxGeometry args={[0.036, 0.0022, 0.0016]} />
-        <meshBasicMaterial color="#f8fafc" transparent opacity={0.44} depthWrite={false} />
+      <mesh position={[-0.022, 0.105, 0.046]} rotation={[0.18, 0.12, -0.12]}>
+        <boxGeometry args={[0.038, 0.0021, 0.0014]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.48} depthWrite={false} />
+      </mesh>
+      <mesh position={[0.019, 0.018, 0.043]} rotation={[0.1, 0, 0.08]}>
+        <boxGeometry args={[0.026, 0.0015, 0.0012]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.22} depthWrite={false} />
       </mesh>
       {steam.map((geo, i) => (
         <mesh key={i} geometry={geo}>
-          <meshBasicMaterial color="#f8fafc" transparent opacity={0.14 - i * 0.025} depthWrite={false} />
+          <meshBasicMaterial color="#fffaf0" transparent opacity={0.13 - i * 0.024} depthWrite={false} />
         </mesh>
       ))}
     </group>

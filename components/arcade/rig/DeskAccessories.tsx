@@ -189,20 +189,51 @@ export function DeskAccessories() {
               side={2}
             />
           </mesh>
+          <mesh position={[0, 0.054, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[0.028, 32]} />
+            <meshStandardMaterial
+              color="#fff1c7"
+              emissive="#ffd79a"
+              emissiveIntensity={1.4}
+              transparent
+              opacity={0.78}
+              roughness={0.18}
+            />
+          </mesh>
           <spotLight
             position={[0, 0.06, 0]}
-            rotation={[Math.PI / 2, 0, 0]}
-            angle={0.48}
-            penumbra={0.78}
-            intensity={1.15}
-            distance={1.45}
-            color="#f3e7c9"
+            angle={0.38}
+            penumbra={0.9}
+            intensity={2.15}
+            distance={1.65}
+            color="#ffdca8"
             castShadow
             shadow-mapSize={[1024, 1024]}
-            shadow-bias={-0.00025}
+            shadow-bias={-0.00018}
           />
         </group>
       </group>
+
+      <mesh position={[-0.94, 0.058, 0.16]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.235, 64]} />
+        <meshBasicMaterial color="#ffdca8" transparent opacity={0.2} depthWrite={false} />
+      </mesh>
+      <mesh position={[-0.93, 0.059, 0.16]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.45, 0.62, 1]}>
+        <circleGeometry args={[0.18, 64]} />
+        <meshBasicMaterial color="#fff1c7" transparent opacity={0.13} depthWrite={false} />
+      </mesh>
+      <spotLight
+        position={[-0.93, 0.36, 0.08]}
+        angle={0.44}
+        penumbra={0.86}
+        intensity={1.9}
+        distance={1.25}
+        color="#ffdca8"
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.00016}
+      />
+      <pointLight position={[-0.98, 0.16, 0.12]} intensity={0.34} distance={0.42} color="#ffedc2" />
 
       <group position={[-0.56, 0.05, 0.36]} rotation={[0, 0.12, 0]}>
         <mesh position={[0, 0.004, 0]} castShadow>

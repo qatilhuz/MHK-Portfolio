@@ -58,18 +58,59 @@ function PortraitScreen({ side }: { side: -1 | 1 }) {
         <planeGeometry args={[0.272, 0.535]} />
         <meshPhysicalMaterial color="#d6f3ff" transparent opacity={0.055} roughness={0.04} metalness={0} />
       </mesh>
-      {[-0.205, -0.13, -0.055, 0.02, 0.095].map((y, i) => (
-        <mesh key={y} position={[0, y, 0.023]}>
-          <boxGeometry args={[0.205 - i * 0.016, 0.0085, 0.0035]} />
-          <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.5} roughness={0.34} />
-        </mesh>
-      ))}
-      {[0, 1, 2].map((i) => (
-        <mesh key={i} position={[-0.084 + i * 0.084, 0.214, 0.0235]}>
-          <circleGeometry args={[0.017 + i * 0.004, 24]} />
-          <meshStandardMaterial color={i % 2 ? secondary : warm} emissive={i % 2 ? secondary : warm} emissiveIntensity={0.62} roughness={0.28} />
-        </mesh>
-      ))}
+      {side < 0 ? (
+        <>
+          {[-0.084, 0.084].map((x, i) => (
+            <mesh key={`gauge-${x}`} position={[x, 0.205, 0.0235]}>
+              <circleGeometry args={[0.027, 28]} />
+              <meshStandardMaterial color="#111827" emissive={i ? secondary : accent} emissiveIntensity={0.28} roughness={0.32} />
+            </mesh>
+          ))}
+          {[0.12, 0.045, -0.03].map((y, row) => (
+            <group key={`chart-${y}`} position={[0, y, 0.024]}>
+              <mesh>
+                <boxGeometry args={[0.218, 0.044, 0.003]} />
+                <meshStandardMaterial color="#0f172a" emissive="#111827" emissiveIntensity={0.16} roughness={0.42} />
+              </mesh>
+              {[-0.076, -0.038, 0, 0.038, 0.076].map((x, i) => (
+                <mesh key={x} position={[x, -0.014 + ((i + row) % 3) * 0.012, 0.003]}>
+                  <boxGeometry args={[0.022, 0.004 + ((i + row) % 3) * 0.009, 0.003]} />
+                  <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.48} roughness={0.3} />
+                </mesh>
+              ))}
+            </group>
+          ))}
+          {[-0.112, -0.151, -0.19, -0.229].map((y, i) => (
+            <mesh key={`left-row-${y}`} position={[-0.016, y, 0.024]}>
+              <boxGeometry args={[0.18 - i * 0.022, 0.007, 0.003]} />
+              <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.44} roughness={0.34} />
+            </mesh>
+          ))}
+        </>
+      ) : (
+        <>
+          {Array.from({ length: 10 }, (_, i) => {
+            const y = 0.215 - i * 0.043;
+            const isAccent = i === 1 || i === 5;
+            return (
+              <group key={`chat-${i}`} position={[0, y, 0.024]}>
+                <mesh position={[-0.106, 0, 0]}>
+                  <circleGeometry args={[0.0085, 14]} />
+                  <meshStandardMaterial color={isAccent ? warm : "#334155"} emissive={isAccent ? warm : "#0f172a"} emissiveIntensity={0.34} roughness={0.3} />
+                </mesh>
+                <mesh position={[0.005, 0.006, 0]}>
+                  <boxGeometry args={[0.17 - (i % 4) * 0.018, 0.005, 0.003]} />
+                  <meshStandardMaterial color="#94a3b8" emissive="#22d3ee" emissiveIntensity={0.12} roughness={0.35} />
+                </mesh>
+                <mesh position={[-0.008, -0.008, 0]}>
+                  <boxGeometry args={[0.14 - (i % 3) * 0.018, 0.004, 0.003]} />
+                  <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.32} roughness={0.35} />
+                </mesh>
+              </group>
+            );
+          })}
+        </>
+      )}
       {[-0.104, 0.104].map((x) => (
         <mesh key={x} position={[x, -0.242, 0.024]}>
           <boxGeometry args={[0.048, 0.006, 0.003]} />

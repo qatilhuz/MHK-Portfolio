@@ -51,6 +51,7 @@ const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANC
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
 const STUDIO_WALL_COLOR = "#3f4756";
+const NEON_FONT_URL = "https://cdn.jsdelivr.net/npm/@fontsource/audiowide@5.0.20/files/audiowide-latin-400-normal.woff2";
 
 type LookRef = ArcadePortalPoint;
 
@@ -282,6 +283,79 @@ function MiniArcade({ position, color }: { position: Vec3; color: string }) {
   );
 }
 
+function NeonWallText({
+  label,
+  position,
+  primary,
+  secondary,
+}: {
+  label: string;
+  position: Vec3;
+  primary: string;
+  secondary: string;
+}) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0, -0.012]}>
+        <planeGeometry args={[0.52, 0.205]} />
+        <meshBasicMaterial color={primary} transparent opacity={0.055} depthWrite={false} />
+      </mesh>
+      <Text
+        font={NEON_FONT_URL}
+        position={[0.012, -0.012, -0.004]}
+        fontSize={0.056}
+        lineHeight={0.86}
+        letterSpacing={0.085}
+        anchorX="center"
+        anchorY="middle"
+        color={secondary}
+        outlineWidth={0.0025}
+        outlineColor="#05070f"
+      >
+        {label}
+      </Text>
+      <Text
+        font={NEON_FONT_URL}
+        position={[-0.011, 0.011, -0.002]}
+        fontSize={0.056}
+        lineHeight={0.86}
+        letterSpacing={0.085}
+        anchorX="center"
+        anchorY="middle"
+        color={primary}
+        outlineWidth={0.0025}
+        outlineColor="#05070f"
+      >
+        {label}
+      </Text>
+      <Text
+        font={NEON_FONT_URL}
+        position={[0, 0, 0]}
+        fontSize={0.056}
+        lineHeight={0.86}
+        letterSpacing={0.085}
+        anchorX="center"
+        anchorY="middle"
+        color="#f8fafc"
+        outlineWidth={0.003}
+        outlineColor={primary}
+      >
+        {label}
+      </Text>
+      <mesh position={[0, -0.103, -0.001]}>
+        <boxGeometry args={[0.34, 0.007, 0.006]} />
+        <meshStandardMaterial color={secondary} emissive={secondary} emissiveIntensity={0.8} roughness={0.24} />
+      </mesh>
+      <mesh position={[0, 0.103, -0.001]}>
+        <boxGeometry args={[0.24, 0.006, 0.006]} />
+        <meshStandardMaterial color={primary} emissive={primary} emissiveIntensity={0.7} roughness={0.24} />
+      </mesh>
+      <pointLight position={[0, 0, 0.17]} intensity={0.55} distance={0.55} color={primary} />
+      <pointLight position={[0.08, -0.06, 0.15]} intensity={0.32} distance={0.42} color={secondary} />
+    </group>
+  );
+}
+
 function ReferenceWall() {
   const leftTiles: { position: Vec3; accent: "cyan" | "magenta" }[] = [
     { position: [-1.18, 0.64, -1.108], accent: "cyan" },
@@ -362,24 +436,8 @@ function ReferenceWall() {
         <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.36} roughness={0.35} />
       </mesh>
 
-      <Text position={[-0.315, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
-        {"INSERT\nCOIN"}
-      </Text>
-      <Text position={[-0.322, 0.847, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
-        {"INSERT\nCOIN"}
-      </Text>
-      <Text position={[-0.302, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
-        {"INSERT\nCOIN"}
-      </Text>
-      <Text position={[0.445, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
-        {"GAME\nOVER"}
-      </Text>
-      <Text position={[0.435, 0.848, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
-        {"GAME\nOVER"}
-      </Text>
-      <Text position={[0.457, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
-        {"GAME\nOVER"}
-      </Text>
+      <NeonWallText label={"CREATIVE\nCODE"} position={[-0.315, 0.84, -1.052]} primary="#22d3ee" secondary="#f0abfc" />
+      <NeonWallText label={"SYS\nREADY"} position={[0.445, 0.84, -1.052]} primary="#c084fc" secondary="#67e8f9" />
 
       <pointLight position={[-1.15, 0.88, -0.78]} intensity={1.75} distance={1.05} color="#22d3ee" />
       <pointLight position={[-0.72, 1.12, -0.8]} intensity={1.55} distance={0.95} color="#c084fc" />

@@ -182,7 +182,7 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
   const CUP_X = 0.0805;
 
   return (
-    <group position={[-0.76, 0.05, SPEAKER_Z - 0.14]} rotation={[0, 0.14, 0]}>
+    <group position={[-0.9, 0.05, SPEAKER_Z - 0.1]} rotation={[0, 0.14, 0]}>
       {/* ---------- weighted base ---------- */}
       <mesh geometry={baseGeo} castShadow receiveShadow material={steel} />
       <mesh position={[0, -0.0022, 0]}>

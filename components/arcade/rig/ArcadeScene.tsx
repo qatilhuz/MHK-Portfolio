@@ -14,7 +14,7 @@ import {
   type ArcadePortalPoint,
   type ArcadePortalView,
 } from "@/lib/arcade/portal";
-import { DESK_SIZE, SPEAKER_LEFT, SPEAKER_RIGHT } from "@/lib/arcade/layout";
+import { DESK_CENTER_X, DESK_CENTER_Z, DESK_SIZE, SPEAKER_LEFT, SPEAKER_RIGHT } from "@/lib/arcade/layout";
 import { Keyboard } from "./Keyboard";
 import { Monitor } from "./Monitor";
 import { Mouse, MousePad } from "./Mouse";
@@ -337,8 +337,8 @@ function Room() {
   const wood = useMemo(() => woodAlbedo(), []);
   const concrete = useMemo(() => concreteAlbedo(), []);
   const legX = DESK_SIZE[0] / 2 - 0.2;
-  const frontZ = 0.12 + DESK_SIZE[2] / 2 - 0.11;
-  const backZ = 0.12 - DESK_SIZE[2] / 2 + 0.18;
+  const frontZ = DESK_CENTER_Z + DESK_SIZE[2] / 2 - 0.11;
+  const backZ = DESK_CENTER_Z - DESK_SIZE[2] / 2 + 0.18;
 
   return (
     <>
@@ -347,26 +347,26 @@ function Room() {
         <meshStandardMaterial map={concrete} color="#33384d" roughness={0.92} metalness={0.03} />
       </mesh>
       <ReferenceWall />
-      <mesh position={[0, 0.025, 0.12]} receiveShadow castShadow>
+      <mesh position={[DESK_CENTER_X, 0.025, DESK_CENTER_Z]} receiveShadow castShadow>
         <boxGeometry args={DESK_SIZE} />
         <meshStandardMaterial map={wood} color="#7d8491" roughness={0.68} metalness={0.04} />
       </mesh>
       {[
-        [-legX, -0.12, frontZ],
-        [legX, -0.12, frontZ],
-        [-legX, -0.12, backZ],
-        [legX, -0.12, backZ],
+        [DESK_CENTER_X - legX, -0.12, frontZ],
+        [DESK_CENTER_X + legX, -0.12, frontZ],
+        [DESK_CENTER_X - legX, -0.12, backZ],
+        [DESK_CENTER_X + legX, -0.12, backZ],
       ].map((p) => (
         <mesh key={p.join(",")} position={p as Vec3}>
           <boxGeometry args={[0.058, 0.24, 0.058]} />
           <meshStandardMaterial color="#151822" roughness={0.78} metalness={0.18} />
         </mesh>
       ))}
-      <mesh position={[0, -0.01, 0.12]}>
+      <mesh position={[DESK_CENTER_X, -0.01, DESK_CENTER_Z]}>
         <boxGeometry args={[DESK_SIZE[0] - 0.06, 0.026, DESK_SIZE[2] - 0.05]} />
         <meshStandardMaterial color="#161923" roughness={0.82} metalness={0.12} />
       </mesh>
-      <mesh position={[0, 0.056, 0.12 + DESK_SIZE[2] / 2 + 0.004]}>
+      <mesh position={[DESK_CENTER_X, 0.056, DESK_CENTER_Z + DESK_SIZE[2] / 2 + 0.004]}>
         <boxGeometry args={[DESK_SIZE[0] - 0.12, 0.006, 0.006]} />
         <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.32} roughness={0.28} />
       </mesh>

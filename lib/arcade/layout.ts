@@ -19,6 +19,8 @@ export const SPEAKER_RIGHT: [number, number, number] = [
   SPEAKER_Z,
 ];
 
-export const DESK_SIZE: [number, number, number] = [3.06, 0.05, 1.2];
+export const DESK_CENTER_X = 0.08;
+export const DESK_CENTER_Z = 0.12;
+export const DESK_SIZE: [number, number, number] = [2.86, 0.05, 1.12];
 export const PC_POS: [number, number, number] = [1.16, 0.055, 0.015];
 export const PC_YAW = -0.06;

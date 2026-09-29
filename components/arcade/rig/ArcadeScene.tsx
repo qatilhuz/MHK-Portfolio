@@ -51,7 +51,6 @@ const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANC
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
 const STUDIO_WALL_COLOR = "#1F1F1F";
-const NEON_FONT_URL = "https://cdn.jsdelivr.net/npm/@fontsource/audiowide@5.0.20/files/audiowide-latin-400-normal.woff2";
 
 type LookRef = ArcadePortalPoint;
 
@@ -301,7 +300,6 @@ function NeonWallText({
         <meshBasicMaterial color={primary} transparent opacity={0.055} depthWrite={false} />
       </mesh>
       <Text
-        font={NEON_FONT_URL}
         position={[0.012, -0.012, -0.004]}
         fontSize={0.056}
         lineHeight={0.86}
@@ -315,7 +313,6 @@ function NeonWallText({
         {label}
       </Text>
       <Text
-        font={NEON_FONT_URL}
         position={[-0.011, 0.011, -0.002]}
         fontSize={0.056}
         lineHeight={0.86}
@@ -329,7 +326,6 @@ function NeonWallText({
         {label}
       </Text>
       <Text
-        font={NEON_FONT_URL}
         position={[0, 0, 0]}
         fontSize={0.056}
         lineHeight={0.86}
@@ -517,7 +513,7 @@ export function ArcadeScene({
       camera={{ fov: 40, near: 0.05, far: 16, position: DEFAULT_CAMERA_POSITION }}
       style={{ width: "100%", height: "100%" }}
     >
-      <color attach="background" args={[STUDIO_WALL_COLOR]} />
+      <color attach="background" args={["#10131a"]} />
       <hemisphereLight args={["#dbeafe", "#15101f", 0.42]} />
       <directionalLight
         position={[0.42, 2.35, 1.55]}

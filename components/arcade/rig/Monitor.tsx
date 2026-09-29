@@ -39,105 +39,170 @@ void main() {
 }
 `;
 
-function PortraitScreen({ side }: { side: -1 | 1 }) {
+const sideFragment = `
+uniform float uTime;
+uniform float uSide;
+varying vec2 vUv;
+void main() {
+  vec2 p = vUv * 2.0 - 1.0;
+  float vignette = smoothstep(1.42, 0.18, length(p));
+  float scan = 0.94 + 0.06 * sin((vUv.y + uTime * 0.035) * 190.0);
+  float drift = 0.5 + 0.5 * sin(uTime * 0.38 + p.y * 2.2 + uSide * 1.1);
+  vec3 base = mix(vec3(0.012, 0.019, 0.033), vec3(0.025, 0.014, 0.045), vUv.y);
+  vec3 cyan = vec3(0.10, 0.72, 1.0);
+  vec3 magenta = vec3(0.92, 0.24, 1.0);
+  float sideGlow = smoothstep(0.72, 0.05, abs(p.x - (uSide * -0.42))) * 0.16;
+  float topGlow = smoothstep(1.0, 0.1, 1.0 - vUv.y) * 0.12;
+  vec3 accent = mix(cyan, magenta, drift);
+  vec3 col = base + accent * (sideGlow + topGlow) * vignette;
+  col *= scan;
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+function PortraitScreen({ side, reduced }: { side: -1 | 1; reduced?: boolean }) {
+  const oled = useRef<ShaderMaterial>(null);
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uSide: { value: side },
+    }),
+    [side],
+  );
   const accent = side < 0 ? "#22d3ee" : "#c084fc";
   const secondary = side < 0 ? "#c084fc" : "#22d3ee";
   const warm = side < 0 ? "#67e8f9" : "#f0abfc";
+  const chartRows = side < 0 ? [0.175, 0.095, 0.015] : [0.165, 0.09, 0.015, -0.06];
+
+  useFrame((state) => {
+    if (oled.current) oled.current.uniforms.uTime.value = reduced ? 0 : state.clock.elapsedTime;
+  });
 
   return (
-    <group position={[side * 0.575, 0.02, 0.052]} rotation={[0, side * -0.31, 0]}>
-      <mesh position={[0, 0, 0.018]}>
-        <planeGeometry args={[0.318, 0.595]} />
-        <meshStandardMaterial
-          color="#050b14"
-          emissive="#071827"
-          emissiveIntensity={0.62}
-          roughness={0.18}
-          metalness={0.02}
-        />
-      </mesh>
+    <group position={[side * 0.585, 0.024, 0.056]} rotation={[0, side * -0.37, 0]}>
+      {/* Invisible-mounted flagship side OLED: rear shell, micro edge, emissive display, and reflective glass only. */}
+      <RoundedBox args={[0.334, 0.622, 0.024]} radius={0.013} smoothness={8} position={[0, 0, 0]} castShadow>
+        <meshStandardMaterial color="#080c13" metalness={0.38} roughness={0.46} />
+      </RoundedBox>
+      <RoundedBox args={[0.326, 0.612, 0.012]} radius={0.011} smoothness={8} position={[0, 0, 0.013]}>
+        <meshStandardMaterial color="#020611" emissive="#020b16" emissiveIntensity={0.42} roughness={0.24} metalness={0.08} />
+      </RoundedBox>
       <mesh position={[0, 0, 0.0205]}>
-        <planeGeometry args={[0.318, 0.595]} />
+        <planeGeometry args={[0.316, 0.592]} />
+        <shaderMaterial ref={oled} vertexShader={vertex} fragmentShader={sideFragment} uniforms={uniforms} />
+      </mesh>
+      <mesh position={[0, 0, 0.024]}>
+        <planeGeometry args={[0.318, 0.594]} />
         <meshPhysicalMaterial
-          color="#d6f3ff"
-          emissive={accent}
-          emissiveIntensity={0.035}
+          color="#e0f2fe"
+          transmission={0.82}
+          thickness={0.025}
+          ior={1.52}
           transparent
-          opacity={0.105}
-          roughness={0.018}
+          opacity={0.18}
+          roughness={0.012}
           metalness={0}
           clearcoat={1}
-          clearcoatRoughness={0.055}
+          clearcoatRoughness={0.045}
+          envMapIntensity={1.8}
         />
       </mesh>
-      <pointLight position={[0, 0, 0.08]} intensity={0.18} distance={0.42} color={accent} />
+      {[
+        [0, 0.302, 0.0265, 0.3, 0.0032],
+        [0, -0.302, 0.0265, 0.3, 0.0032],
+        [-0.162, 0, 0.0265, 0.0032, 0.58],
+        [0.162, 0, 0.0265, 0.0032, 0.58],
+      ].map(([x, y, z, w, h], index) => (
+        <mesh key={`micro-edge-${index}`} position={[x, y, z]}>
+          <boxGeometry args={[w, h, 0.0025]} />
+          <meshStandardMaterial
+            color="#101827"
+            emissive={index % 2 ? secondary : accent}
+            emissiveIntensity={0.12}
+            metalness={0.6}
+            roughness={0.18}
+          />
+        </mesh>
+      ))}
+      <mesh position={[-0.102, 0.266, 0.029]}>
+        <boxGeometry args={[0.09, 0.005, 0.002]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.36} roughness={0.28} />
+      </mesh>
+      <mesh position={[0.066, 0.266, 0.029]}>
+        <boxGeometry args={[0.118, 0.004, 0.002]} />
+        <meshStandardMaterial color="#94a3b8" emissive="#38bdf8" emissiveIntensity={0.1} roughness={0.32} />
+      </mesh>
       {side < 0 ? (
         <>
-          {[-0.084, 0.084].map((x, i) => (
-            <mesh key={`gauge-${x}`} position={[x, 0.205, 0.0235]}>
-              <circleGeometry args={[0.027, 28]} />
-              <meshStandardMaterial color="#111827" emissive={i ? secondary : accent} emissiveIntensity={0.28} roughness={0.32} />
-            </mesh>
-          ))}
-          {[0.12, 0.045, -0.03].map((y, row) => (
-            <group key={`chart-${y}`} position={[0, y, 0.024]}>
+          {[-0.086, 0.0, 0.086].map((x, i) => (
+            <group key={`dial-${x}`} position={[x, 0.218, 0.029]}>
               <mesh>
-                <boxGeometry args={[0.218, 0.044, 0.003]} />
-                <meshStandardMaterial color="#0f172a" emissive="#111827" emissiveIntensity={0.16} roughness={0.42} />
+                <ringGeometry args={[0.018, 0.023, 32]} />
+                <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.44} roughness={0.22} />
               </mesh>
-              {[-0.076, -0.038, 0, 0.038, 0.076].map((x, i) => (
-                <mesh key={x} position={[x, -0.014 + ((i + row) % 3) * 0.012, 0.003]}>
-                  <boxGeometry args={[0.022, 0.004 + ((i + row) % 3) * 0.009, 0.003]} />
-                  <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.48} roughness={0.3} />
+              <mesh position={[0.006, 0.004, 0.001]} rotation={[0, 0, i * 0.7]}>
+                <boxGeometry args={[0.018, 0.002, 0.002]} />
+                <meshStandardMaterial color="#f8fafc" emissive="#f8fafc" emissiveIntensity={0.18} roughness={0.3} />
+              </mesh>
+            </group>
+          ))}
+          {chartRows.map((y, row) => (
+            <group key={`pro-chart-${y}`} position={[0, y - 0.01, 0.029]}>
+              <mesh>
+                <boxGeometry args={[0.246, 0.046, 0.002]} />
+                <meshStandardMaterial color="#08111d" emissive="#0f172a" emissiveIntensity={0.14} transparent opacity={0.82} roughness={0.38} />
+              </mesh>
+              {Array.from({ length: 7 }, (_, i) => (
+                <mesh key={i} position={[-0.09 + i * 0.03, -0.014 + ((i + row) % 4) * 0.009, 0.002]}>
+                  <boxGeometry args={[0.016, 0.004 + ((i + row) % 4) * 0.0065, 0.002]} />
+                  <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.42} roughness={0.3} />
                 </mesh>
               ))}
             </group>
           ))}
-          {[-0.112, -0.151, -0.19, -0.229].map((y, i) => (
-            <mesh key={`left-row-${y}`} position={[-0.016, y, 0.024]}>
-              <boxGeometry args={[0.18 - i * 0.022, 0.007, 0.003]} />
-              <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.44} roughness={0.34} />
+          {[-0.155, -0.192, -0.229, -0.266].map((y, i) => (
+            <mesh key={`telemetry-${y}`} position={[-0.015, y, 0.029]}>
+              <boxGeometry args={[0.22 - i * 0.026, 0.0055, 0.002]} />
+              <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.36} roughness={0.34} />
             </mesh>
           ))}
         </>
       ) : (
         <>
-          {Array.from({ length: 10 }, (_, i) => {
-            const y = 0.215 - i * 0.043;
-            const isAccent = i === 1 || i === 5;
+          {Array.from({ length: 11 }, (_, i) => {
+            const y = 0.216 - i * 0.0415;
+            const isAccent = i === 1 || i === 5 || i === 8;
             return (
-              <group key={`chat-${i}`} position={[0, y, 0.024]}>
-                <mesh position={[-0.106, 0, 0]}>
-                  <circleGeometry args={[0.0085, 14]} />
-                  <meshStandardMaterial color={isAccent ? warm : "#334155"} emissive={isAccent ? warm : "#0f172a"} emissiveIntensity={0.34} roughness={0.3} />
+              <group key={`message-${i}`} position={[0, y, 0.029]}>
+                <mesh position={[-0.112, 0, 0]}>
+                  <circleGeometry args={[0.008, 18]} />
+                  <meshStandardMaterial color={isAccent ? warm : "#334155"} emissive={isAccent ? warm : "#0f172a"} emissiveIntensity={0.36} roughness={0.3} />
                 </mesh>
-                <mesh position={[0.005, 0.006, 0]}>
-                  <boxGeometry args={[0.17 - (i % 4) * 0.018, 0.005, 0.003]} />
-                  <meshStandardMaterial color="#94a3b8" emissive="#22d3ee" emissiveIntensity={0.12} roughness={0.35} />
+                <mesh position={[0.006, 0.006, 0]}>
+                  <boxGeometry args={[0.178 - (i % 4) * 0.017, 0.0045, 0.002]} />
+                  <meshStandardMaterial color="#a8b3c5" emissive="#22d3ee" emissiveIntensity={0.1} roughness={0.35} />
                 </mesh>
-                <mesh position={[-0.008, -0.008, 0]}>
-                  <boxGeometry args={[0.14 - (i % 3) * 0.018, 0.004, 0.003]} />
-                  <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.32} roughness={0.35} />
+                <mesh position={[-0.006, -0.008, 0]}>
+                  <boxGeometry args={[0.142 - (i % 3) * 0.018, 0.0038, 0.002]} />
+                  <meshStandardMaterial color={i % 2 ? secondary : accent} emissive={i % 2 ? secondary : accent} emissiveIntensity={0.29} roughness={0.35} />
                 </mesh>
               </group>
             );
           })}
         </>
       )}
-      {[-0.104, 0.104].map((x) => (
-        <mesh key={x} position={[x, -0.242, 0.024]}>
-          <boxGeometry args={[0.048, 0.006, 0.003]} />
-          <meshStandardMaterial color={x < 0 ? accent : secondary} emissive={x < 0 ? accent : secondary} emissiveIntensity={0.42} roughness={0.26} />
-        </mesh>
-      ))}
-      <mesh position={[0, -0.306, 0.011]}>
-        <boxGeometry args={[0.058, 0.15, 0.04]} />
-        <meshStandardMaterial color="#151923" metalness={0.56} roughness={0.38} />
+      <mesh position={[-0.055, -0.276, 0.029]}>
+        <boxGeometry args={[0.17, 0.005, 0.002]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.34} roughness={0.26} />
       </mesh>
+      <mesh position={[0.095, -0.276, 0.029]}>
+        <boxGeometry args={[0.068, 0.005, 0.002]} />
+        <meshStandardMaterial color={secondary} emissive={secondary} emissiveIntensity={0.34} roughness={0.26} />
+      </mesh>
+      <pointLight position={[0, 0.02, 0.11]} intensity={0.2} distance={0.44} color={accent} />
     </group>
   );
 }
-
 function MonitorEnterButton({
   enabled,
   onEnter,

@@ -531,6 +531,73 @@ function ReferenceWall() {
   );
 }
 
+
+function DeskAmbientLoops() {
+  const edgeMat = useRef<MeshStandardMaterial>(null);
+  const runnerMat = useRef<MeshStandardMaterial>(null);
+  const runner = useRef<Group>(null);
+  const cyanLight = useRef<PointLight>(null);
+  const magentaLight = useRef<PointLight>(null);
+  const cyan = useMemo(() => new Color("#22d3ee"), []);
+  const magenta = useMemo(() => new Color("#c084fc"), []);
+  const live = useMemo(() => new Color(), []);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const breath = 0.5 + 0.5 * Math.sin(t * 0.82);
+    const chase = (Math.sin(t * 0.62) + 1) * 0.5;
+    live.lerpColors(cyan, magenta, chase);
+
+    if (edgeMat.current) {
+      edgeMat.current.color.copy(live);
+      edgeMat.current.emissive.copy(live);
+      edgeMat.current.emissiveIntensity = 0.24 + breath * 0.32;
+    }
+    if (runner.current) {
+      runner.current.position.x = DESK_CENTER_X - 1.04 + ((t * 0.22) % 1) * 2.08;
+    }
+    if (runnerMat.current) {
+      runnerMat.current.color.copy(live);
+      runnerMat.current.emissive.copy(live);
+      runnerMat.current.emissiveIntensity = 0.9 + breath * 0.72;
+    }
+    if (cyanLight.current) {
+      cyanLight.current.color.copy(cyan);
+      cyanLight.current.intensity = 0.7 + breath * 0.32;
+    }
+    if (magentaLight.current) {
+      magentaLight.current.color.copy(magenta);
+      magentaLight.current.intensity = 0.42 + (1 - breath) * 0.26;
+    }
+  });
+
+  return (
+    <>
+      <mesh position={[DESK_CENTER_X, 0.056, DESK_CENTER_Z + DESK_SIZE[2] / 2 + 0.004]}>
+        <boxGeometry args={[DESK_SIZE[0] - 0.12, 0.006, 0.006]} />
+        <meshStandardMaterial ref={edgeMat} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.32} roughness={0.28} toneMapped={false} />
+      </mesh>
+      <group ref={runner} position={[DESK_CENTER_X - 1.04, 0.0615, DESK_CENTER_Z + DESK_SIZE[2] / 2 + 0.010]}>
+        <mesh>
+          <boxGeometry args={[0.24, 0.004, 0.004]} />
+          <meshStandardMaterial
+            ref={runnerMat}
+            color="#c084fc"
+            emissive="#c084fc"
+            emissiveIntensity={1.2}
+            transparent
+            opacity={0.82}
+            roughness={0.18}
+            toneMapped={false}
+          />
+        </mesh>
+      </group>
+      <pointLight ref={cyanLight} position={[0, 0.08, 0.68]} intensity={0.9} distance={2.3} color="#22d3ee" />
+      <pointLight ref={magentaLight} position={[0.72, 0.12, 0.42]} intensity={0.55} distance={1.2} color="#c084fc" />
+    </>
+  );
+}
+
 function Room() {
   const wood = useMemo(() => woodAlbedo(), []);
   const concrete = useMemo(() => concreteAlbedo(), []);
@@ -572,12 +639,7 @@ function Room() {
         <boxGeometry args={[DESK_SIZE[0] - 0.06, 0.026, DESK_SIZE[2] - 0.05]} />
         <meshStandardMaterial color="#161923" roughness={0.82} metalness={0.12} />
       </mesh>
-      <mesh position={[DESK_CENTER_X, 0.056, DESK_CENTER_Z + DESK_SIZE[2] / 2 + 0.004]}>
-        <boxGeometry args={[DESK_SIZE[0] - 0.12, 0.006, 0.006]} />
-        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.32} roughness={0.28} />
-      </mesh>
-      <pointLight position={[0, 0.08, 0.68]} intensity={0.9} distance={2.3} color="#22d3ee" />
-      <pointLight position={[0.72, 0.12, 0.42]} intensity={0.55} distance={1.2} color="#c084fc" />
+      <DeskAmbientLoops />
     </>
   );
 }

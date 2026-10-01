@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { trackEvent } from "@/lib/analytics/client";
 import { arcadeGames, futureCabinets } from "@/lib/arcade/registry";
 import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
+import { runArcadeExitHandoff } from "@/lib/arcade/spatialZoom";
 import type { ArcadeGameId } from "@/lib/arcade/gameTypes";
 
 const RockPaperScissors = dynamic(() =>
@@ -24,7 +25,7 @@ export function GameWorld() {
 
   const exit = useCallback(() => {
     sessionStorage.setItem(ARCADE_EXIT_FLAG, "exit");
-    router.push("/#arcade");
+    runArcadeExitHandoff(() => router.push("/#arcade"));
   }, [router]);
 
   useEffect(() => {

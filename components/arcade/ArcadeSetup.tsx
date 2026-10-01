@@ -47,10 +47,6 @@ export function ArcadeSetup() {
 
   useEffect(() => {
     router.prefetch("/arcade");
-
-    if (sessionStorage.getItem(ARCADE_EXIT_FLAG) === "exit") {
-      sessionStorage.removeItem(ARCADE_EXIT_FLAG);
-    }
   }, [router]);
 
   const goArcade = useCallback(() => {

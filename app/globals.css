@@ -397,6 +397,31 @@ h3 {
   }
 }
 
+
+
+[data-arcade-spatial-root] {
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+[data-arcade-spatial-root][data-arcade-spatial-active="true"],
+.arcade-world[data-arcade-handoff-active="true"] {
+  will-change: transform, opacity;
+  pointer-events: none;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  contain: paint style;
+}
+
+body.arcade-transition-lock,
+body.arcade-transition-lock * {
+  pointer-events: none !important;
+}
+
+body.arcade-transition-lock {
+  cursor: default !important;
+}
 .arcade-rig {
   --arcade-cyan: #22d3ee;
   --arcade-magenta: #c084fc;

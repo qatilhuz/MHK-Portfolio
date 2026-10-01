@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useLayoutEffect, useMemo, useRef, type MutableRefObject, type RefObject } from "react";
+import { Suspense, useCallback, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, Text } from "@react-three/drei";
 import { Color, type Camera, type Group, type MeshBasicMaterial, type MeshStandardMaterial, type PointLight } from "three";
@@ -18,7 +18,9 @@ import {
   attachArcadeSpatialZoom,
   clearArcadeSpatialZoom,
   getArcadeSpatialRoot,
+  releaseArcadeSpatialInputLock,
 } from "@/lib/arcade/spatialZoom";
+import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
 import { DESK_CENTER_X, DESK_CENTER_Z, DESK_SIZE, SPEAKER_LEFT, SPEAKER_RIGHT } from "@/lib/arcade/layout";
 import { Keyboard } from "./Keyboard";
 import { Monitor } from "./Monitor";
@@ -110,13 +112,14 @@ function CameraRig({
   onEnterComplete: () => void;
   onExitComplete: () => void;
 }) {
-  const { camera } = useThree();
+  const { camera, gl, performance } = useThree();
   const look = useRef({
     x: DEFAULT_LOOK_TARGET[0],
     y: DEFAULT_LOOK_TARGET[1],
     z: DEFAULT_LOOK_TARGET[2],
   });
   const phase = useRef<ArcadeTransitionMode>("idle");
+  const originalPixelRatio = useRef<number | null>(null);
   const done = useRef(false);
   const timeline = useRef<ReturnType<typeof buildArcadePortalTimeline> | null>(null);
   const enterComplete = useRef(onEnterComplete);
@@ -125,7 +128,12 @@ function CameraRig({
   exitComplete.current = onExitComplete;
 
   useLayoutEffect(() => {
-    const orientCamera = () => camera.lookAt(look.current.x, look.current.y, look.current.z);
+    const orientCamera = () => {
+      camera.lookAt(look.current.x, look.current.y, look.current.z);
+      if (phase.current !== "idle") {
+        controlsRef.current?.target.set(look.current.x, look.current.y, look.current.z);
+      }
+    };
     const defaultView = getDefaultArcadePortalView();
 
     const setIdleView = () => {
@@ -144,6 +152,10 @@ function CameraRig({
       done.current = false;
       phase.current = nextMode;
 
+      performance.regress();
+      originalPixelRatio.current = gl.getPixelRatio();
+      gl.setPixelRatio(1);
+
       const controls = controlsRef.current;
       controls?.update();
       const startView = nextMode === "enter"
@@ -157,7 +169,7 @@ function CameraRig({
       }
 
       const tl = buildArcadePortalTimeline(camera, look.current, startView);
-      const spatialRoot = attachArcadeSpatialZoom(tl, getArcadeSpatialRoot());
+      const spatialRoot = nextMode === "enter" ? attachArcadeSpatialZoom(tl, getArcadeSpatialRoot()) : null;
       timeline.current = tl;
       tl.eventCallback("onUpdate", orientCamera);
       orientCamera();
@@ -168,13 +180,27 @@ function CameraRig({
         timeline.current = null;
         phase.current = "idle";
 
+        const restorePixelRatio = originalPixelRatio.current ?? Math.min(window.devicePixelRatio || 1, 2);
+        gl.setPixelRatio(restorePixelRatio);
+        originalPixelRatio.current = null;
+
         if (nextMode === "enter") {
+          releaseArcadeSpatialInputLock();
           enterComplete.current();
           return;
         }
 
         syncControlsToView(controlsRef.current, defaultView, true);
-        clearArcadeSpatialZoom(spatialRoot);
+        if (spatialRoot) {
+          clearArcadeSpatialZoom(spatialRoot);
+        }
+        try {
+          if (!document.querySelector("[data-arcade-spatial-active='true']")) {
+            sessionStorage.removeItem(ARCADE_EXIT_FLAG);
+          }
+        } catch {
+          /* ignore blocked storage */
+        }
         exitComplete.current();
       };
 
@@ -217,7 +243,7 @@ function CameraRig({
       timeline.current?.kill();
       timeline.current = null;
     };
-  }, [camera, controlsRef, initialMode, transitionApiRef]);
+  }, [camera, controlsRef, gl, initialMode, performance, transitionApiRef]);
 
   return null;
 }
@@ -643,9 +669,9 @@ function DeskAmbientLoops() {
   );
 }
 
-function Room() {
-  const wood = useMemo(() => woodAlbedo(), []);
-  const concrete = useMemo(() => concreteAlbedo(), []);
+function Room({ lite = false }: { lite?: boolean }) {
+  const wood = useMemo(() => (lite ? null : woodAlbedo()), [lite]);
+  const concrete = useMemo(() => (lite ? null : concreteAlbedo()), [lite]);
   const legX = DESK_SIZE[0] / 2 - 0.2;
   const frontZ = DESK_CENTER_Z + DESK_SIZE[2] / 2 - 0.11;
   const backZ = DESK_CENTER_Z - DESK_SIZE[2] / 2 + 0.18;
@@ -658,16 +684,16 @@ function Room() {
       </mesh>
       <mesh position={[-1.62, 0.83, -0.18]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[2.04, 3.2]} />
-        <meshStandardMaterial map={concrete} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
+        <meshStandardMaterial map={concrete ?? undefined} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
       </mesh>
       <mesh position={[1.62, 0.83, -0.18]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[2.04, 3.2]} />
-        <meshStandardMaterial map={concrete} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
+        <meshStandardMaterial map={concrete ?? undefined} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
       </mesh>
-      <ReferenceWall />
+      {lite ? null : <ReferenceWall />}
       <mesh position={[DESK_CENTER_X, 0.025, DESK_CENTER_Z]} receiveShadow castShadow>
         <boxGeometry args={DESK_SIZE} />
-        <meshStandardMaterial map={wood} color="#7d8491" roughness={0.68} metalness={0.04} />
+        <meshStandardMaterial map={wood ?? undefined} color="#7d8491" roughness={0.68} metalness={0.04} />
       </mesh>
       {[
         [DESK_CENTER_X - legX, -0.12, frontZ],
@@ -684,7 +710,7 @@ function Room() {
         <boxGeometry args={[DESK_SIZE[0] - 0.06, 0.026, DESK_SIZE[2] - 0.05]} />
         <meshStandardMaterial color="#161923" roughness={0.82} metalness={0.12} />
       </mesh>
-      <DeskAmbientLoops />
+      {lite ? null : <DeskAmbientLoops />}
     </>
   );
 }
@@ -700,6 +726,9 @@ export function ArcadeScene({
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const transitionApiRef = useRef<ArcadeTransitionRequest | null>(null);
   const transitionLocked = useRef(initialMode === "exit");
+  const [fullRigReady, setFullRigReady] = useState(initialMode !== "exit");
+  const transitionLite = !fullRigReady;
+  const animationReduced = reduced || transitionLite;
 
   const handleEnter = useCallback(() => {
     if (transitionLocked.current) return;
@@ -713,6 +742,7 @@ export function ArcadeScene({
 
   const handleExitComplete = useCallback(() => {
     transitionLocked.current = false;
+    setFullRigReady(true);
   }, []);
 
   return (
@@ -735,17 +765,17 @@ export function ArcadeScene({
         shadow-mapSize={[2048, 2048]}
       />
       <ambientLight intensity={0.16} />
-      <Room />
-      <PcCase reduced={reduced} />
-      <Monitor reduced={reduced} enterEnabled onEnter={handleEnter} />
-      <Speaker position={SPEAKER_LEFT} reduced={reduced} phase={0.08} />
-      <Speaker position={SPEAKER_RIGHT} reduced={reduced} phase={0.58} />
-      <Keyboard reduced={reduced} />
-      <MousePad reduced={reduced} />
-      <Mouse reduced={reduced} />
-      <DeskAccessories />
-      <HeadsetStand reduced={reduced} />
-      <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} />
+      <Room lite={transitionLite} />
+      {fullRigReady ? <PcCase reduced={reduced} /> : null}
+      <Monitor reduced={animationReduced} enterEnabled={fullRigReady} transitionLite={transitionLite} onEnter={handleEnter} />
+      {fullRigReady ? <Speaker position={SPEAKER_LEFT} reduced={reduced} phase={0.08} /> : null}
+      {fullRigReady ? <Speaker position={SPEAKER_RIGHT} reduced={reduced} phase={0.58} /> : null}
+      {fullRigReady ? <Keyboard reduced={reduced} /> : null}
+      {fullRigReady ? <MousePad reduced={reduced} /> : null}
+      {fullRigReady ? <Mouse reduced={reduced} /> : null}
+      {fullRigReady ? <DeskAccessories /> : null}
+      {fullRigReady ? <HeadsetStand reduced={reduced} /> : null}
+      {fullRigReady ? <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} /> : null}
       <CameraRig
         initialMode={initialMode}
         controlsRef={controlsRef}

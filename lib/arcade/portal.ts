@@ -35,6 +35,7 @@ export function buildArcadePortalTimeline(
   look: Look,
   startView: ArcadePortalView = getDefaultArcadePortalView(),
 ) {
+  gsap.ticker.lagSmoothing(0);
   camera.position.set(startView.position.x, startView.position.y, startView.position.z);
   look.x = startView.look.x;
   look.y = startView.look.y;
@@ -48,12 +49,12 @@ export function buildArcadePortalTimeline(
   const screenStart = approachDuration * 0.86;
   const portalStart = screenStart + 0.66;
 
-  const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.inOut", overwrite: "auto" } });
+  const tl = gsap.timeline({ paused: true, defaults: { ease: "power4.inOut", overwrite: "auto" } });
   tl.to(camera.position, { ...PORTAL_APPROACH_POS, duration: approachDuration }, 0);
   tl.to(look, { ...PORTAL_APPROACH_LOOK, duration: approachDuration }, 0);
   tl.to(camera.position, { ...PORTAL_SCREEN_POS, duration: 0.76 }, screenStart);
   tl.to(look, { ...PORTAL_SCREEN_LOOK, duration: 0.76 }, screenStart);
-  tl.to(camera.position, { ...PORTAL_END_POS, duration: 0.54, ease: "power3.inOut" }, portalStart);
-  tl.to(look, { ...PORTAL_END_LOOK, duration: 0.54, ease: "power3.inOut" }, portalStart);
+  tl.to(camera.position, { ...PORTAL_END_POS, duration: 0.54, ease: "power4.inOut" }, portalStart);
+  tl.to(look, { ...PORTAL_END_LOOK, duration: 0.54, ease: "power4.inOut" }, portalStart);
   return tl;
 }

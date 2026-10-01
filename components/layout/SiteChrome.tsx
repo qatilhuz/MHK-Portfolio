@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { CharacterWorldLazy } from "@/components/character/CharacterWorldLazy";
 import { GuideProvider } from "@/lib/guide/context";
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
-import { ARCADE_EXIT_FLAG, ARCADE_SPATIAL_SCALE } from "@/lib/arcade/session";
+import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
+import { runArcadeReturnZoom } from "@/lib/arcade/spatialZoom";
 import { Footer } from "./Footer";
 import { Navbar } from "./Navbar";
 
@@ -19,14 +20,13 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
 
     try {
       if (sessionStorage.getItem(ARCADE_EXIT_FLAG) === "exit") {
-        const root = spatialRootRef.current;
-        if (root) {
-          root.style.transformOrigin = "50% 50%";
-          root.style.transform = `scale(${ARCADE_SPATIAL_SCALE}) translateZ(0)`;
-          root.style.opacity = "0";
-          root.style.pointerEvents = "none";
-          root.style.willChange = "transform, opacity";
-        }
+        runArcadeReturnZoom(spatialRootRef.current, () => {
+          try {
+            sessionStorage.removeItem(ARCADE_EXIT_FLAG);
+          } catch {
+            /* ignore blocked storage */
+          }
+        });
       }
     } catch {
       /* keep route rendering resilient if storage is blocked */

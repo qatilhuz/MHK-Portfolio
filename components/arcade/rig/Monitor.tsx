@@ -573,15 +573,17 @@ function MonitorEnterButton({
 export function Monitor({
   reduced,
   enterEnabled,
+  transitionLite = false,
   onEnter,
 }: {
   reduced?: boolean;
   enterEnabled: boolean;
+  transitionLite?: boolean;
   onEnter: () => void;
 }) {
   const mat = useRef<ShaderMaterial>(null);
   const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
-  const metal = useMemo(() => metalAlbedo(), []);
+  const metal = useMemo(() => (transitionLite ? null : metalAlbedo()), [transitionLite]);
 
   useFrame((state) => {
     if (mat.current) mat.current.uniforms.uTime.value = reduced ? 0 : state.clock.elapsedTime;
@@ -593,7 +595,7 @@ export function Monitor({
       <group position={[0, 0.09, 0]}>
         <mesh castShadow>
           <boxGeometry args={[1.035, 0.49, 0.036]} />
-          <meshStandardMaterial map={metal} color="#11131a" metalness={0.64} roughness={0.27} />
+          <meshStandardMaterial map={metal ?? undefined} color="#11131a" metalness={0.64} roughness={0.27} />
         </mesh>
         <mesh position={[0, 0.008, 0.019]}>
           <planeGeometry args={[0.972, 0.424]} />
@@ -603,19 +605,19 @@ export function Monitor({
           <planeGeometry args={[0.972, 0.424]} />
           <meshPhysicalMaterial color="#d6f3ff" transparent opacity={0.075} roughness={0.035} metalness={0} />
         </mesh>
-        <MonitorEnterButton enabled={enterEnabled} onEnter={onEnter} />
+        {transitionLite ? null : <MonitorEnterButton enabled={enterEnabled} onEnter={onEnter} />}
         <mesh position={[0, -0.245, 0.02]}>
           <planeGeometry args={[0.99, 0.018]} />
           <meshStandardMaterial color="#222631" metalness={0.28} roughness={0.42} />
         </mesh>
         <mesh position={[0, 0.006, -0.032]}>
           <boxGeometry args={[0.985, 0.434, 0.045]} />
-          <meshStandardMaterial map={metal} color="#090b11" metalness={0.48} roughness={0.43} />
+          <meshStandardMaterial map={metal ?? undefined} color="#090b11" metalness={0.48} roughness={0.43} />
         </mesh>
       </group>
 
-      <PortraitScreen side={-1} />
-      <PortraitScreen side={1} />
+      {transitionLite ? null : <PortraitScreen side={-1} reduced={reduced} />}
+      {transitionLite ? null : <PortraitScreen side={1} reduced={reduced} />}
 
       <pointLight position={[0, 0.04, 0.32]} intensity={0.82} distance={1.9} color="#c026d3" />
       <pointLight position={[-0.5, 0.03, 0.24]} intensity={0.35} distance={0.7} color="#22d3ee" />

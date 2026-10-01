@@ -2,8 +2,8 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { RoundedBox, Text } from "@react-three/drei";
-import type { ShaderMaterial } from "three";
+import { OrthographicCamera, RenderTexture, RoundedBox, Text } from "@react-three/drei";
+import type { Group, Mesh, ShaderMaterial } from "three";
 import { metalAlbedo } from "./textures";
 
 const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
@@ -77,44 +77,184 @@ void main() {
 }
 `;
 
-const sideFragment = `
-uniform float uTime;
-uniform float uSide;
-varying vec2 vUv;
-void main() {
-  vec2 p = vUv * 2.0 - 1.0;
-  float vignette = smoothstep(1.42, 0.18, length(p));
-  float scan = 0.94 + 0.06 * sin((vUv.y + uTime * 0.035) * 190.0);
-  float drift = 0.5 + 0.5 * sin(uTime * 0.38 + p.y * 2.2 + uSide * 1.1);
-  vec3 base = mix(vec3(0.012, 0.019, 0.033), vec3(0.025, 0.014, 0.045), vUv.y);
-  vec3 cyan = vec3(0.10, 0.72, 1.0);
-  vec3 magenta = vec3(0.92, 0.24, 1.0);
-  float sideGlow = smoothstep(0.72, 0.05, abs(p.x - (uSide * -0.42))) * 0.16;
-  float topGlow = smoothstep(1.0, 0.1, 1.0 - vUv.y) * 0.12;
-  vec3 accent = mix(cyan, magenta, drift);
-  vec3 col = base + accent * (sideGlow + topGlow) * vignette;
-  col *= scan;
-  gl_FragColor = vec4(col, 1.0);
+
+function TerminalRenderTexture({ reduced }: { reduced?: boolean }) {
+  const stream = useRef<Group>(null);
+  const cursor = useRef<Mesh>(null);
+  const lineSpecs = useMemo(
+    () =>
+      Array.from({ length: 34 }, (_, i) => ({
+        y: 1.58 - i * 0.145,
+        x: -0.62 + ((i % 3) * 0.035),
+        a: 0.36 + ((i * 7) % 9) * 0.045,
+        b: 0.12 + ((i * 5) % 7) * 0.032,
+        c: 0.08 + ((i * 11) % 6) * 0.034,
+        tint: i % 5 === 0 ? "#c084fc" : i % 2 === 0 ? "#67e8f9" : "#8ee7d2",
+      })),
+    [],
+  );
+  const scanLines = useMemo(() => Array.from({ length: 25 }, (_, i) => -1.7 + i * 0.145), []);
+
+  useFrame((state) => {
+    const t = reduced ? 0 : state.clock.elapsedTime;
+    if (stream.current) stream.current.position.y = ((t * 0.28) % 0.145) - 0.145;
+    if (cursor.current) {
+      cursor.current.visible = Math.sin(t * 7.5) > -0.2;
+      cursor.current.position.x = -0.28 + Math.sin(t * 0.9) * 0.045;
+    }
+  });
+
+  return (
+    <RenderTexture attach="map" width={384} height={768} anisotropy={8} frames={Infinity}>
+      <OrthographicCamera makeDefault manual left={-1} right={1} top={1.82} bottom={-1.82} near={0.1} far={10} position={[0, 0, 5]} />
+      <color attach="background" args={["#020713"]} />
+      <mesh position={[0, 0, -0.02]}>
+        <planeGeometry args={[2, 3.64]} />
+        <meshBasicMaterial color="#020713" toneMapped={false} />
+      </mesh>
+      <mesh position={[-0.18, 1.55, 0]}>
+        <boxGeometry args={[1.18, 0.028, 0.001]} />
+        <meshBasicMaterial color="#22d3ee" transparent opacity={0.55} toneMapped={false} />
+      </mesh>
+      <mesh position={[0.42, 1.46, 0]}>
+        <boxGeometry args={[0.44, 0.016, 0.001]} />
+        <meshBasicMaterial color="#c084fc" transparent opacity={0.48} toneMapped={false} />
+      </mesh>
+      <group ref={stream}>
+        {lineSpecs.map((line, i) => (
+          <group key={`terminal-line-${i}`} position={[0, line.y, 0]}>
+            <mesh position={[-0.78, 0, 0]}>
+              <boxGeometry args={[0.038, 0.014, 0.001]} />
+              <meshBasicMaterial color={i % 4 === 0 ? "#c084fc" : "#22d3ee"} toneMapped={false} />
+            </mesh>
+            <mesh position={[line.x, 0, 0]}>
+              <boxGeometry args={[line.a, 0.012, 0.001]} />
+              <meshBasicMaterial color={line.tint} transparent opacity={0.82} toneMapped={false} />
+            </mesh>
+            <mesh position={[line.x + line.a * 0.5 + 0.08, 0, 0]}>
+              <boxGeometry args={[line.b, 0.012, 0.001]} />
+              <meshBasicMaterial color="#e0f2fe" transparent opacity={0.66} toneMapped={false} />
+            </mesh>
+            <mesh position={[line.x + line.a * 0.5 + line.b + 0.18, 0, 0]}>
+              <boxGeometry args={[line.c, 0.012, 0.001]} />
+              <meshBasicMaterial color={i % 3 === 0 ? "#f0abfc" : "#38bdf8"} transparent opacity={0.58} toneMapped={false} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+      <mesh ref={cursor} position={[-0.28, -1.48, 0]}>
+        <boxGeometry args={[0.16, 0.02, 0.001]} />
+        <meshBasicMaterial color="#67e8f9" toneMapped={false} />
+      </mesh>
+      {scanLines.map((y) => (
+        <mesh key={`terminal-scan-${y}`} position={[0, y, 0.01]}>
+          <boxGeometry args={[1.9, 0.003, 0.001]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.035} toneMapped={false} />
+        </mesh>
+      ))}
+    </RenderTexture>
+  );
 }
-`;
+
+function DeveloperHudRenderTexture({ reduced }: { reduced?: boolean }) {
+  const cube = useRef<Mesh>(null);
+  const graphBars = useRef<Array<Mesh | null>>([]);
+  const pulse = useRef<Group>(null);
+  const bars = useMemo(() => Array.from({ length: 12 }, (_, i) => ({ x: -0.75 + i * 0.135, phase: i * 0.51 })), []);
+  const nodes = useMemo(
+    () => [
+      [-0.62, 0.92, 0.34],
+      [-0.2, 1.12, 0.5],
+      [0.34, 0.94, 0.38],
+      [0.62, 0.55, 0.3],
+      [0.18, 0.35, 0.44],
+      [-0.48, 0.42, 0.32],
+    ] as [number, number, number][],
+    [],
+  );
+
+  useFrame((state) => {
+    const t = reduced ? 0 : state.clock.elapsedTime;
+    if (cube.current) {
+      cube.current.rotation.x = t * 0.42;
+      cube.current.rotation.y = t * 0.58;
+      cube.current.rotation.z = Math.sin(t * 0.33) * 0.12;
+    }
+    if (pulse.current) pulse.current.scale.setScalar(1 + Math.sin(t * 1.35) * 0.045);
+    graphBars.current.forEach((bar, i) => {
+      if (!bar) return;
+      const h = 0.18 + 0.34 * (0.5 + 0.5 * Math.sin(t * 1.28 + bars[i].phase));
+      bar.scale.y = h;
+      bar.position.y = -1.32 + h * 0.5;
+    });
+  });
+
+  return (
+    <RenderTexture attach="map" width={384} height={768} anisotropy={8} frames={Infinity}>
+      <OrthographicCamera makeDefault manual left={-1} right={1} top={1.82} bottom={-1.82} near={0.1} far={10} position={[0, 0, 5]} />
+      <color attach="background" args={["#060518"]} />
+      <mesh position={[0, 0, -0.02]}>
+        <planeGeometry args={[2, 3.64]} />
+        <meshBasicMaterial color="#060518" toneMapped={false} />
+      </mesh>
+      <group ref={pulse} position={[0, 0.55, 0]}>
+        {nodes.map(([x, y, r], i) => (
+          <mesh key={`node-${i}`} position={[x, y - 0.55, 0.01]}>
+            <circleGeometry args={[0.025 + r * 0.018, 24]} />
+            <meshBasicMaterial color={i % 2 ? "#c084fc" : "#22d3ee"} transparent opacity={0.92} toneMapped={false} />
+          </mesh>
+        ))}
+        {[
+          [-0.41, 0.47, 0.48, 0.018],
+          [0.07, 0.47, 0.58, -0.16],
+          [0.45, 0.19, 0.46, -0.67],
+          [-0.13, -0.04, 0.64, -0.06],
+          [-0.46, -0.01, 0.43, 0.6],
+          [0.05, 0.63, 0.5, -0.43],
+        ].map(([x, y, length, angle], i) => (
+          <mesh key={`link-${i}`} position={[x, y, 0]} rotation={[0, 0, angle]}>
+            <boxGeometry args={[length, 0.008, 0.001]} />
+            <meshBasicMaterial color={i % 2 ? "#c084fc" : "#22d3ee"} transparent opacity={0.36} toneMapped={false} />
+          </mesh>
+        ))}
+      </group>
+      <mesh ref={cube} position={[0, 0.18, 0.02]} scale={0.46}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial color="#67e8f9" wireframe transparent opacity={0.62} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, -0.68, 0.01]}>
+        <boxGeometry args={[1.54, 0.022, 0.001]} />
+        <meshBasicMaterial color="#c084fc" transparent opacity={0.48} toneMapped={false} />
+      </mesh>
+      <group>
+        {bars.map((bar, i) => (
+          <mesh
+            key={`perf-bar-${i}`}
+            ref={(node) => {
+              graphBars.current[i] = node;
+            }}
+            position={[bar.x, -1.2, 0.01]}
+          >
+            <boxGeometry args={[0.07, 1, 0.001]} />
+            <meshBasicMaterial color={i % 3 === 0 ? "#f0abfc" : i % 2 === 0 ? "#22d3ee" : "#67e8f9"} transparent opacity={0.78} toneMapped={false} />
+          </mesh>
+        ))}
+      </group>
+      {[-1.56, -1.22, -0.88, -0.54, -0.2, 0.14, 0.48, 0.82, 1.16, 1.5].map((y) => (
+        <mesh key={`hud-scan-${y}`} position={[0, y, 0.02]}>
+          <boxGeometry args={[1.84, 0.003, 0.001]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.03} toneMapped={false} />
+        </mesh>
+      ))}
+    </RenderTexture>
+  );
+}
 
 function PortraitScreen({ side, reduced }: { side: -1 | 1; reduced?: boolean }) {
-  const oled = useRef<ShaderMaterial>(null);
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uSide: { value: side },
-    }),
-    [side],
-  );
   const accent = side < 0 ? "#22d3ee" : "#c084fc";
   const secondary = side < 0 ? "#c084fc" : "#22d3ee";
   const warm = side < 0 ? "#67e8f9" : "#f0abfc";
   const chartRows = side < 0 ? [0.175, 0.095, 0.015] : [0.165, 0.09, 0.015, -0.06];
-
-  useFrame((state) => {
-    if (oled.current) oled.current.uniforms.uTime.value = reduced ? 0 : state.clock.elapsedTime;
-  });
 
   return (
     <group position={[side * 0.706, 0.024, 0.056]} rotation={[0, side * -0.37, 0]}>
@@ -141,7 +281,9 @@ function PortraitScreen({ side, reduced }: { side: -1 | 1; reduced?: boolean }) 
       </RoundedBox>
       <mesh position={[0, 0, 0.0205]}>
         <planeGeometry args={[0.316, 0.592]} />
-        <shaderMaterial ref={oled} vertexShader={vertex} fragmentShader={sideFragment} uniforms={uniforms} />
+        <meshBasicMaterial toneMapped={false}>
+          {side < 0 ? <TerminalRenderTexture reduced={reduced} /> : <DeveloperHudRenderTexture reduced={reduced} />}
+        </meshBasicMaterial>
       </mesh>
       <mesh position={[0, 0, 0.031]}>
         <planeGeometry args={[0.318, 0.594]} />

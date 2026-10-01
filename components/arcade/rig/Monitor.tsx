@@ -19,25 +19,61 @@ void main() {
 const fragment = `
 uniform float uTime;
 varying vec2 vUv;
+
+float hash21(vec2 p) {
+  p = fract(p * vec2(123.34, 456.21));
+  p += dot(p, p + 45.32);
+  return fract(p.x * p.y);
+}
+
+float lineGlow(float value, float width) {
+  return smoothstep(width, 0.0, abs(value));
+}
+
 void main() {
-  vec2 p = vUv * 2.0 - 1.0;
-  p.y *= 0.82;
-  float d = length(p - vec2(0.0, 0.04));
-  float ring = smoothstep(0.055, 0.018, abs(d - 0.34));
-  float glow = exp(-d * 1.65);
-  vec3 deep = vec3(0.045, 0.012, 0.105);
-  vec3 mag = vec3(1.0, 0.16, 0.82);
-  vec3 cyan = vec3(0.20, 0.72, 1.0);
-  vec3 col = mix(deep, mag, glow * 0.82);
-  col += cyan * ring * 1.2;
-  col += mag * ring * 0.55;
-  float floorLine = smoothstep(0.026, 0.0, abs(p.y + 0.58)) * (1.0 - abs(p.x));
-  col += vec3(0.75, 0.22, 0.95) * floorLine * 0.45;
-  float hud = step(0.88, vUv.x) * step(vUv.y, 0.20) * 0.1;
-  col += vec3(0.4, 0.8, 1.0) * hud;
-  float scan = 0.93 + 0.07 * sin(vUv.y * 128.0 + uTime * 3.2);
-  float pulse = 0.9 + 0.1 * sin(uTime * 1.35);
-  gl_FragColor = vec4(col * scan * pulse, 1.0);
+  vec2 uv = vUv;
+  vec2 p = uv * 2.0 - 1.0;
+  p.x *= 2.18;
+  float t = uTime;
+
+  vec3 deepA = vec3(0.010, 0.014, 0.035);
+  vec3 deepB = vec3(0.090, 0.018, 0.135);
+  vec3 col = mix(deepA, deepB, uv.y + 0.16 * sin(t * 0.18 + uv.x * 4.0));
+
+  float horizon = lineGlow(p.y + 0.42 + 0.03 * sin(p.x * 2.2 + t * 0.7), 0.030);
+  col += vec3(0.22, 0.92, 1.0) * horizon * 0.55;
+
+  vec2 flow = vec2(uv.x * 16.0 + sin(uv.y * 6.0 + t * 0.55), uv.y * 10.0 - t * 0.62);
+  vec2 cell = abs(fract(flow) - 0.5);
+  float grid = smoothstep(0.034, 0.0, min(cell.x, cell.y));
+  float gridMask = smoothstep(0.08, 0.82, uv.y) * (1.0 - smoothstep(0.98, 1.0, uv.y));
+  col += vec3(0.06, 0.72, 1.0) * grid * gridMask * 0.20;
+
+  float waveA = lineGlow(p.y - 0.22 * sin(p.x * 1.65 + t * 0.92), 0.030);
+  float waveB = lineGlow(p.y - 0.14 * cos(p.x * 2.35 - t * 0.72) + 0.20, 0.026);
+  col += vec3(0.84, 0.20, 1.0) * waveA * 0.36;
+  col += vec3(0.12, 0.82, 1.0) * waveB * 0.28;
+
+  float ring = lineGlow(length(vec2(p.x * 0.62, p.y * 1.1) - vec2(0.0, 0.03)) - (0.36 + 0.014 * sin(t * 1.4)), 0.040);
+  float ringInner = smoothstep(0.72, 0.05, length(vec2(p.x * 0.68, p.y * 1.2) - vec2(0.0, 0.03)));
+  col += vec3(0.95, 0.30, 1.0) * ring * 0.85;
+  col += vec3(0.13, 0.78, 1.0) * ringInner * 0.12;
+
+  for (int i = 0; i < 18; i++) {
+    float fi = float(i);
+    vec2 base = vec2(hash21(vec2(fi, 7.1)), hash21(vec2(11.7, fi)));
+    vec2 q = vec2(fract(base.x + t * (0.018 + fi * 0.0009)), fract(base.y + t * (0.028 + fi * 0.0007)));
+    vec2 d = (uv - q) * vec2(2.18, 1.0);
+    float particle = smoothstep(0.040, 0.0, length(d));
+    col += mix(vec3(0.10, 0.75, 1.0), vec3(0.95, 0.22, 1.0), hash21(base * 4.0)) * particle * 0.20;
+  }
+
+  float scan = 0.92 + 0.08 * sin(uv.y * 210.0 + t * 5.2);
+  float vignette = smoothstep(1.28, 0.22, length(p * vec2(0.74, 1.0)));
+  float glass = smoothstep(0.98, 0.08, length(p - vec2(-1.55, 0.92))) * 0.08;
+  col = col * scan * vignette + vec3(0.65, 0.90, 1.0) * glass;
+
+  gl_FragColor = vec4(col, 1.0);
 }
 `;
 

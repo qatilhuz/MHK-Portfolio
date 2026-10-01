@@ -459,7 +459,7 @@ function MonitorEnterButton({
   const stopButtonEvent = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
   };
-  const activateButton = (event: ThreeEvent<MouseEvent>) => {
+  const activateButton = (event: ThreeEvent<MouseEvent | PointerEvent>) => {
     event.stopPropagation();
     if (!active) return;
 
@@ -491,6 +491,7 @@ function MonitorEnterButton({
         applyHover(false);
       }}
       onPointerDown={stopButtonEvent}
+      onPointerUp={activateButton}
       onClick={activateButton}
     >
       <RoundedBox args={[0.39, 0.078, 0.012]} radius={0.016} smoothness={5}>
@@ -536,6 +537,7 @@ function MonitorEnterButton({
           applyHover(false);
         }}
         onPointerDown={stopButtonEvent}
+        onPointerUp={activateButton}
         onClick={activateButton}
       >
         <planeGeometry args={[0.58, 0.16]} />

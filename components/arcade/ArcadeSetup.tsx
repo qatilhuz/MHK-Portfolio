@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { SceneErrorBoundary } from "@/components/three/SceneErrorBoundary";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { trackEvent } from "@/lib/analytics/client";
-import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
+import { ARCADE_ENTER_EVENT, ARCADE_EXIT_FLAG, ARCADE_TRANSITION_LOCK_CLASS } from "@/lib/arcade/session";
 
 const ArcadeScene = dynamic(
   () => import("./rig/ArcadeScene").then((mod) => mod.ArcadeScene),
@@ -47,12 +47,25 @@ export function ArcadeSetup() {
 
   useEffect(() => {
     router.prefetch("/arcade");
+
+    if (initialModeRef.current !== "exit") {
+      document.body.classList.remove(ARCADE_TRANSITION_LOCK_CLASS);
+    }
   }, [router]);
 
   const goArcade = useCallback(() => {
     trackEvent("arcade_open", undefined, { onceKey: "arcade_open" });
     router.push("/arcade");
   }, [router]);
+
+  const requestArcadeEnter = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.currentTarget.style.pointerEvents = "none";
+    const handledByScene = !window.dispatchEvent(new CustomEvent(ARCADE_ENTER_EVENT, { cancelable: true }));
+
+    if (!handledByScene) {
+      goArcade();
+    }
+  }, [goArcade]);
 
   return (
     <div className="arcade-rig relative h-[min(72vh,38rem)] min-h-[24rem] overflow-hidden">
@@ -65,9 +78,20 @@ export function ArcadeSetup() {
           </p>
         </div>
       ) : (
-        <SceneErrorBoundary fallback={<ArcadeFallback onEnter={goArcade} />}>
-          <ArcadeScene initialMode={initialModeRef.current} onEnter={goArcade} />
-        </SceneErrorBoundary>
+        <>
+          <SceneErrorBoundary fallback={<ArcadeFallback onEnter={goArcade} />}>
+            <ArcadeScene initialMode={initialModeRef.current} onEnter={goArcade} />
+          </SceneErrorBoundary>
+          <button
+            type="button"
+            className="arcade-enter-hotspot"
+            aria-label="Enter the Arcade"
+            title="Enter the Arcade"
+            onClick={requestArcadeEnter}
+          >
+            Enter the Arcade
+          </button>
+        </>
       )}
     </div>
   );

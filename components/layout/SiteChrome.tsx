@@ -6,7 +6,7 @@ import { CharacterWorldLazy } from "@/components/character/CharacterWorldLazy";
 import { GuideProvider } from "@/lib/guide/context";
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
-import { runArcadeReturnZoom } from "@/lib/arcade/spatialZoom";
+import { clearArcadeSpatialZoom, runArcadeReturnZoom } from "@/lib/arcade/spatialZoom";
 import { Footer } from "./Footer";
 import { Navbar } from "./Navbar";
 
@@ -27,6 +27,8 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
             /* ignore blocked storage */
           }
         });
+      } else {
+        clearArcadeSpatialZoom(spatialRootRef.current);
       }
     } catch {
       /* keep route rendering resilient if storage is blocked */

@@ -414,13 +414,35 @@ h3 {
   contain: paint style;
 }
 
-body.arcade-transition-lock,
-body.arcade-transition-lock * {
-  pointer-events: none !important;
-}
-
 body.arcade-transition-lock {
   cursor: default !important;
+  user-select: none;
+}
+
+.arcade-enter-hotspot {
+  position: absolute;
+  left: 50%;
+  top: 49.25%;
+  z-index: 5;
+  width: clamp(7.5rem, 16vw, 13rem);
+  height: clamp(2.4rem, 6.8vw, 4.2rem);
+  transform: translate3d(-50%, -50%, 0);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.arcade-enter-hotspot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+body.arcade-transition-lock .arcade-enter-hotspot,
+[data-arcade-spatial-root][data-arcade-spatial-active="true"] .arcade-enter-hotspot {
+  pointer-events: none;
 }
 .arcade-rig {
   --arcade-cyan: #22d3ee;

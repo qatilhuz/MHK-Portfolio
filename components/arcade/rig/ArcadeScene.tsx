@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, Text } from "@react-three/drei";
 import { Color, type Camera, type Group, type MeshBasicMaterial, type MeshStandardMaterial, type PointLight } from "three";
@@ -20,7 +20,7 @@ import {
   getArcadeSpatialRoot,
   releaseArcadeSpatialInputLock,
 } from "@/lib/arcade/spatialZoom";
-import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
+import { ARCADE_ENTER_EVENT, ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
 import { DESK_CENTER_X, DESK_CENTER_Z, DESK_SIZE, SPEAKER_LEFT, SPEAKER_RIGHT } from "@/lib/arcade/layout";
 import { Keyboard } from "./Keyboard";
 import { Monitor } from "./Monitor";
@@ -112,7 +112,7 @@ function CameraRig({
   onEnterComplete: () => void;
   onExitComplete: () => void;
 }) {
-  const { camera, gl, performance } = useThree();
+  const { camera, gl } = useThree();
   const look = useRef({
     x: DEFAULT_LOOK_TARGET[0],
     y: DEFAULT_LOOK_TARGET[1],
@@ -120,6 +120,7 @@ function CameraRig({
   });
   const phase = useRef<ArcadeTransitionMode>("idle");
   const originalPixelRatio = useRef<number | null>(null);
+  const completionFallback = useRef<number | null>(null);
   const done = useRef(false);
   const timeline = useRef<ReturnType<typeof buildArcadePortalTimeline> | null>(null);
   const enterComplete = useRef(onEnterComplete);
@@ -149,10 +150,13 @@ function CameraRig({
     const startTransition: ArcadeTransitionRequest = (nextMode) => {
       timeline.current?.kill();
       timeline.current = null;
+      if (completionFallback.current) {
+        window.clearTimeout(completionFallback.current);
+        completionFallback.current = null;
+      }
       done.current = false;
       phase.current = nextMode;
 
-      performance.regress();
       originalPixelRatio.current = gl.getPixelRatio();
       gl.setPixelRatio(1);
 
@@ -177,6 +181,10 @@ function CameraRig({
       const finish = () => {
         if (done.current) return;
         done.current = true;
+        if (completionFallback.current) {
+          window.clearTimeout(completionFallback.current);
+          completionFallback.current = null;
+        }
         timeline.current = null;
         phase.current = "idle";
 
@@ -203,6 +211,14 @@ function CameraRig({
         }
         exitComplete.current();
       };
+
+      completionFallback.current = window.setTimeout(() => {
+        if (done.current || phase.current !== nextMode) return;
+        if (nextMode === "enter") tl.progress(1);
+        else tl.progress(0);
+        orientCamera();
+        finish();
+      }, (tl.duration() + 0.85) * 1000);
 
       if (prefersReducedMotion()) {
         if (nextMode === "enter") tl.progress(1);
@@ -242,8 +258,13 @@ function CameraRig({
       transitionApiRef.current = null;
       timeline.current?.kill();
       timeline.current = null;
+      if (completionFallback.current) {
+        window.clearTimeout(completionFallback.current);
+        completionFallback.current = null;
+      }
+      releaseArcadeSpatialInputLock();
     };
-  }, [camera, controlsRef, gl, initialMode, performance, transitionApiRef]);
+  }, [camera, controlsRef, gl, initialMode, transitionApiRef]);
 
   return null;
 }
@@ -733,12 +754,32 @@ export function ArcadeScene({
   const handleEnter = useCallback(() => {
     if (transitionLocked.current) return;
     const startTransition = transitionApiRef.current;
-    if (!startTransition) return;
+    if (!startTransition) {
+      onEnter();
+      return;
+    }
 
     transitionLocked.current = true;
     document.body.style.cursor = "";
-    startTransition("enter");
-  }, []);
+    try {
+      startTransition("enter");
+    } catch (error) {
+      console.error("Arcade enter transition failed", error);
+      transitionLocked.current = false;
+      releaseArcadeSpatialInputLock();
+      onEnter();
+    }
+  }, [onEnter]);
+
+  useEffect(() => {
+    const requestEnter = (event: Event) => {
+      event.preventDefault();
+      handleEnter();
+    };
+
+    window.addEventListener(ARCADE_ENTER_EVENT, requestEnter);
+    return () => window.removeEventListener(ARCADE_ENTER_EVENT, requestEnter);
+  }, [handleEnter]);
 
   const handleExitComplete = useCallback(() => {
     transitionLocked.current = false;

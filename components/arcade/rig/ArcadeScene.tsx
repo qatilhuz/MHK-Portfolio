@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
+import { Suspense, useCallback, useLayoutEffect, useMemo, useRef, type MutableRefObject, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, Text } from "@react-three/drei";
 import { Color, type Camera, type Group, type MeshBasicMaterial, type MeshStandardMaterial, type PointLight } from "three";
@@ -55,6 +55,8 @@ const BACK_WALL_COLOR = "#2f312b";
 const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
 
 type LookRef = ArcadePortalPoint;
+type ArcadeTransitionMode = "idle" | "enter" | "exit";
+type ArcadeTransitionRequest = (mode: Exclude<ArcadeTransitionMode, "idle">) => void;
 
 function captureCurrentPortalView(
   camera: Camera,
@@ -84,19 +86,24 @@ function syncControlsToView(
 ) {
   if (!controls) return;
   controls.enabled = enabled;
+  controls.enableDamping = enabled;
   controls.target.set(view.look.x, view.look.y, view.look.z);
   controls.update();
   controls.saveState();
 }
 
 function CameraRig({
-  mode,
+  initialMode,
   controlsRef,
-  onArrived,
+  transitionApiRef,
+  onEnterComplete,
+  onExitComplete,
 }: {
-  mode: "idle" | "enter" | "exit";
+  initialMode: "idle" | "exit";
   controlsRef: RefObject<OrbitControlsImpl | null>;
-  onArrived: () => void;
+  transitionApiRef: MutableRefObject<ArcadeTransitionRequest | null>;
+  onEnterComplete: () => void;
+  onExitComplete: () => void;
 }) {
   const { camera } = useThree();
   const look = useRef({
@@ -104,90 +111,113 @@ function CameraRig({
     y: DEFAULT_LOOK_TARGET[1],
     z: DEFAULT_LOOK_TARGET[2],
   });
+  const phase = useRef<ArcadeTransitionMode>("idle");
   const done = useRef(false);
-  const arrived = useRef(onArrived);
-  arrived.current = onArrived;
+  const timeline = useRef<ReturnType<typeof buildArcadePortalTimeline> | null>(null);
+  const enterComplete = useRef(onEnterComplete);
+  const exitComplete = useRef(onExitComplete);
+  enterComplete.current = onEnterComplete;
+  exitComplete.current = onExitComplete;
 
   useLayoutEffect(() => {
-    done.current = false;
-    const reduced = prefersReducedMotion();
-    const controls = controlsRef.current;
+    const orientCamera = () => camera.lookAt(look.current.x, look.current.y, look.current.z);
     const defaultView = getDefaultArcadePortalView();
 
-    if (mode === "idle") {
-      const tl = buildArcadePortalTimeline(camera, look.current, defaultView);
-      tl.progress(0);
-      camera.lookAt(look.current.x, look.current.y, look.current.z);
-      syncControlsToView(controls, defaultView, true);
-      return () => tl.kill();
-    }
+    const setIdleView = () => {
+      phase.current = "idle";
+      camera.position.set(defaultView.position.x, defaultView.position.y, defaultView.position.z);
+      look.current.x = defaultView.look.x;
+      look.current.y = defaultView.look.y;
+      look.current.z = defaultView.look.z;
+      orientCamera();
+      syncControlsToView(controlsRef.current, defaultView, true);
+    };
 
-    controls?.update();
-    const startView = mode === "enter"
-      ? captureCurrentPortalView(camera, controls, look.current)
-      : defaultView;
+    const startTransition: ArcadeTransitionRequest = (nextMode) => {
+      timeline.current?.kill();
+      timeline.current = null;
+      done.current = false;
+      phase.current = nextMode;
 
-    if (controls) {
-      controls.enabled = false;
-      controls.update();
-    }
+      const controls = controlsRef.current;
+      controls?.update();
+      const startView = nextMode === "enter"
+        ? captureCurrentPortalView(camera, controls, look.current)
+        : defaultView;
 
-    const tl = buildArcadePortalTimeline(camera, look.current, startView);
-    const orientCamera = () => camera.lookAt(look.current.x, look.current.y, look.current.z);
-    tl.eventCallback("onUpdate", orientCamera);
-    orientCamera();
+      if (controls) {
+        controls.enabled = false;
+        controls.enableDamping = false;
+        controls.update();
+      }
 
-    const finish = () => {
-      if (!done.current) {
+      const tl = buildArcadePortalTimeline(camera, look.current, startView);
+      timeline.current = tl;
+      tl.eventCallback("onUpdate", orientCamera);
+      orientCamera();
+
+      const finish = () => {
+        if (done.current) return;
         done.current = true;
-        arrived.current();
+        timeline.current = null;
+        phase.current = "idle";
+
+        if (nextMode === "enter") {
+          enterComplete.current();
+          return;
+        }
+
+        syncControlsToView(controlsRef.current, defaultView, true);
+        exitComplete.current();
+      };
+
+      if (prefersReducedMotion()) {
+        if (nextMode === "enter") tl.progress(1);
+        else tl.progress(0);
+        orientCamera();
+        finish();
+        return;
+      }
+
+      if (nextMode === "enter") {
+        tl.eventCallback("onComplete", finish);
+        tl.play(0);
+      } else {
+        tl.progress(1);
+        orientCamera();
+        tl.eventCallback("onReverseComplete", finish);
+        tl.reverse();
       }
     };
 
-    if (reduced) {
-      if (mode === "enter") tl.progress(1);
-      else tl.progress(0);
-      orientCamera();
-      finish();
-      return () => tl.kill();
-    }
+    transitionApiRef.current = startTransition;
 
-    if (mode === "enter") {
-      tl.eventCallback("onComplete", finish);
-      tl.play(0);
+    if (initialMode === "exit") {
+      startTransition("exit");
     } else {
-      tl.progress(1);
-      orientCamera();
-      tl.eventCallback("onReverseComplete", finish);
-      tl.reverse();
+      setIdleView();
     }
 
     return () => {
-      tl.kill();
+      transitionApiRef.current = null;
+      timeline.current?.kill();
+      timeline.current = null;
     };
-  }, [camera, controlsRef, mode]);
-
-  useFrame(() => {
-    if (mode !== "idle") {
-      camera.lookAt(look.current.x, look.current.y, look.current.z);
-    }
-  });
+  }, [camera, controlsRef, initialMode, transitionApiRef]);
 
   return null;
 }
 
 function StrictOrbitControls({
-  mode,
   controlsRef,
 }: {
-  mode: "idle" | "enter" | "exit";
   controlsRef: RefObject<OrbitControlsImpl | null>;
 }) {
   return (
     <OrbitControls
       ref={controlsRef}
       makeDefault
-      enabled={mode === "idle"}
+      enabled
       target={DEFAULT_LOOK_TARGET}
       enablePan={false}
       enableZoom
@@ -646,16 +676,30 @@ function Room() {
 }
 
 export function ArcadeScene({
-  mode,
+  initialMode = "idle",
   onEnter,
-  onArrived,
 }: {
-  mode: "idle" | "enter" | "exit";
+  initialMode?: "idle" | "exit";
   onEnter: () => void;
-  onArrived: () => void;
 }) {
   const reduced = prefersReducedMotion();
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
+  const transitionApiRef = useRef<ArcadeTransitionRequest | null>(null);
+  const transitionLocked = useRef(initialMode === "exit");
+
+  const handleEnter = useCallback(() => {
+    if (transitionLocked.current) return;
+    const startTransition = transitionApiRef.current;
+    if (!startTransition) return;
+
+    transitionLocked.current = true;
+    document.body.style.cursor = "";
+    startTransition("enter");
+  }, []);
+
+  const handleExitComplete = useCallback(() => {
+    transitionLocked.current = false;
+  }, []);
 
   return (
     <Canvas
@@ -679,7 +723,7 @@ export function ArcadeScene({
       <ambientLight intensity={0.16} />
       <Room />
       <PcCase reduced={reduced} />
-      <Monitor reduced={reduced} enterEnabled={mode === "idle"} onEnter={onEnter} />
+      <Monitor reduced={reduced} enterEnabled onEnter={handleEnter} />
       <Speaker position={SPEAKER_LEFT} reduced={reduced} phase={0.08} />
       <Speaker position={SPEAKER_RIGHT} reduced={reduced} phase={0.58} />
       <Keyboard reduced={reduced} />
@@ -688,8 +732,14 @@ export function ArcadeScene({
       <DeskAccessories />
       <HeadsetStand reduced={reduced} />
       <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} />
-      <CameraRig mode={mode} controlsRef={controlsRef} onArrived={onArrived} />
-      <StrictOrbitControls mode={mode} controlsRef={controlsRef} />
+      <CameraRig
+        initialMode={initialMode}
+        controlsRef={controlsRef}
+        transitionApiRef={transitionApiRef}
+        onEnterComplete={onEnter}
+        onExitComplete={handleExitComplete}
+      />
+      <StrictOrbitControls controlsRef={controlsRef} />
     </Canvas>
   );
 }

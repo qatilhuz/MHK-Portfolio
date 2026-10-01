@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { SceneErrorBoundary } from "@/components/three/SceneErrorBoundary";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { trackEvent } from "@/lib/analytics/client";
@@ -43,23 +43,20 @@ function getInitialMode(): "idle" | "exit" {
 export function ArcadeSetup() {
   const router = useRouter();
   const webgl = useWebGLSupport();
-  const [mode, setMode] = useState<"idle" | "enter" | "exit">(getInitialMode);
+  const initialModeRef = useRef<"idle" | "exit">(getInitialMode());
 
   useEffect(() => {
+    router.prefetch("/arcade");
+
     if (sessionStorage.getItem(ARCADE_EXIT_FLAG) === "exit") {
       sessionStorage.removeItem(ARCADE_EXIT_FLAG);
     }
-  }, []);
+  }, [router]);
 
   const goArcade = useCallback(() => {
     trackEvent("arcade_open", undefined, { onceKey: "arcade_open" });
     router.push("/arcade");
   }, [router]);
-
-  const onArrived = useCallback(() => {
-    if (mode === "enter") goArcade();
-    if (mode === "exit") setMode("idle");
-  }, [goArcade, mode]);
 
   return (
     <div className="arcade-rig relative h-[min(72vh,38rem)] min-h-[24rem] overflow-hidden">
@@ -73,7 +70,7 @@ export function ArcadeSetup() {
         </div>
       ) : (
         <SceneErrorBoundary fallback={<ArcadeFallback onEnter={goArcade} />}>
-          <ArcadeScene mode={mode} onEnter={() => setMode("enter")} onArrived={onArrived} />
+          <ArcadeScene initialMode={initialModeRef.current} onEnter={goArcade} />
         </SceneErrorBoundary>
       )}
     </div>

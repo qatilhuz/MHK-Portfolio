@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { useFrame } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { OrthographicCamera, RenderTexture, RoundedBox, Text } from "@react-three/drei";
-import type { Group, Mesh, ShaderMaterial } from "three";
+import type { Group, Mesh, MeshStandardMaterial, PointLight, ShaderMaterial } from "three";
 import { metalAlbedo } from "./textures";
 
 const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
@@ -412,48 +412,93 @@ function MonitorEnterButton({
   enabled: boolean;
   onEnter: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
   const active = enabled;
-  const accent = hovered && active ? "#f0abfc" : "#22d3ee";
-  const secondary = hovered && active ? "#22d3ee" : "#c084fc";
-  const emissive = hovered && active ? 1.35 : 0.78;
+  const buttonGroup = useRef<Group>(null);
+  const baseMat = useRef<MeshStandardMaterial>(null);
+  const faceMat = useRef<MeshStandardMaterial>(null);
+  const topRailMat = useRef<MeshStandardMaterial>(null);
+  const bottomRailMat = useRef<MeshStandardMaterial>(null);
+  const glowLight = useRef<PointLight>(null);
+  const hovered = useRef(false);
+
+  const applyHover = (nextHovered: boolean) => {
+    hovered.current = active && nextHovered;
+    const hot = hovered.current;
+    const accent = hot ? "#f0abfc" : "#22d3ee";
+    const secondary = hot ? "#22d3ee" : "#c084fc";
+    const emissive = hot ? 1.35 : 0.78;
+
+    document.body.style.cursor = hot ? "pointer" : "";
+    buttonGroup.current?.scale.set(hot ? 1.035 : 1, hot ? 1.035 : 1, 1);
+
+    if (baseMat.current) {
+      baseMat.current.color.set(hot ? "#28112d" : "#071521");
+      baseMat.current.emissive.set(secondary);
+      baseMat.current.emissiveIntensity = hot ? 0.44 : 0.22;
+    }
+    if (faceMat.current) {
+      faceMat.current.emissive.set(accent);
+      faceMat.current.emissiveIntensity = hot ? 0.28 : 0.12;
+    }
+    if (topRailMat.current) {
+      topRailMat.current.color.set(accent);
+      topRailMat.current.emissive.set(accent);
+      topRailMat.current.emissiveIntensity = emissive;
+    }
+    if (bottomRailMat.current) {
+      bottomRailMat.current.color.set(secondary);
+      bottomRailMat.current.emissive.set(secondary);
+      bottomRailMat.current.emissiveIntensity = emissive;
+    }
+    if (glowLight.current) {
+      glowLight.current.color.set(accent);
+      glowLight.current.intensity = hot ? 0.62 : 0.32;
+    }
+  };
+
+  const stopButtonEvent = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+  };
+  const activateButton = (event: ThreeEvent<MouseEvent>) => {
+    event.stopPropagation();
+    if (!active) return;
+
+    applyHover(false);
+    onEnter();
+  };
 
   useEffect(() => {
-    if (!active || !hovered) {
+    if (!active) {
+      hovered.current = false;
       document.body.style.cursor = "";
-      return;
     }
-    document.body.style.cursor = "pointer";
+
     return () => {
       document.body.style.cursor = "";
     };
-  }, [active, hovered]);
+  }, [active]);
 
   return (
     <group
+      ref={buttonGroup}
       position={[0, -0.11, 0.031]}
-      scale={hovered && active ? [1.035, 1.035, 1] : [1, 1, 1]}
       onPointerOver={(event) => {
         event.stopPropagation();
-        if (active) setHovered(true);
+        applyHover(true);
       }}
       onPointerOut={(event) => {
         event.stopPropagation();
-        setHovered(false);
+        applyHover(false);
       }}
-      onPointerDown={(event) => {
-        event.stopPropagation();
-      }}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (active) onEnter();
-      }}
+      onPointerDown={stopButtonEvent}
+      onClick={activateButton}
     >
       <RoundedBox args={[0.39, 0.078, 0.012]} radius={0.016} smoothness={5}>
         <meshStandardMaterial
-          color={hovered && active ? "#28112d" : "#071521"}
-          emissive={secondary}
-          emissiveIntensity={hovered && active ? 0.44 : 0.22}
+          ref={baseMat}
+          color="#071521"
+          emissive="#c084fc"
+          emissiveIntensity={0.22}
           roughness={0.28}
           metalness={0.18}
           transparent
@@ -464,8 +509,9 @@ function MonitorEnterButton({
         <planeGeometry args={[0.355, 0.052]} />
         <meshStandardMaterial
           color="#020617"
-          emissive={accent}
-          emissiveIntensity={hovered && active ? 0.28 : 0.12}
+          ref={faceMat}
+          emissive="#22d3ee"
+          emissiveIntensity={0.12}
           transparent
           opacity={0.74}
           roughness={0.2}
@@ -473,11 +519,27 @@ function MonitorEnterButton({
       </mesh>
       <mesh position={[0, 0.0415, 0.011]}>
         <boxGeometry args={[0.305, 0.004, 0.004]} />
-        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={emissive} roughness={0.18} />
+        <meshStandardMaterial ref={topRailMat} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.78} roughness={0.18} />
       </mesh>
       <mesh position={[0, -0.0415, 0.011]}>
         <boxGeometry args={[0.305, 0.004, 0.004]} />
-        <meshStandardMaterial color={secondary} emissive={secondary} emissiveIntensity={emissive} roughness={0.18} />
+        <meshStandardMaterial ref={bottomRailMat} color="#c084fc" emissive="#c084fc" emissiveIntensity={0.78} roughness={0.18} />
+      </mesh>
+      <mesh
+        position={[0, 0, 0.028]}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          applyHover(true);
+        }}
+        onPointerOut={(event) => {
+          event.stopPropagation();
+          applyHover(false);
+        }}
+        onPointerDown={stopButtonEvent}
+        onClick={activateButton}
+      >
+        <planeGeometry args={[0.58, 0.16]} />
+        <meshBasicMaterial transparent opacity={0.01} colorWrite={false} depthWrite={false} />
       </mesh>
       <Suspense fallback={null}>
         <Text
@@ -498,12 +560,12 @@ function MonitorEnterButton({
           letterSpacing={0.18}
           anchorX="center"
           anchorY="middle"
-          color={accent}
+          color="#22d3ee"
         >
           PRESS START
         </Text>
       </Suspense>
-      <pointLight position={[0, 0, 0.08]} intensity={hovered && active ? 0.62 : 0.32} distance={0.5} color={accent} />
+      <pointLight ref={glowLight} position={[0, 0, 0.08]} intensity={0.32} distance={0.5} color="#22d3ee" />
     </group>
   );
 }

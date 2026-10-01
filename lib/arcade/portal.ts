@@ -48,13 +48,13 @@ export function buildArcadePortalTimeline(
   const screenStart = approachDuration * 0.86;
   const portalStart = screenStart + 0.66;
 
-  const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.inOut" } });
-  tl.to(camera.position, { ...PORTAL_APPROACH_POS, duration: approachDuration, ease: "sine.inOut" }, 0);
-  tl.to(look, { ...PORTAL_APPROACH_LOOK, duration: approachDuration, ease: "sine.inOut" }, 0);
+  const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.inOut", overwrite: "auto" } });
+  tl.to(camera.position, { ...PORTAL_APPROACH_POS, duration: approachDuration }, 0);
+  tl.to(look, { ...PORTAL_APPROACH_LOOK, duration: approachDuration }, 0);
   tl.to(camera.position, { ...PORTAL_SCREEN_POS, duration: 0.76 }, screenStart);
   tl.to(look, { ...PORTAL_SCREEN_LOOK, duration: 0.76 }, screenStart);
-  tl.to(camera.position, { ...PORTAL_END_POS, duration: 0.54, ease: "power3.in" }, portalStart);
-  tl.to(look, { ...PORTAL_END_LOOK, duration: 0.54, ease: "power3.in" }, portalStart);
+  tl.to(camera.position, { ...PORTAL_END_POS, duration: 0.54, ease: "power3.inOut" }, portalStart);
+  tl.to(look, { ...PORTAL_END_LOOK, duration: 0.54, ease: "power3.inOut" }, portalStart);
   return tl;
 }
 

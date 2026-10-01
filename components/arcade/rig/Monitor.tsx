@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox, Text } from "@react-three/drei";
 import type { ShaderMaterial } from "three";
@@ -374,28 +374,30 @@ function MonitorEnterButton({
         <boxGeometry args={[0.305, 0.004, 0.004]} />
         <meshStandardMaterial color={secondary} emissive={secondary} emissiveIntensity={emissive} roughness={0.18} />
       </mesh>
-      <Text
-        font={ARCADE_TEXT_FONT}
-        position={[0, 0.006, 0.018]}
-        fontSize={0.026}
-        letterSpacing={0.07}
-        anchorX="center"
-        anchorY="middle"
-        color="#f8fafc"
-      >
-        ENTER ARCADE
-      </Text>
-      <Text
-        font={ARCADE_TEXT_FONT}
-        position={[0, -0.023, 0.018]}
-        fontSize={0.0105}
-        letterSpacing={0.18}
-        anchorX="center"
-        anchorY="middle"
-        color={accent}
-      >
-        PRESS START
-      </Text>
+      <Suspense fallback={null}>
+        <Text
+          font={ARCADE_TEXT_FONT}
+          position={[0, 0.006, 0.018]}
+          fontSize={0.026}
+          letterSpacing={0.07}
+          anchorX="center"
+          anchorY="middle"
+          color="#f8fafc"
+        >
+          ENTER ARCADE
+        </Text>
+        <Text
+          font={ARCADE_TEXT_FONT}
+          position={[0, -0.023, 0.018]}
+          fontSize={0.0105}
+          letterSpacing={0.18}
+          anchorX="center"
+          anchorY="middle"
+          color={accent}
+        >
+          PRESS START
+        </Text>
+      </Suspense>
       <pointLight position={[0, 0, 0.08]} intensity={hovered && active ? 0.62 : 0.32} distance={0.5} color={accent} />
     </group>
   );

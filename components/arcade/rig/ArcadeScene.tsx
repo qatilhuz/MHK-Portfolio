@@ -51,6 +51,7 @@ const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANC
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
 const STUDIO_WALL_COLOR = "#3f4756";
+const ARCADE_TEXT_FONT = "/fonts/Charmonman-Bold.woff2";
 
 type LookRef = ArcadePortalPoint;
 
@@ -362,24 +363,26 @@ function ReferenceWall() {
         <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.36} roughness={0.35} />
       </mesh>
 
-      <Text position={[-0.315, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
-        {"INSERT\nCOIN"}
-      </Text>
-      <Text position={[-0.322, 0.847, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
-        {"INSERT\nCOIN"}
-      </Text>
-      <Text position={[-0.302, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
-        {"INSERT\nCOIN"}
-      </Text>
-      <Text position={[0.445, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
-        {"GAME\nOVER"}
-      </Text>
-      <Text position={[0.435, 0.848, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
-        {"GAME\nOVER"}
-      </Text>
-      <Text position={[0.457, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
-        {"GAME\nOVER"}
-      </Text>
+      <Suspense fallback={null}>
+        <Text font={ARCADE_TEXT_FONT} position={[-0.315, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
+          {"INSERT\nCOIN"}
+        </Text>
+        <Text font={ARCADE_TEXT_FONT} position={[-0.322, 0.847, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
+          {"INSERT\nCOIN"}
+        </Text>
+        <Text font={ARCADE_TEXT_FONT} position={[-0.302, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
+          {"INSERT\nCOIN"}
+        </Text>
+        <Text font={ARCADE_TEXT_FONT} position={[0.445, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
+          {"GAME\nOVER"}
+        </Text>
+        <Text font={ARCADE_TEXT_FONT} position={[0.435, 0.848, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
+          {"GAME\nOVER"}
+        </Text>
+        <Text font={ARCADE_TEXT_FONT} position={[0.457, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
+          {"GAME\nOVER"}
+        </Text>
+      </Suspense>
 
       <pointLight position={[-1.15, 0.88, -0.78]} intensity={1.75} distance={1.05} color="#22d3ee" />
       <pointLight position={[-0.72, 1.12, -0.8]} intensity={1.55} distance={0.95} color="#c084fc" />
@@ -458,7 +461,10 @@ export function ArcadeScene({
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       camera={{ fov: 40, near: 0.05, far: 16, position: DEFAULT_CAMERA_POSITION }}
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: "100%", height: "100%", display: "block" }}
+      onCreated={({ camera }) => {
+        camera.lookAt(PORTAL_START_LOOK.x, PORTAL_START_LOOK.y, PORTAL_START_LOOK.z);
+      }}
     >
       <color attach="background" args={[STUDIO_WALL_COLOR]} />
       <hemisphereLight args={["#dbeafe", "#15101f", 0.42]} />
@@ -469,19 +475,17 @@ export function ArcadeScene({
         shadow-mapSize={[2048, 2048]}
       />
       <ambientLight intensity={0.16} />
-      <Suspense fallback={null}>
-        <Room />
-        <PcCase reduced={reduced} />
-        <Monitor reduced={reduced} enterEnabled={mode === "idle"} onEnter={onEnter} />
-        <Speaker position={SPEAKER_LEFT} reduced={reduced} phase={0.08} />
-        <Speaker position={SPEAKER_RIGHT} reduced={reduced} phase={0.58} />
-        <Keyboard reduced={reduced} />
-        <MousePad reduced={reduced} />
-        <Mouse reduced={reduced} />
-        <DeskAccessories />
-        <HeadsetStand reduced={reduced} />
-        <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} />
-      </Suspense>
+      <Room />
+      <PcCase reduced={reduced} />
+      <Monitor reduced={reduced} enterEnabled={mode === "idle"} onEnter={onEnter} />
+      <Speaker position={SPEAKER_LEFT} reduced={reduced} phase={0.08} />
+      <Speaker position={SPEAKER_RIGHT} reduced={reduced} phase={0.58} />
+      <Keyboard reduced={reduced} />
+      <MousePad reduced={reduced} />
+      <Mouse reduced={reduced} />
+      <DeskAccessories />
+      <HeadsetStand reduced={reduced} />
+      <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} />
       <CameraRig mode={mode} controlsRef={controlsRef} onArrived={onArrived} />
       <StrictOrbitControls mode={mode} controlsRef={controlsRef} />
     </Canvas>

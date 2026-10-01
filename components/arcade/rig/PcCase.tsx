@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox, Text } from "@react-three/drei";
 import {
@@ -289,29 +289,31 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
         <boxGeometry args={[0.04, 0.09, 0.43]} />
         <meshStandardMaterial map={metal} color="#111827" metalness={0.42} roughness={0.48} />
       </mesh>
-      <Text
-        font={ARCADE_TEXT_FONT}
-        position={[SIDE_X - 0.024, 0.115, 0.095]}
-        rotation={[0, -Math.PI / 2, 0]}
-        fontSize={0.034}
-        letterSpacing={0.05}
-        anchorX="center"
-        anchorY="middle"
-        color="#8b5cf6"
-      >
-        Arcade
-      </Text>
-      <Text
-        font={ARCADE_TEXT_FONT}
-        position={[0.118, 0.065, FRONT_Z + 0.026]}
-        fontSize={0.032}
-        letterSpacing={0.07}
-        anchorX="center"
-        anchorY="middle"
-        color="#22d3ee"
-      >
-        Arcade
-      </Text>
+      <Suspense fallback={null}>
+        <Text
+          font={ARCADE_TEXT_FONT}
+          position={[SIDE_X - 0.024, 0.115, 0.095]}
+          rotation={[0, -Math.PI / 2, 0]}
+          fontSize={0.034}
+          letterSpacing={0.05}
+          anchorX="center"
+          anchorY="middle"
+          color="#8b5cf6"
+        >
+          Arcade
+        </Text>
+        <Text
+          font={ARCADE_TEXT_FONT}
+          position={[0.118, 0.065, FRONT_Z + 0.026]}
+          fontSize={0.032}
+          letterSpacing={0.07}
+          anchorX="center"
+          anchorY="middle"
+          color="#22d3ee"
+        >
+          Arcade
+        </Text>
+      </Suspense>
 
       <CableComb y={0.275} />
       <mesh geometry={COOLANT_TUBE_A}>

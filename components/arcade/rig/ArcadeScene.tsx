@@ -51,6 +51,7 @@ const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANC
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
 const STUDIO_WALL_COLOR = "#3f4756";
+const BACK_WALL_COLOR = "#1F1F1F";
 const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
 
 type LookRef = ArcadePortalPoint;
@@ -609,7 +610,7 @@ function Room() {
     <>
       <mesh position={[0, 0.83, -1.16]} receiveShadow>
         <planeGeometry args={[6, 3.2]} />
-        <meshStandardMaterial map={concrete} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
+        <meshStandardMaterial map={concrete} color={BACK_WALL_COLOR} roughness={0.9} metalness={0.03} />
       </mesh>
       <mesh position={[-1.62, 0.83, -0.18]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[2.04, 3.2]} />

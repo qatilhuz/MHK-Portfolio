@@ -1,20 +1,24 @@
 /** Full reference-inspired monitor wall: central display plus angled portrait side screens. */
 export const MONITOR_X = 0.02;
-export const MONITOR_HALF = 0.61;
+
+/** Main monitor lit-glass width from Monitor.tsx; speaker centers align to these two bottom screen corners. */
+export const MAIN_SCREEN_WIDTH = 0.972;
+export const MONITOR_HALF = MAIN_SCREEN_WIDTH / 2;
 export const MONITOR_LEFT = MONITOR_X - MONITOR_HALF;
 export const MONITOR_RIGHT = MONITOR_X + MONITOR_HALF;
 
 export const SPEAKER_WIDTH = 0.09;
-export const SPEAKER_Y = 0.145;
+/** Speaker root Y places the small rubber feet exactly on the desk top at y=0.05. */
+export const SPEAKER_Y = 0.153;
 export const SPEAKER_Z = -0.045;
 
 export const SPEAKER_LEFT: [number, number, number] = [
-  MONITOR_LEFT - SPEAKER_WIDTH / 2,
+  MONITOR_LEFT,
   SPEAKER_Y,
   SPEAKER_Z,
 ];
 export const SPEAKER_RIGHT: [number, number, number] = [
-  MONITOR_RIGHT + SPEAKER_WIDTH / 2,
+  MONITOR_RIGHT,
   SPEAKER_Y,
   SPEAKER_Z,
 ];

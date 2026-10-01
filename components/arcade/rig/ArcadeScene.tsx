@@ -50,8 +50,8 @@ const DEFAULT_AZIMUTH = Math.atan2(DEFAULT_CAMERA_VECTOR.x, DEFAULT_CAMERA_VECTO
 const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANCE);
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
-const STUDIO_WALL_COLOR = "#3f4756";
-const BACK_WALL_COLOR = "#1F1F1F";
+const STUDIO_WALL_COLOR = "#e3e4e1";
+const BACK_WALL_COLOR = "#2f312b";
 const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
 
 type LookRef = ArcadePortalPoint;

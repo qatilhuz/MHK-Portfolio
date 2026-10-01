@@ -8,17 +8,19 @@ export const MONITOR_LEFT = MONITOR_X - MONITOR_HALF;
 export const MONITOR_RIGHT = MONITOR_X + MONITOR_HALF;
 
 export const SPEAKER_WIDTH = 0.09;
+/** Micro-inset each cabinet from the main screen corners to tighten the speaker gap subtly. */
+export const SPEAKER_CENTER_INSET = 0.018;
 /** Speaker root Y places the small rubber feet exactly on the desk top at y=0.05. */
 export const SPEAKER_Y = 0.153;
 export const SPEAKER_Z = -0.045;
 
 export const SPEAKER_LEFT: [number, number, number] = [
-  MONITOR_LEFT,
+  MONITOR_LEFT + SPEAKER_CENTER_INSET,
   SPEAKER_Y,
   SPEAKER_Z,
 ];
 export const SPEAKER_RIGHT: [number, number, number] = [
-  MONITOR_RIGHT,
+  MONITOR_RIGHT - SPEAKER_CENTER_INSET,
   SPEAKER_Y,
   SPEAKER_Z,
 ];

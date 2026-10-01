@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import {
   CanvasTexture,
   CatmullRomCurve3,
@@ -10,6 +11,8 @@ import {
   SRGBColorSpace,
   Vector2,
   Vector3,
+  type Group,
+  type MeshBasicMaterial,
 } from "three";
 import { metalAlbedo } from "./textures";
 
@@ -258,21 +261,71 @@ function premiumMugHandleGeometry() {
   return geo;
 }
 
-function premiumSteamGeometry(offset: number, lean: number) {
-  const curve = new CatmullRomCurve3(
-    [
-      new Vector3(offset, 0.135, 0.002),
-      new Vector3(offset + lean * 0.012, 0.157, 0.004),
-      new Vector3(offset - lean * 0.008, 0.182, 0.001),
-      new Vector3(offset + lean * 0.006, 0.209, 0.003),
-    ],
-    false,
-    "centripetal",
-    0.5,
+function ContinuousCoffeeSmoke() {
+  const puffRefs = useRef<Array<Group | null>>([]);
+  const matRefs = useRef<Array<MeshBasicMaterial | null>>([]);
+  const puffs = useMemo(
+    () =>
+      Array.from({ length: 10 }, (_, i) => ({
+        phase: i / 10,
+        x: -0.016 + ((i * 7) % 9) * 0.004,
+        z: -0.004 + ((i * 5) % 7) * 0.003,
+        drift: i % 2 === 0 ? 1 : -1,
+        size: 0.62 + ((i * 3) % 5) * 0.12,
+      })),
+    [],
   );
-  const geo = new TubeGeometry(curve, 54, 0.00085, 10, false);
-  geo.computeVertexNormals();
-  return geo;
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    puffs.forEach((puff, index) => {
+      const cycle = (t * 0.18 + puff.phase) % 1;
+      const easeIn = Math.min(cycle * 5.5, 1);
+      const fadeOut = 1 - cycle;
+      const y = 0.139 + cycle * 0.14;
+      const sway = Math.sin(t * 0.92 + index * 1.7) * 0.012 * cycle;
+      const side = Math.cos(t * 0.62 + index * 0.9) * 0.006 * cycle;
+      const scale = (0.44 + cycle * 1.38) * puff.size;
+      const puffNode = puffRefs.current[index];
+      if (puffNode) {
+        puffNode.position.set(puff.x + sway * puff.drift, y, puff.z + side);
+        puffNode.scale.set(scale * 0.72, scale, scale * 0.72);
+        puffNode.rotation.z = Math.sin(t * 0.44 + index) * 0.32;
+      }
+      const mat = matRefs.current[index];
+      if (mat) {
+        mat.opacity = 0.02 + 0.18 * easeIn * fadeOut;
+      }
+    });
+  });
+
+  return (
+    <group>
+      {puffs.map((puff, index) => (
+        <group
+          key={`coffee-smoke-${index}`}
+          ref={(node) => {
+            puffRefs.current[index] = node;
+          }}
+          position={[puff.x, 0.139 + puff.phase * 0.14, puff.z]}
+          scale={0.42 + puff.phase * 0.9}
+        >
+          <mesh>
+            <circleGeometry args={[0.017, 28]} />
+            <meshBasicMaterial
+              ref={(material) => {
+                matRefs.current[index] = material;
+              }}
+              color="#7b8490"
+              transparent
+              opacity={0.11}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
 }
 
 function PremiumDeskMug() {
@@ -280,15 +333,6 @@ function PremiumDeskMug() {
   const shell = useMemo(() => premiumMugOuterShellGeometry(), []);
   const innerWall = useMemo(() => premiumMugInnerWallGeometry(), []);
   const handle = useMemo(() => premiumMugHandleGeometry(), []);
-  const steam = useMemo(
-    () => [
-      premiumSteamGeometry(-0.015, 1),
-      premiumSteamGeometry(0.006, -1),
-      premiumSteamGeometry(0.02, 0.7),
-    ],
-    [],
-  );
-
   return (
     <group position={[0.88, 0.05, 0.44]} rotation={[0, -0.22, 0]} scale={1.1}>
       <mesh position={[0, 0.0022, 0]} receiveShadow>
@@ -388,11 +432,7 @@ function PremiumDeskMug() {
         <boxGeometry args={[0.039, 0.0017, 0.0012]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.24} depthWrite={false} />
       </mesh>
-      {steam.map((geo, idx) => (
-        <mesh key={`premium-steam-${idx}`} geometry={geo}>
-          <meshBasicMaterial color="#fff7ea" transparent opacity={0.1 - idx * 0.022} depthWrite={false} />
-        </mesh>
-      ))}
+      <ContinuousCoffeeSmoke />
     </group>
   );
 }

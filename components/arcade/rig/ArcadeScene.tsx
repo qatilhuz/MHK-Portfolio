@@ -3,7 +3,7 @@
 import { Suspense, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, Text } from "@react-three/drei";
-import type { Camera } from "three";
+import { Color, type Camera, type Group, type MeshBasicMaterial, type MeshStandardMaterial, type PointLight } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { prefersReducedMotion } from "@/lib/motion/engine";
 import {
@@ -214,12 +214,53 @@ function AcousticTile({
 }) {
   const glow = accent === "cyan" ? "#22d3ee" : "#c084fc";
   const dimGlow = accent === "cyan" ? "#155e75" : "#581c87";
+  const alternate = accent === "cyan" ? "#a855f7" : "#22d3ee";
+  const panel = useRef<MeshStandardMaterial>(null);
+  const edgeMats = useRef<Array<MeshStandardMaterial | null>>([]);
+  const crossMats = useRef<Array<MeshStandardMaterial | null>>([]);
+  const tileLight = useRef<PointLight>(null);
+  const baseColor = useMemo(() => new Color(glow), [glow]);
+  const altColor = useMemo(() => new Color(alternate), [alternate]);
+  const liveColor = useMemo(() => new Color(), []);
+  const phase = position[0] * 1.7 + position[1] * 2.3;
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const wave = 0.5 + 0.5 * Math.sin(t * 1.05 + phase);
+    const runner = 0.5 + 0.5 * Math.sin(t * 2.15 + phase * 1.4);
+    liveColor.lerpColors(baseColor, altColor, 0.18 + runner * 0.28);
+
+    if (panel.current) {
+      panel.current.color.copy(liveColor);
+      panel.current.emissive.copy(liveColor);
+      panel.current.emissiveIntensity = 0.14 + wave * 0.22;
+      panel.current.opacity = 0.30 + wave * 0.22;
+    }
+    edgeMats.current.forEach((mat, index) => {
+      if (!mat) return;
+      const chase = 0.5 + 0.5 * Math.sin(t * 2.6 + phase + index * 1.18);
+      mat.color.copy(liveColor);
+      mat.emissive.copy(liveColor);
+      mat.emissiveIntensity = 0.42 + chase * 0.78;
+    });
+    crossMats.current.forEach((mat, index) => {
+      if (!mat) return;
+      const flicker = 0.5 + 0.5 * Math.sin(t * 1.65 + phase + index * 0.85);
+      mat.color.copy(liveColor);
+      mat.emissive.copy(liveColor);
+      mat.emissiveIntensity = 0.22 + flicker * 0.48;
+    });
+    if (tileLight.current) {
+      tileLight.current.color.copy(liveColor);
+      tileLight.current.intensity = 0.11 + wave * 0.18;
+    }
+  });
 
   return (
     <group position={position}>
       <mesh position={[0, 0, -0.014]} receiveShadow>
         <boxGeometry args={[0.248, 0.248, 0.01]} />
-        <meshStandardMaterial color={glow} emissive={glow} emissiveIntensity={0.25} transparent opacity={0.42} roughness={0.4} />
+        <meshStandardMaterial ref={panel} color={glow} emissive={glow} emissiveIntensity={0.25} transparent opacity={0.42} roughness={0.4} />
       </mesh>
       <mesh receiveShadow>
         <boxGeometry args={[0.22, 0.22, 0.028]} />
@@ -237,7 +278,16 @@ function AcousticTile({
       ].map(([x, y, z, w, h], i) => (
         <mesh key={`edge-${i}`} position={[x, y, z]}>
           <boxGeometry args={[w, h, 0.006]} />
-          <meshStandardMaterial color={glow} emissive={glow} emissiveIntensity={0.72} roughness={0.22} />
+          <meshStandardMaterial
+            ref={(material) => {
+              edgeMats.current[i] = material;
+            }}
+            color={glow}
+            emissive={glow}
+            emissiveIntensity={0.72}
+            roughness={0.22}
+            toneMapped={false}
+          />
         </mesh>
       ))}
       {[
@@ -253,13 +303,31 @@ function AcousticTile({
       ))}
       <mesh position={[0, 0, 0.031]} rotation={[0, 0, Math.PI / 4]}>
         <boxGeometry args={[0.12, 0.006, 0.005]} />
-        <meshStandardMaterial color={dimGlow} emissive={glow} emissiveIntensity={0.36} roughness={0.36} />
+        <meshStandardMaterial
+          ref={(material) => {
+            crossMats.current[0] = material;
+          }}
+          color={dimGlow}
+          emissive={glow}
+          emissiveIntensity={0.36}
+          roughness={0.36}
+          toneMapped={false}
+        />
       </mesh>
       <mesh position={[0, 0, 0.032]} rotation={[0, 0, -Math.PI / 4]}>
         <boxGeometry args={[0.12, 0.006, 0.005]} />
-        <meshStandardMaterial color={dimGlow} emissive={glow} emissiveIntensity={0.36} roughness={0.36} />
+        <meshStandardMaterial
+          ref={(material) => {
+            crossMats.current[1] = material;
+          }}
+          color={dimGlow}
+          emissive={glow}
+          emissiveIntensity={0.36}
+          roughness={0.36}
+          toneMapped={false}
+        />
       </mesh>
-      <pointLight position={[0, 0, 0.12]} intensity={0.18} distance={0.32} color={glow} />
+      <pointLight ref={tileLight} position={[0, 0, 0.12]} intensity={0.18} distance={0.32} color={glow} />
     </group>
   );
 }
@@ -279,6 +347,96 @@ function MiniArcade({ position, color }: { position: Vec3; color: string }) {
         <boxGeometry args={[0.055, 0.018, 0.004]} />
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} roughness={0.35} />
       </mesh>
+    </group>
+  );
+}
+
+
+function NeonWallTitle() {
+  const titleGroup = useRef<Group>(null);
+  const titleMat = useRef<MeshStandardMaterial>(null);
+  const plateMat = useRef<MeshBasicMaterial>(null);
+  const barMats = useRef<Array<MeshStandardMaterial | null>>([]);
+  const titleLight = useRef<PointLight>(null);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const breath = 0.5 + 0.5 * Math.sin(t * 1.15);
+    const chase = 0.5 + 0.5 * Math.sin(t * 2.35);
+    if (titleGroup.current) {
+      const s = 1 + breath * 0.012;
+      titleGroup.current.scale.set(s, s, 1);
+    }
+    if (titleMat.current) {
+      titleMat.current.emissiveIntensity = 1.85 + breath * 1.05;
+    }
+    if (plateMat.current) {
+      plateMat.current.opacity = 0.045 + breath * 0.07;
+    }
+    barMats.current.forEach((mat, index) => {
+      if (!mat) return;
+      mat.emissiveIntensity = 0.55 + (index === 0 ? chase : 1 - chase) * 0.78;
+    });
+    if (titleLight.current) titleLight.current.intensity = 0.42 + breath * 0.28;
+  });
+
+  return (
+    <group ref={titleGroup}>
+      <mesh position={[0.04, 0.842, -1.061]}>
+        <planeGeometry args={[0.86, 0.19]} />
+        <meshBasicMaterial ref={plateMat} color="#22d3ee" transparent opacity={0.075} depthWrite={false} />
+      </mesh>
+      <mesh position={[0.04, 0.952, -1.052]}>
+        <boxGeometry args={[0.7, 0.006, 0.006]} />
+        <meshStandardMaterial
+          ref={(material) => {
+            barMats.current[0] = material;
+          }}
+          color="#67e8f9"
+          emissive="#22d3ee"
+          emissiveIntensity={0.95}
+          roughness={0.24}
+          toneMapped={false}
+        />
+      </mesh>
+      <mesh position={[0.04, 0.73, -1.052]}>
+        <boxGeometry args={[0.62, 0.006, 0.006]} />
+        <meshStandardMaterial
+          ref={(material) => {
+            barMats.current[1] = material;
+          }}
+          color="#c084fc"
+          emissive="#c084fc"
+          emissiveIntensity={0.78}
+          roughness={0.24}
+          toneMapped={false}
+        />
+      </mesh>
+      <Suspense fallback={null}>
+        <Text
+          font={ARCADE_TEXT_FONT}
+          position={[0.04, 0.84, -1.045]}
+          fontSize={0.118}
+          letterSpacing={0.115}
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.0045}
+          outlineColor="#38bdf8"
+          outlineOpacity={0.7}
+        >
+          HUZAIFA
+          <meshStandardMaterial
+            ref={titleMat}
+            color="#ecfeff"
+            emissive="#22d3ee"
+            emissiveIntensity={2.35}
+            roughness={0.18}
+            metalness={0.04}
+            toneMapped={false}
+          />
+        </Text>
+      </Suspense>
+      <pointLight ref={titleLight} position={[0.04, 0.84, -0.78]} intensity={0.5} distance={0.8} color="#22d3ee" />
     </group>
   );
 }
@@ -363,41 +521,7 @@ function ReferenceWall() {
         <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.36} roughness={0.35} />
       </mesh>
 
-      <mesh position={[0.04, 0.842, -1.061]}>
-        <planeGeometry args={[0.86, 0.19]} />
-        <meshBasicMaterial color="#22d3ee" transparent opacity={0.075} depthWrite={false} />
-      </mesh>
-      <mesh position={[0.04, 0.952, -1.052]}>
-        <boxGeometry args={[0.7, 0.006, 0.006]} />
-        <meshStandardMaterial color="#67e8f9" emissive="#22d3ee" emissiveIntensity={0.95} roughness={0.24} toneMapped={false} />
-      </mesh>
-      <mesh position={[0.04, 0.73, -1.052]}>
-        <boxGeometry args={[0.62, 0.006, 0.006]} />
-        <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.78} roughness={0.24} toneMapped={false} />
-      </mesh>
-      <Suspense fallback={null}>
-        <Text
-          font={ARCADE_TEXT_FONT}
-          position={[0.04, 0.84, -1.045]}
-          fontSize={0.118}
-          letterSpacing={0.115}
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={0.0045}
-          outlineColor="#38bdf8"
-          outlineOpacity={0.7}
-        >
-          HUZAIFA
-          <meshStandardMaterial
-            color="#ecfeff"
-            emissive="#22d3ee"
-            emissiveIntensity={2.35}
-            roughness={0.18}
-            metalness={0.04}
-            toneMapped={false}
-          />
-        </Text>
-      </Suspense>
+      <NeonWallTitle />
 
       <pointLight position={[-1.15, 0.88, -0.78]} intensity={1.75} distance={1.05} color="#22d3ee" />
       <pointLight position={[-0.72, 1.12, -0.8]} intensity={1.55} distance={0.95} color="#c084fc" />

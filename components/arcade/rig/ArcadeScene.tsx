@@ -14,6 +14,11 @@ import {
   type ArcadePortalPoint,
   type ArcadePortalView,
 } from "@/lib/arcade/portal";
+import {
+  attachArcadeSpatialZoom,
+  clearArcadeSpatialZoom,
+  getArcadeSpatialRoot,
+} from "@/lib/arcade/spatialZoom";
 import { DESK_CENTER_X, DESK_CENTER_Z, DESK_SIZE, SPEAKER_LEFT, SPEAKER_RIGHT } from "@/lib/arcade/layout";
 import { Keyboard } from "./Keyboard";
 import { Monitor } from "./Monitor";
@@ -152,6 +157,7 @@ function CameraRig({
       }
 
       const tl = buildArcadePortalTimeline(camera, look.current, startView);
+      const spatialRoot = attachArcadeSpatialZoom(tl, getArcadeSpatialRoot());
       timeline.current = tl;
       tl.eventCallback("onUpdate", orientCamera);
       orientCamera();
@@ -168,6 +174,7 @@ function CameraRig({
         }
 
         syncControlsToView(controlsRef.current, defaultView, true);
+        clearArcadeSpatialZoom(spatialRoot);
         exitComplete.current();
       };
 
@@ -192,13 +199,20 @@ function CameraRig({
 
     transitionApiRef.current = startTransition;
 
+    let exitFrame = 0;
+    let settledExitFrame = 0;
+
     if (initialMode === "exit") {
-      startTransition("exit");
+      exitFrame = requestAnimationFrame(() => {
+        settledExitFrame = requestAnimationFrame(() => startTransition("exit"));
+      });
     } else {
       setIdleView();
     }
 
     return () => {
+      cancelAnimationFrame(exitFrame);
+      cancelAnimationFrame(settledExitFrame);
       transitionApiRef.current = null;
       timeline.current?.kill();
       timeline.current = null;

@@ -57,5 +57,3 @@ export function buildArcadePortalTimeline(
   tl.to(look, { ...PORTAL_END_LOOK, duration: 0.54, ease: "power3.inOut" }, portalStart);
   return tl;
 }
-
-export const ARCADE_EXIT_FLAG = "arcade-portal";

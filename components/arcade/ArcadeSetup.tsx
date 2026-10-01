@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { SceneErrorBoundary } from "@/components/three/SceneErrorBoundary";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { trackEvent } from "@/lib/analytics/client";
-import { ARCADE_EXIT_FLAG } from "@/lib/arcade/portal";
+import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
 
 const ArcadeScene = dynamic(
   () => import("./rig/ArcadeScene").then((mod) => mod.ArcadeScene),

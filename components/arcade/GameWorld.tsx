@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { trackEvent } from "@/lib/analytics/client";
 import { arcadeGames, futureCabinets } from "@/lib/arcade/registry";
-import { ARCADE_EXIT_FLAG } from "@/lib/arcade/portal";
+import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
 import type { ArcadeGameId } from "@/lib/arcade/gameTypes";
 
 const RockPaperScissors = dynamic(() =>
@@ -28,6 +28,21 @@ export function GameWorld() {
   }, [router]);
 
   useEffect(() => {
+    router.prefetch("/");
+
+    const warmArcadeRig = () => {
+      void import("./ArcadeSetup");
+      void import("./rig/ArcadeScene");
+    };
+    let cancelWarmArcadeRig = () => {};
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(warmArcadeRig, { timeout: 1500 });
+      cancelWarmArcadeRig = () => window.cancelIdleCallback(idleId);
+    } else {
+      const timeoutId = window.setTimeout(warmArcadeRig, 450);
+      cancelWarmArcadeRig = () => window.clearTimeout(timeoutId);
+    }
+
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (event: KeyboardEvent) => {
@@ -38,10 +53,11 @@ export function GameWorld() {
     };
     window.addEventListener("keydown", onKey);
     return () => {
+      cancelWarmArcadeRig();
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [exit, game]);
+  }, [exit, game, router]);
 
   const back = () => setGame(null);
   const select = (id: ArcadeGameId) => {

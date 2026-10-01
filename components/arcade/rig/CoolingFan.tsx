@@ -27,7 +27,10 @@ export function CoolingFan({
   const spin = useRef<Group>(null);
   const ring = useRef<MeshStandardMaterial>(null);
   const hub = useRef<MeshStandardMaterial>(null);
+  const bladeMats = useRef<Array<MeshStandardMaterial | null>>([]);
   const color = useMemo(() => new Color(rgb), [rgb]);
+  const bladeColor = useMemo(() => new Color(), []);
+  const blades = 7;
 
   useFrame((state, delta) => {
     if (!reduced && spin.current) spin.current.rotation.y += delta * speed;
@@ -43,9 +46,17 @@ export function CoolingFan({
       mat.emissive.copy(color);
       mat.emissiveIntensity = pulse;
     }
+
+    bladeMats.current.forEach((mat, index) => {
+      if (!mat) return;
+      arcadeRgbAt(t * 0.08, bladeColor, phase + index / blades);
+      mat.color.copy(bladeColor);
+      mat.emissive.copy(bladeColor);
+      mat.emissiveIntensity = 0.98 + 0.28 * Math.sin(t * 1.45 + index * 0.72 + phase * Math.PI * 2);
+      mat.opacity = 0.82 + 0.08 * Math.sin(t * 1.1 + index * 0.47);
+    });
   });
 
-  const blades = 7;
   const inner = radius * 0.9;
   const hubR = radius * 0.2;
   const bladeLen = inner - hubR - radius * 0.04;
@@ -92,7 +103,19 @@ export function CoolingFan({
             <group key={i} rotation={[0, a, 0]}>
               <mesh position={[hubR + bladeLen * 0.5, 0, 0]} rotation={[0.45, 0, 0]}>
                 <boxGeometry args={[bladeLen, 0.0014, radius * 0.16]} />
-                <meshStandardMaterial color="#4b5160" metalness={0.12} roughness={0.55} />
+                <meshStandardMaterial
+                  ref={(material) => {
+                    bladeMats.current[i] = material;
+                  }}
+                  color="#22d3ee"
+                  emissive="#22d3ee"
+                  emissiveIntensity={1.05}
+                  metalness={0.16}
+                  roughness={0.28}
+                  transparent
+                  opacity={0.86}
+                  toneMapped={false}
+                />
               </mesh>
             </group>
           );

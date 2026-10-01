@@ -290,7 +290,7 @@ function PremiumDeskMug() {
   );
 
   return (
-    <group position={[0.88, 0.05, 0.32]} rotation={[0, -0.22, 0]} scale={1.1}>
+    <group position={[0.88, 0.05, 0.44]} rotation={[0, -0.22, 0]} scale={1.1}>
       <mesh position={[0, 0.0022, 0]} receiveShadow>
         <cylinderGeometry args={[0.059, 0.059, 0.0044, 96]} />
         <meshStandardMaterial color="#111318" roughness={0.72} metalness={0.08} />

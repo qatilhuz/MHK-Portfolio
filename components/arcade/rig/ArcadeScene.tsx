@@ -51,7 +51,7 @@ const DEFAULT_POLAR = Math.acos(DEFAULT_CAMERA_VECTOR.y / DEFAULT_CAMERA_DISTANC
 const ORBIT_VARIANCE = Math.PI / 14;
 const MIN_CAMERA_DISTANCE = 0.72;
 const STUDIO_WALL_COLOR = "#3f4756";
-const ARCADE_TEXT_FONT = "/fonts/Charmonman-Bold.woff2";
+const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
 
 type LookRef = ArcadePortalPoint;
 

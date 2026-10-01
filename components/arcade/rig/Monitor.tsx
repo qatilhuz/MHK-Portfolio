@@ -6,7 +6,7 @@ import { RoundedBox, Text } from "@react-three/drei";
 import type { ShaderMaterial } from "three";
 import { metalAlbedo } from "./textures";
 
-const ARCADE_TEXT_FONT = "/fonts/Charmonman-Bold.woff2";
+const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
 
 const vertex = `
 varying vec2 vUv;

@@ -16,7 +16,7 @@ import { PC_POS, PC_YAW } from "@/lib/arcade/layout";
 import { CoolingFan } from "./CoolingFan";
 import { pcBrushedMetal, pcHexMesh, pcPcbMaps } from "./pcTextures";
 
-const ARCADE_TEXT_FONT = "/fonts/Charmonman-Bold.woff2";
+const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
 
 const CASE_W = 0.43;
 const CASE_H = 0.6;

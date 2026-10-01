@@ -363,24 +363,39 @@ function ReferenceWall() {
         <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.36} roughness={0.35} />
       </mesh>
 
+      <mesh position={[0.04, 0.842, -1.061]}>
+        <planeGeometry args={[0.86, 0.19]} />
+        <meshBasicMaterial color="#22d3ee" transparent opacity={0.075} depthWrite={false} />
+      </mesh>
+      <mesh position={[0.04, 0.952, -1.052]}>
+        <boxGeometry args={[0.7, 0.006, 0.006]} />
+        <meshStandardMaterial color="#67e8f9" emissive="#22d3ee" emissiveIntensity={0.95} roughness={0.24} toneMapped={false} />
+      </mesh>
+      <mesh position={[0.04, 0.73, -1.052]}>
+        <boxGeometry args={[0.62, 0.006, 0.006]} />
+        <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.78} roughness={0.24} toneMapped={false} />
+      </mesh>
       <Suspense fallback={null}>
-        <Text font={ARCADE_TEXT_FONT} position={[-0.315, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
-          {"INSERT\nCOIN"}
-        </Text>
-        <Text font={ARCADE_TEXT_FONT} position={[-0.322, 0.847, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
-          {"INSERT\nCOIN"}
-        </Text>
-        <Text font={ARCADE_TEXT_FONT} position={[-0.302, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
-          {"INSERT\nCOIN"}
-        </Text>
-        <Text font={ARCADE_TEXT_FONT} position={[0.445, 0.84, -1.06]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#1f2937" anchorX="center" anchorY="middle">
-          {"GAME\nOVER"}
-        </Text>
-        <Text font={ARCADE_TEXT_FONT} position={[0.435, 0.848, -1.055]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#67e8f9" anchorX="center" anchorY="middle">
-          {"GAME\nOVER"}
-        </Text>
-        <Text font={ARCADE_TEXT_FONT} position={[0.457, 0.833, -1.054]} fontSize={0.074} lineHeight={0.82} letterSpacing={0.045} color="#f0abfc" anchorX="center" anchorY="middle">
-          {"GAME\nOVER"}
+        <Text
+          font={ARCADE_TEXT_FONT}
+          position={[0.04, 0.84, -1.045]}
+          fontSize={0.118}
+          letterSpacing={0.115}
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.0045}
+          outlineColor="#38bdf8"
+          outlineOpacity={0.7}
+        >
+          HUZAIFA
+          <meshStandardMaterial
+            color="#ecfeff"
+            emissive="#22d3ee"
+            emissiveIntensity={2.35}
+            roughness={0.18}
+            metalness={0.04}
+            toneMapped={false}
+          />
         </Text>
       </Suspense>
 

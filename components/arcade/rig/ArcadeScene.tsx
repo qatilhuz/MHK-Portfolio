@@ -610,7 +610,7 @@ function Room() {
     <>
       <mesh position={[0, 0.83, -1.16]} receiveShadow>
         <planeGeometry args={[6, 3.2]} />
-        <meshStandardMaterial map={concrete} color={BACK_WALL_COLOR} roughness={0.9} metalness={0.03} />
+        <meshStandardMaterial color={BACK_WALL_COLOR} roughness={0.94} metalness={0.02} />
       </mesh>
       <mesh position={[-1.62, 0.83, -0.18]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[2.04, 3.2]} />

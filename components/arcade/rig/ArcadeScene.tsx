@@ -2,8 +2,8 @@
 
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, OrbitControls, Text } from "@react-three/drei";
-import { Color, type Camera, type Group, type MeshBasicMaterial, type MeshStandardMaterial, type PointLight } from "three";
+import { ContactShadows, OrbitControls, Text, useProgress } from "@react-three/drei";
+import { Color, type Camera, type Group, type MeshBasicMaterial, type MeshStandardMaterial, type PointLight, type Scene } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { prefersReducedMotion } from "@/lib/motion/engine";
 import {
@@ -741,6 +741,74 @@ function Room({ lite = false, reduced = false }: { lite?: boolean; reduced?: boo
   );
 }
 
+
+function ArcadeShaderPrecompiler({
+  enabled,
+  onCompiled,
+}: {
+  enabled: boolean;
+  onCompiled?: () => void;
+}) {
+  const { gl, scene, camera } = useThree();
+  const { active: assetsLoading, progress, total } = useProgress();
+  const compiled = useRef(false);
+
+  useEffect(() => {
+    if (!enabled || compiled.current || assetsLoading || (total > 0 && progress < 100)) return;
+
+    let cancelled = false;
+    let frame = 0;
+    let idleId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const finish = () => {
+      if (cancelled) return;
+      compiled.current = true;
+      requestAnimationFrame(() => {
+        if (!cancelled) onCompiled?.();
+      });
+    };
+
+    const compileScene = async () => {
+      if (cancelled || compiled.current) return;
+      compiled.current = true;
+      try {
+        scene.updateMatrixWorld(true);
+        camera.updateMatrixWorld(true);
+        const renderer = gl as typeof gl & {
+          compileAsync?: (scene: Scene, camera: Camera) => Promise<void>;
+        };
+
+        renderer.compile(scene, camera);
+        if (typeof renderer.compileAsync === "function") {
+          await renderer.compileAsync(scene, camera);
+        }
+      } catch (error) {
+        console.warn("Arcade shader precompile failed; continuing with warmed scene.", error);
+      } finally {
+        finish();
+      }
+    };
+
+    frame = requestAnimationFrame(() => {
+      timeoutId = globalThis.setTimeout(() => void compileScene(), 500);
+      const requestIdle = (window as typeof window & { requestIdleCallback?: typeof window.requestIdleCallback }).requestIdleCallback;
+      if (typeof requestIdle === "function") {
+        idleId = requestIdle(() => void compileScene(), { timeout: 450 });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      if (idleId !== null) window.cancelIdleCallback(idleId);
+      if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
+    };
+  }, [assetsLoading, camera, enabled, gl, onCompiled, progress, scene, total]);
+
+  return null;
+}
+
 export function ArcadeScene({
   active = true,
   initialMode = "idle",
@@ -786,12 +854,6 @@ export function ArcadeScene({
       if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
     };
   }, [initialMode]);
-
-  useEffect(() => {
-    if (!fullRigReady) return;
-    const frame = requestAnimationFrame(() => onReady?.());
-    return () => cancelAnimationFrame(frame);
-  }, [fullRigReady, onReady]);
 
   const handleEnter = useCallback(() => {
     if (transitionLocked.current) return;
@@ -867,6 +929,7 @@ export function ArcadeScene({
           onEnterComplete={onEnter}
           onExitComplete={handleExitComplete}
         />
+        <ArcadeShaderPrecompiler enabled={fullRigReady} onCompiled={onReady} />
         <StrictOrbitControls controlsRef={controlsRef} />
       </Suspense>
     </Canvas>

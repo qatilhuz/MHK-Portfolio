@@ -8,23 +8,94 @@ import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { trackEvent } from "@/lib/analytics/client";
 import { ARCADE_ENTER_EVENT, ARCADE_EXIT_FLAG, ARCADE_TRANSITION_LOCK_CLASS } from "@/lib/arcade/session";
 
+const TERMINAL_BOOT_LINES = [
+  "Initializing Huzaifa's 3D workspace...",
+  "Loading custom RGB fan configurations...",
+  "Huzaifa is developing the arcade...",
+  "Rendering ultra-realistic monitors...",
+  "Compiling complex WebGL shaders...",
+  "Finalizing cinematic camera angles...",
+  "System Ready. Booting up...",
+];
+
+function terminalFrameAt(elapsedMs: number) {
+  const typeMs = 42;
+  const deleteMs = 20;
+  const pauseMs = 720;
+  const gapMs = 120;
+  const totalMs = TERMINAL_BOOT_LINES.reduce(
+    (sum, line) => sum + line.length * typeMs + pauseMs + line.length * deleteMs + gapMs,
+    0,
+  );
+  let cursor = elapsedMs % totalMs;
+
+  for (const line of TERMINAL_BOOT_LINES) {
+    const typeDuration = line.length * typeMs;
+    const deleteDuration = line.length * deleteMs;
+    const segment = typeDuration + pauseMs + deleteDuration + gapMs;
+
+    if (cursor <= segment) {
+      if (cursor < typeDuration) {
+        const chars = Math.min(line.length, Math.floor(cursor / typeMs));
+        return line.slice(0, chars);
+      }
+      if (cursor < typeDuration + pauseMs) return line;
+      if (cursor < typeDuration + pauseMs + deleteDuration) {
+        const deleted = Math.floor((cursor - typeDuration - pauseMs) / deleteMs);
+        return line.slice(0, Math.max(0, line.length - deleted));
+      }
+      return "";
+    }
+
+    cursor -= segment;
+  }
+
+  return TERMINAL_BOOT_LINES[0];
+}
+
 const ArcadeScene = dynamic(
   () => import("./rig/ArcadeScene").then((mod) => mod.ArcadeScene),
   {
     ssr: false,
-    loading: () => <ArcadeRigLoader label="Streaming arcade rig…" />,
+    loading: () => <ArcadeTerminalLoader />,
   },
 );
 
-function ArcadeRigLoader({ label = "Preparing arcade rig…" }: { label?: string }) {
+function ArcadeTerminalLoader() {
+  const [elapsed, setElapsed] = useState(0);
+  const typedLine = terminalFrameAt(elapsed);
+
+  useEffect(() => {
+    const runtime = window as typeof window & { __arcadeTerminalBootStart?: number };
+    runtime.__arcadeTerminalBootStart ??= performance.now();
+
+    const update = () => setElapsed(performance.now() - (runtime.__arcadeTerminalBootStart ?? performance.now()));
+    update();
+    const interval = window.setInterval(update, 45);
+    return () => window.clearInterval(interval);
+  }, []);
+
   return (
-    <div className="arcade-loader" role="status" aria-live="polite">
-      <div className="arcade-loader-card">
-        <span className="arcade-loader-orb" aria-hidden="true" />
-        <span className="arcade-loader-copy">{label}</span>
-        <span className="arcade-loader-bar" aria-hidden="true">
+    <div className="arcade-loader arcade-terminal-loader" role="status" aria-live="polite">
+      <div className="arcade-terminal-window">
+        <div className="arcade-terminal-chrome" aria-hidden="true">
           <span />
-        </span>
+          <span />
+          <span />
+        </div>
+        <div className="arcade-terminal-body">
+          <p className="arcade-terminal-kicker">MHK_PORTFOLIO_BOOT / WEBGL_PIPELINE</p>
+          <p className="arcade-terminal-line">
+            <span className="arcade-terminal-prompt">dev@huzaifa:~$</span>
+            <span className="arcade-terminal-text"> {typedLine}</span>
+            <span className="arcade-terminal-cursor" aria-hidden="true" />
+          </p>
+          <div className="arcade-terminal-log" aria-hidden="true">
+            <span>GPU layer primed</span>
+            <span>Suspense stream active</span>
+            <span>Awaiting shader warmup</span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -54,7 +125,8 @@ export function ArcadeSetup() {
   const rigRef = useRef<HTMLDivElement>(null);
   const initialModeRef = useRef<"idle" | "exit">(getInitialMode());
   const [sceneRequested, setSceneRequested] = useState(initialModeRef.current === "exit");
-  const [sceneInteractive, setSceneInteractive] = useState(false);
+  const [sceneWarm, setSceneWarm] = useState(false);
+  const [loaderReleaseReady, setLoaderReleaseReady] = useState(initialModeRef.current === "exit");
   const [sceneNearViewport, setSceneNearViewport] = useState(initialModeRef.current === "exit");
   const [pageVisible, setPageVisible] = useState(true);
 
@@ -74,6 +146,12 @@ export function ArcadeSetup() {
   }, []);
 
   useEffect(() => {
+    if (initialModeRef.current === "exit") return;
+    const releaseTimer = globalThis.setTimeout(() => setLoaderReleaseReady(true), 5200);
+    return () => globalThis.clearTimeout(releaseTimer);
+  }, []);
+
+  useEffect(() => {
     if (webgl !== true) return;
     const node = rigRef.current;
     let cancelled = false;
@@ -85,12 +163,16 @@ export function ArcadeSetup() {
       setSceneRequested(true);
     };
     const scheduleScene = () => {
-      if (sceneRequested) return;
-      timeoutId = globalThis.setTimeout(requestScene, 700);
-      const requestIdle = (window as typeof window & { requestIdleCallback?: typeof window.requestIdleCallback }).requestIdleCallback;
-      if (typeof requestIdle === "function") {
-        idleId = requestIdle(requestScene, { timeout: 500 });
-      }
+      if (sceneRequested || timeoutId !== null || idleId !== null) return;
+      const sceneStartDelay = 700;
+      timeoutId = globalThis.setTimeout(() => {
+        const requestIdle = (window as typeof window & { requestIdleCallback?: typeof window.requestIdleCallback }).requestIdleCallback;
+        if (typeof requestIdle === "function") {
+          idleId = requestIdle(requestScene, { timeout: 300 });
+        } else {
+          requestScene();
+        }
+      }, sceneStartDelay);
     };
 
     if (initialModeRef.current === "exit" || window.location.hash === "#arcade") {
@@ -128,6 +210,11 @@ export function ArcadeSetup() {
     router.push("/arcade");
   }, [router]);
 
+  const sceneInteractive = sceneWarm && loaderReleaseReady;
+  const sceneActive = sceneInteractive && sceneNearViewport && pageVisible;
+  const handleSceneReady = useCallback(() => setSceneWarm(true), []);
+  const showLoadingOverlay = !sceneInteractive && initialModeRef.current !== "exit";
+
   const requestArcadeEnter = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     if (!sceneInteractive) {
       setSceneRequested(true);
@@ -142,21 +229,17 @@ export function ArcadeSetup() {
     }
   }, [goArcade, sceneInteractive]);
 
-  const sceneActive = sceneInteractive && sceneNearViewport && pageVisible;
-  const handleSceneReady = useCallback(() => setSceneInteractive(true), []);
-  const showLoadingOverlay = !sceneInteractive && initialModeRef.current !== "exit";
-
   return (
     <div ref={rigRef} className="arcade-rig relative h-[min(72vh,38rem)] min-h-[24rem] overflow-hidden">
       {webgl === false ? (
         <ArcadeFallback onEnter={goArcade} />
       ) : webgl === null ? (
-        <ArcadeRigLoader label="Checking WebGL support…" />
+        <ArcadeTerminalLoader />
       ) : (
         <>
           {sceneRequested ? (
             <SceneErrorBoundary fallback={<ArcadeFallback onEnter={goArcade} />}>
-              <Suspense fallback={<ArcadeRigLoader label="Streaming arcade rig…" />}>
+              <Suspense fallback={<ArcadeTerminalLoader />}>
                 <ArcadeScene
                   active={sceneActive}
                   initialMode={initialModeRef.current}
@@ -166,7 +249,7 @@ export function ArcadeSetup() {
               </Suspense>
             </SceneErrorBoundary>
           ) : null}
-          {showLoadingOverlay ? <ArcadeRigLoader /> : null}
+          {showLoadingOverlay ? <ArcadeTerminalLoader /> : null}
           {sceneInteractive ? (
             <button
               type="button"

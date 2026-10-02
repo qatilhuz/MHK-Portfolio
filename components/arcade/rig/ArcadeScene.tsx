@@ -300,9 +300,11 @@ function StrictOrbitControls({
 function AcousticTile({
   position,
   accent,
+  reduced = false,
 }: {
   position: Vec3;
   accent: "cyan" | "magenta";
+  reduced?: boolean;
 }) {
   const glow = accent === "cyan" ? "#22d3ee" : "#c084fc";
   const dimGlow = accent === "cyan" ? "#155e75" : "#581c87";
@@ -317,6 +319,7 @@ function AcousticTile({
   const phase = position[0] * 1.7 + position[1] * 2.3;
 
   useFrame((state) => {
+    if (reduced) return;
     const t = state.clock.elapsedTime;
     const wave = 0.5 + 0.5 * Math.sin(t * 1.05 + phase);
     const runner = 0.5 + 0.5 * Math.sin(t * 2.15 + phase * 1.4);
@@ -444,7 +447,7 @@ function MiniArcade({ position, color }: { position: Vec3; color: string }) {
 }
 
 
-function NeonWallTitle() {
+function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
   const titleGroup = useRef<Group>(null);
   const titleMat = useRef<MeshStandardMaterial>(null);
   const plateMat = useRef<MeshBasicMaterial>(null);
@@ -452,6 +455,7 @@ function NeonWallTitle() {
   const titleLight = useRef<PointLight>(null);
 
   useFrame((state) => {
+    if (reduced) return;
     const t = state.clock.elapsedTime;
     const breath = 0.5 + 0.5 * Math.sin(t * 1.15);
     const chase = 0.5 + 0.5 * Math.sin(t * 2.35);
@@ -533,7 +537,7 @@ function NeonWallTitle() {
   );
 }
 
-function ReferenceWall() {
+function ReferenceWall({ reduced = false }: { reduced?: boolean }) {
   const leftTiles: { position: Vec3; accent: "cyan" | "magenta" }[] = [
     { position: [-1.18, 0.64, -1.108], accent: "cyan" },
     { position: [-0.93, 0.64, -1.108], accent: "cyan" },
@@ -562,10 +566,10 @@ function ReferenceWall() {
   return (
     <group>
       {leftTiles.map(({ position, accent }) => (
-        <AcousticTile key={`left-${position.join("-")}`} position={position} accent={accent} />
+        <AcousticTile key={`left-${position.join("-")}`} position={position} accent={accent} reduced={reduced} />
       ))}
       {rightTiles.map(({ position, accent }) => (
-        <AcousticTile key={`right-${position.join("-")}`} position={position} accent={accent} />
+        <AcousticTile key={`right-${position.join("-")}`} position={position} accent={accent} reduced={reduced} />
       ))}
 
       {/* Black display shelf with collectible arcade boxes, cartridges, and a retro controller. */}
@@ -613,7 +617,7 @@ function ReferenceWall() {
         <meshStandardMaterial color="#c084fc" emissive="#c084fc" emissiveIntensity={0.36} roughness={0.35} />
       </mesh>
 
-      <NeonWallTitle />
+      <NeonWallTitle reduced={reduced} />
 
       <pointLight position={[-1.15, 0.88, -0.78]} intensity={1.75} distance={1.05} color="#22d3ee" />
       <pointLight position={[-0.72, 1.12, -0.8]} intensity={1.55} distance={0.95} color="#c084fc" />
@@ -624,7 +628,7 @@ function ReferenceWall() {
 }
 
 
-function DeskAmbientLoops() {
+function DeskAmbientLoops({ reduced = false }: { reduced?: boolean }) {
   const edgeMat = useRef<MeshStandardMaterial>(null);
   const runnerMat = useRef<MeshStandardMaterial>(null);
   const runner = useRef<Group>(null);
@@ -635,6 +639,7 @@ function DeskAmbientLoops() {
   const live = useMemo(() => new Color(), []);
 
   useFrame((state) => {
+    if (reduced) return;
     const t = state.clock.elapsedTime;
     const breath = 0.5 + 0.5 * Math.sin(t * 0.82);
     const chase = (Math.sin(t * 0.62) + 1) * 0.5;
@@ -690,7 +695,7 @@ function DeskAmbientLoops() {
   );
 }
 
-function Room({ lite = false }: { lite?: boolean }) {
+function Room({ lite = false, reduced = false }: { lite?: boolean; reduced?: boolean }) {
   const wood = useMemo(() => (lite ? null : woodAlbedo()), [lite]);
   const concrete = useMemo(() => (lite ? null : concreteAlbedo()), [lite]);
   const legX = DESK_SIZE[0] / 2 - 0.2;
@@ -711,7 +716,7 @@ function Room({ lite = false }: { lite?: boolean }) {
         <planeGeometry args={[2.04, 3.2]} />
         <meshStandardMaterial map={concrete ?? undefined} color={STUDIO_WALL_COLOR} roughness={0.9} metalness={0.03} />
       </mesh>
-      {lite ? null : <ReferenceWall />}
+      {lite ? null : <ReferenceWall reduced={reduced} />}
       <mesh position={[DESK_CENTER_X, 0.025, DESK_CENTER_Z]} receiveShadow castShadow>
         <boxGeometry args={DESK_SIZE} />
         <meshStandardMaterial map={wood ?? undefined} color="#7d8491" roughness={0.68} metalness={0.04} />
@@ -731,25 +736,62 @@ function Room({ lite = false }: { lite?: boolean }) {
         <boxGeometry args={[DESK_SIZE[0] - 0.06, 0.026, DESK_SIZE[2] - 0.05]} />
         <meshStandardMaterial color="#161923" roughness={0.82} metalness={0.12} />
       </mesh>
-      {lite ? null : <DeskAmbientLoops />}
+      {lite ? null : <DeskAmbientLoops reduced={reduced} />}
     </>
   );
 }
 
 export function ArcadeScene({
+  active = true,
   initialMode = "idle",
   onEnter,
+  onReady,
 }: {
+  active?: boolean;
   initialMode?: "idle" | "exit";
   onEnter: () => void;
+  onReady?: () => void;
 }) {
   const reduced = prefersReducedMotion();
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const transitionApiRef = useRef<ArcadeTransitionRequest | null>(null);
   const transitionLocked = useRef(initialMode === "exit");
-  const [fullRigReady, setFullRigReady] = useState(initialMode !== "exit");
+  const [fullRigReady, setFullRigReady] = useState(false);
   const transitionLite = !fullRigReady;
-  const animationReduced = reduced || transitionLite;
+  const animationReduced = reduced || transitionLite || !active;
+
+  useEffect(() => {
+    if (initialMode === "exit") return;
+    let cancelled = false;
+    let frame = 0;
+    let idleId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const unlockFullRig = () => {
+      if (!cancelled) setFullRigReady(true);
+    };
+
+    frame = requestAnimationFrame(() => {
+      timeoutId = globalThis.setTimeout(unlockFullRig, 900);
+      const requestIdle = (window as typeof window & { requestIdleCallback?: typeof window.requestIdleCallback }).requestIdleCallback;
+      if (typeof requestIdle === "function") {
+        idleId = requestIdle(unlockFullRig, { timeout: 650 });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      if (idleId !== null) window.cancelIdleCallback(idleId);
+      if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
+    };
+  }, [initialMode]);
+
+  useEffect(() => {
+    if (!fullRigReady) return;
+    const frame = requestAnimationFrame(() => onReady?.());
+    return () => cancelAnimationFrame(frame);
+  }, [fullRigReady, onReady]);
 
   const handleEnter = useCallback(() => {
     if (transitionLocked.current) return;
@@ -798,33 +840,35 @@ export function ArcadeScene({
       }}
     >
       <color attach="background" args={[STUDIO_WALL_COLOR]} />
-      <hemisphereLight args={["#dbeafe", "#15101f", 0.42]} />
-      <directionalLight
-        position={[0.42, 2.35, 1.55]}
-        intensity={0.92}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-      />
-      <ambientLight intensity={0.16} />
-      <Room lite={transitionLite} />
-      {fullRigReady ? <PcCase reduced={reduced} /> : null}
-      <Monitor reduced={animationReduced} enterEnabled={fullRigReady} transitionLite={transitionLite} onEnter={handleEnter} />
-      {fullRigReady ? <Speaker position={SPEAKER_LEFT} reduced={reduced} phase={0.08} /> : null}
-      {fullRigReady ? <Speaker position={SPEAKER_RIGHT} reduced={reduced} phase={0.58} /> : null}
-      {fullRigReady ? <Keyboard reduced={reduced} /> : null}
-      {fullRigReady ? <MousePad reduced={reduced} /> : null}
-      {fullRigReady ? <Mouse reduced={reduced} /> : null}
-      {fullRigReady ? <DeskAccessories /> : null}
-      {fullRigReady ? <HeadsetStand reduced={reduced} /> : null}
-      {fullRigReady ? <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} /> : null}
-      <CameraRig
-        initialMode={initialMode}
-        controlsRef={controlsRef}
-        transitionApiRef={transitionApiRef}
-        onEnterComplete={onEnter}
-        onExitComplete={handleExitComplete}
-      />
-      <StrictOrbitControls controlsRef={controlsRef} />
+      <Suspense fallback={null}>
+        <hemisphereLight args={["#dbeafe", "#15101f", 0.42]} />
+        <directionalLight
+          position={[0.42, 2.35, 1.55]}
+          intensity={0.92}
+          castShadow
+          shadow-mapSize={[2048, 2048]}
+        />
+        <ambientLight intensity={0.16} />
+        <Room lite={transitionLite} reduced={animationReduced} />
+        {fullRigReady ? <PcCase reduced={animationReduced} /> : null}
+        <Monitor reduced={animationReduced} enterEnabled={fullRigReady} transitionLite={transitionLite} onEnter={handleEnter} />
+        {fullRigReady ? <Speaker position={SPEAKER_LEFT} reduced={animationReduced} phase={0.08} /> : null}
+        {fullRigReady ? <Speaker position={SPEAKER_RIGHT} reduced={animationReduced} phase={0.58} /> : null}
+        {fullRigReady ? <Keyboard reduced={animationReduced} /> : null}
+        {fullRigReady ? <MousePad reduced={animationReduced} /> : null}
+        {fullRigReady ? <Mouse reduced={animationReduced} /> : null}
+        {fullRigReady ? <DeskAccessories reduced={animationReduced} /> : null}
+        {fullRigReady ? <HeadsetStand reduced={animationReduced} /> : null}
+        {fullRigReady ? <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} /> : null}
+        <CameraRig
+          initialMode={initialMode}
+          controlsRef={controlsRef}
+          transitionApiRef={transitionApiRef}
+          onEnterComplete={onEnter}
+          onExitComplete={handleExitComplete}
+        />
+        <StrictOrbitControls controlsRef={controlsRef} />
+      </Suspense>
     </Canvas>
   );
 }

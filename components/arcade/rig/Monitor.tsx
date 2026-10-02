@@ -96,7 +96,8 @@ function TerminalRenderTexture({ reduced }: { reduced?: boolean }) {
   const scanLines = useMemo(() => Array.from({ length: 25 }, (_, i) => -1.7 + i * 0.145), []);
 
   useFrame((state) => {
-    const t = reduced ? 0 : state.clock.elapsedTime;
+    if (reduced) return;
+    const t = state.clock.elapsedTime;
     if (stream.current) stream.current.position.y = ((t * 0.28) % 0.145) - 0.145;
     if (cursor.current) {
       cursor.current.visible = Math.sin(t * 7.5) > -0.2;
@@ -105,7 +106,7 @@ function TerminalRenderTexture({ reduced }: { reduced?: boolean }) {
   });
 
   return (
-    <RenderTexture attach="map" width={384} height={768} anisotropy={8} frames={Infinity}>
+    <RenderTexture attach="map" width={384} height={768} anisotropy={8} frames={reduced ? 1 : Infinity}>
       <OrthographicCamera makeDefault manual left={-1} right={1} top={1.82} bottom={-1.82} near={0.1} far={10} position={[0, 0, 5]} />
       <color attach="background" args={["#020713"]} />
       <mesh position={[0, 0, -0.02]}>
@@ -174,7 +175,8 @@ function DeveloperHudRenderTexture({ reduced }: { reduced?: boolean }) {
   );
 
   useFrame((state) => {
-    const t = reduced ? 0 : state.clock.elapsedTime;
+    if (reduced) return;
+    const t = state.clock.elapsedTime;
     if (cube.current) {
       cube.current.rotation.x = t * 0.42;
       cube.current.rotation.y = t * 0.58;
@@ -190,7 +192,7 @@ function DeveloperHudRenderTexture({ reduced }: { reduced?: boolean }) {
   });
 
   return (
-    <RenderTexture attach="map" width={384} height={768} anisotropy={8} frames={Infinity}>
+    <RenderTexture attach="map" width={384} height={768} anisotropy={8} frames={reduced ? 1 : Infinity}>
       <OrthographicCamera makeDefault manual left={-1} right={1} top={1.82} bottom={-1.82} near={0.1} far={10} position={[0, 0, 5]} />
       <color attach="background" args={["#060518"]} />
       <mesh position={[0, 0, -0.02]}>
@@ -588,7 +590,8 @@ export function Monitor({
   const metal = useMemo(() => (transitionLite ? null : metalAlbedo()), [transitionLite]);
 
   useFrame((state) => {
-    if (mat.current) mat.current.uniforms.uTime.value = reduced ? 0 : state.clock.elapsedTime;
+    if (reduced) return;
+    if (mat.current) mat.current.uniforms.uTime.value = state.clock.elapsedTime;
   });
 
   return (

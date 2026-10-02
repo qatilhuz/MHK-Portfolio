@@ -2,6 +2,17 @@
 
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from "three";
 
+const textureCache = new Map<string, unknown>();
+
+function getCached<T>(key: string) {
+  return textureCache.get(key) as T | undefined;
+}
+
+function setCached<T>(key: string, value: T) {
+  textureCache.set(key, value);
+  return value;
+}
+
 function canvas(size: number) {
   const node = document.createElement("canvas");
   node.width = size;
@@ -22,6 +33,8 @@ function wrap(tex: CanvasTexture, repeat = 2) {
 }
 
 export function woodAlbedo() {
+  const cached = getCached<CanvasTexture>("woodAlbedo");
+  if (cached) return cached;
   const size = 1024;
   const { node, ctx } = canvas(size);
   ctx.fillStyle = "#cbb086";
@@ -39,10 +52,12 @@ export function woodAlbedo() {
     ctx.fillStyle = `rgba(70, 42, 16, ${Math.random() * 0.07})`;
     ctx.fillRect(Math.random() * size, Math.random() * size, 1.4, 8);
   }
-  return wrap(new CanvasTexture(node), 2.4);
+  return setCached("woodAlbedo", wrap(new CanvasTexture(node), 2.4));
 }
 
 export function concreteAlbedo() {
+  const cached = getCached<CanvasTexture>("concreteAlbedo");
+  if (cached) return cached;
   const size = 1024;
   const { node, ctx } = canvas(size);
   const base = ctx.createLinearGradient(0, 0, size, size);
@@ -63,10 +78,12 @@ export function concreteAlbedo() {
     ctx.lineTo(size, y + Math.sin(y * 0.04) * 8);
     ctx.stroke();
   }
-  return wrap(new CanvasTexture(node), 3);
+  return setCached("concreteAlbedo", wrap(new CanvasTexture(node), 3));
 }
 
 export function hexPadAlbedo() {
+  const cached = getCached<CanvasTexture>("hexPadAlbedo");
+  if (cached) return cached;
   const { node, ctx } = canvas(512);
   ctx.fillStyle = "#090a10";
   ctx.fillRect(0, 0, 512, 512);
@@ -88,10 +105,12 @@ export function hexPadAlbedo() {
       ctx.stroke();
     }
   }
-  return wrap(new CanvasTexture(node), 1);
+  return setCached("hexPadAlbedo", wrap(new CanvasTexture(node), 1));
 }
 
 export function metalAlbedo() {
+  const cached = getCached<CanvasTexture>("metalAlbedo");
+  if (cached) return cached;
   const { node, ctx } = canvas(512);
   const g = ctx.createLinearGradient(0, 0, 512, 0);
   g.addColorStop(0, "#14151b");
@@ -103,10 +122,12 @@ export function metalAlbedo() {
     ctx.fillStyle = `rgba(255,255,255,${0.015 + Math.random() * 0.03})`;
     ctx.fillRect(0, i * 3, 512, 1);
   }
-  return wrap(new CanvasTexture(node), 1.6);
+  return setCached("metalAlbedo", wrap(new CanvasTexture(node), 1.6));
 }
 
 export function grilleAlbedo() {
+  const cached = getCached<CanvasTexture>("grilleAlbedo");
+  if (cached) return cached;
   const { node, ctx } = canvas(256);
   ctx.fillStyle = "#101114";
   ctx.fillRect(0, 0, 256, 256);
@@ -118,10 +139,10 @@ export function grilleAlbedo() {
       ctx.fill();
     }
   }
-  return wrap(new CanvasTexture(node), 2);
+  return setCached("grilleAlbedo", wrap(new CanvasTexture(node), 2));
 }
 
-export function brushedMetalMaps() {
+function createBrushedMetalMaps() {
   const albedo = metalAlbedo();
   const { node, ctx } = canvas(512);
   const grad = ctx.createLinearGradient(0, 0, 512, 0);
@@ -140,7 +161,7 @@ export function brushedMetalMaps() {
   return { albedo, roughness: wrap(new CanvasTexture(node), 1.8) };
 }
 
-export function leatherMaps() {
+function createLeatherMaps() {
   const { node: albedoNode, ctx: albedoCtx } = canvas(512);
   albedoCtx.fillStyle = "#dfe5ee";
   albedoCtx.fillRect(0, 0, 512, 512);
@@ -179,11 +200,27 @@ export function leatherMaps() {
   };
 }
 
+export function brushedMetalMaps() {
+  const cached = getCached<ReturnType<typeof createBrushedMetalMaps>>("brushedMetalMaps");
+  if (cached) return cached;
+  return setCached("brushedMetalMaps", createBrushedMetalMaps());
+}
+
+export function leatherMaps() {
+  const cached = getCached<ReturnType<typeof createLeatherMaps>>("leatherMaps");
+  if (cached) return cached;
+  return setCached("leatherMaps", createLeatherMaps());
+}
+
 export function driverGrilleAlbedo() {
-  return grilleAlbedo();
+  const cached = getCached<CanvasTexture>("driverGrilleAlbedo");
+  if (cached) return cached;
+  return setCached("driverGrilleAlbedo", grilleAlbedo());
 }
 
 export function pcbAlbedo() {
+  const cached = getCached<CanvasTexture>("pcbAlbedo");
+  if (cached) return cached;
   const { node, ctx } = canvas(512);
   ctx.fillStyle = "#0d2a18";
   ctx.fillRect(0, 0, 512, 512);
@@ -196,5 +233,5 @@ export function pcbAlbedo() {
   for (let i = 0; i < 80; i += 1) {
     ctx.fillRect(20 + (i % 16) * 30, 40 + Math.floor(i / 16) * 90, 4, 4);
   }
-  return wrap(new CanvasTexture(node), 1);
+  return setCached("pcbAlbedo", wrap(new CanvasTexture(node), 1));
 }

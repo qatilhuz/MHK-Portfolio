@@ -16,7 +16,13 @@ import {
 } from "three";
 import { metalAlbedo } from "./textures";
 
+let cachedBrassAlbedo: CanvasTexture | null = null;
+let cachedPaperAlbedo: CanvasTexture | null = null;
+let cachedPremiumMugMaps: ReturnType<typeof buildPremiumMugSurfaceMaps> | null = null;
+
 function brassAlbedo() {
+  if (cachedBrassAlbedo) return cachedBrassAlbedo;
+
   const node = document.createElement("canvas");
   node.width = 256;
   node.height = 256;
@@ -39,10 +45,12 @@ function brassAlbedo() {
   tex.repeat.set(2, 2);
   tex.anisotropy = 8;
   tex.needsUpdate = true;
+  cachedBrassAlbedo = tex;
   return tex;
 }
 
 function paperAlbedo() {
+  if (cachedPaperAlbedo) return cachedPaperAlbedo;
   const node = document.createElement("canvas");
   node.width = 512;
   node.height = 512;
@@ -67,10 +75,11 @@ function paperAlbedo() {
   tex.colorSpace = SRGBColorSpace;
   tex.anisotropy = 8;
   tex.needsUpdate = true;
+  cachedPaperAlbedo = tex;
   return tex;
 }
 
-function premiumMugSurfaceMaps() {
+function buildPremiumMugSurfaceMaps() {
   const size = 512;
 
   const exterior = document.createElement("canvas");
@@ -175,6 +184,11 @@ function premiumMugSurfaceMaps() {
   return { exterior: exteriorTex, interior: interiorTex, roughness: roughTex, bump: bumpTex };
 }
 
+function premiumMugSurfaceMaps() {
+  cachedPremiumMugMaps ??= buildPremiumMugSurfaceMaps();
+  return cachedPremiumMugMaps;
+}
+
 const MATTE = { color: "#1c1e24", metalness: 0.28, roughness: 0.55, envMapIntensity: 0.85 };
 const BRASS = { color: "#d4b36a", metalness: 0.86, roughness: 0.26, envMapIntensity: 1.2 };
 
@@ -261,7 +275,7 @@ function premiumMugHandleGeometry() {
   return geo;
 }
 
-function ContinuousCoffeeSmoke() {
+function ContinuousCoffeeSmoke({ reduced = false }: { reduced?: boolean }) {
   const puffRefs = useRef<Array<Group | null>>([]);
   const matRefs = useRef<Array<MeshBasicMaterial | null>>([]);
   const puffs = useMemo(
@@ -277,6 +291,7 @@ function ContinuousCoffeeSmoke() {
   );
 
   useFrame((state) => {
+    if (reduced) return;
     const t = state.clock.elapsedTime;
     puffs.forEach((puff, index) => {
       const cycle = (t * 0.18 + puff.phase) % 1;
@@ -328,7 +343,7 @@ function ContinuousCoffeeSmoke() {
   );
 }
 
-function PremiumDeskMug() {
+function PremiumDeskMug({ reduced = false }: { reduced?: boolean }) {
   const maps = useMemo(() => premiumMugSurfaceMaps(), []);
   const shell = useMemo(() => premiumMugOuterShellGeometry(), []);
   const innerWall = useMemo(() => premiumMugInnerWallGeometry(), []);
@@ -432,7 +447,7 @@ function PremiumDeskMug() {
         <boxGeometry args={[0.039, 0.0017, 0.0012]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.24} depthWrite={false} />
       </mesh>
-      <ContinuousCoffeeSmoke />
+      <ContinuousCoffeeSmoke reduced={reduced} />
     </group>
   );
 }
@@ -480,7 +495,7 @@ function TwinRods({ length, radius = 0.0048 }: { length: number; radius?: number
  * Twin-rod lamp. Shade is parented to the lamp root (not the boom) so
  * rotation.x = π aims the opening at world −Y (the desk), not the user.
  */
-export function DeskAccessories() {
+export function DeskAccessories({ reduced = false }: { reduced?: boolean }) {
   const dome = useMemo(() => domeGeometry(), []);
   const liner = useMemo(() => linerGeometry(), []);
   const brassMap = useMemo(() => brassAlbedo(), []);
@@ -623,7 +638,7 @@ export function DeskAccessories() {
         </mesh>
       </group>
 
-      <PremiumDeskMug />
+      <PremiumDeskMug reduced={reduced} />
     </group>
   );
 }

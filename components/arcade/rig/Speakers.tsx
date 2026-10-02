@@ -5,6 +5,8 @@ import { useFrame } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import { CanvasTexture, Color, RepeatWrapping, SRGBColorSpace, type MeshStandardMaterial, type PointLight } from "three";
 
+let cachedSpeakerConeMap: CanvasTexture | null = null;
+
 const RGB_STOPS = [
   new Color("#22d3ee"),
   new Color("#3b82f6"),
@@ -14,6 +16,7 @@ const RGB_STOPS = [
 ];
 
 function speakerConeMap() {
+  if (cachedSpeakerConeMap) return cachedSpeakerConeMap;
   const size = 1024;
   const node = document.createElement("canvas");
   node.width = size;
@@ -40,6 +43,7 @@ function speakerConeMap() {
   tex.wrapS = RepeatWrapping;
   tex.wrapT = RepeatWrapping;
   tex.needsUpdate = true;
+  cachedSpeakerConeMap = tex;
   return tex;
 }
 

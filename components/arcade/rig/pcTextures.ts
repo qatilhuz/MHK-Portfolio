@@ -2,6 +2,17 @@
 
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from "three";
 
+const pcTextureCache = new Map<string, unknown>();
+
+function getPcCached<T>(key: string) {
+  return pcTextureCache.get(key) as T | undefined;
+}
+
+function setPcCached<T>(key: string, value: T) {
+  pcTextureCache.set(key, value);
+  return value;
+}
+
 function canvas(size: number) {
   const node = document.createElement("canvas");
   node.width = size;
@@ -22,7 +33,7 @@ function wrap(tex: CanvasTexture, repeat = 1) {
 }
 
 /** Dark ATX PCB with traces, pads, silkscreen — 2048. */
-export function pcPcbMaps() {
+function createPcPcbMaps() {
   const size = 2048;
   const { node, ctx } = canvas(size);
   ctx.fillStyle = "#0a1620";
@@ -65,7 +76,7 @@ export function pcPcbMaps() {
   return { albedo, roughness };
 }
 
-export function pcBrushedMetal() {
+function createPcBrushedMetal() {
   const size = 1024;
   const { node, ctx } = canvas(size);
   ctx.fillStyle = "#1c1e24";
@@ -81,7 +92,7 @@ export function pcBrushedMetal() {
   return wrap(new CanvasTexture(node), 2);
 }
 
-export function pcHexMesh() {
+function createPcHexMesh() {
   const size = 1024;
   const { node, ctx } = canvas(size);
   ctx.fillStyle = "#0b0c10";
@@ -105,4 +116,22 @@ export function pcHexMesh() {
     }
   }
   return wrap(new CanvasTexture(node), 1);
+}
+
+export function pcPcbMaps() {
+  const cached = getPcCached<ReturnType<typeof createPcPcbMaps>>("pcPcbMaps");
+  if (cached) return cached;
+  return setPcCached("pcPcbMaps", createPcPcbMaps());
+}
+
+export function pcBrushedMetal() {
+  const cached = getPcCached<CanvasTexture>("pcBrushedMetal");
+  if (cached) return cached;
+  return setPcCached("pcBrushedMetal", createPcBrushedMetal());
+}
+
+export function pcHexMesh() {
+  const cached = getPcCached<CanvasTexture>("pcHexMesh");
+  if (cached) return cached;
+  return setPcCached("pcHexMesh", createPcHexMesh());
 }

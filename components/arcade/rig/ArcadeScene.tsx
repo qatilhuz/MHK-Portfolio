@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, Text, useProgress } from "@react-three/drei";
-import { Color, type Camera, type Group, type MeshBasicMaterial, type MeshStandardMaterial, type PointLight, type Scene } from "three";
+import { Color, type Camera, type Group, type MeshBasicMaterial, type MeshStandardMaterial, type PointLight } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { prefersReducedMotion } from "@/lib/motion/engine";
 import {
@@ -742,69 +742,47 @@ function Room({ lite = false, reduced = false }: { lite?: boolean; reduced?: boo
 }
 
 
-function ArcadeShaderPrecompiler({
-  enabled,
-  onCompiled,
-}: {
-  enabled: boolean;
-  onCompiled?: () => void;
-}) {
-  const { gl, scene, camera } = useThree();
+function ArcadeWarmupGate({ enabled, onReady }: { enabled: boolean; onReady?: () => void }) {
   const { active: assetsLoading, progress, total } = useProgress();
-  const compiled = useRef(false);
+  const ready = useRef(false);
+  const frameCount = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const assetsReady = enabled && !assetsLoading && (total === 0 || progress >= 100);
 
   useEffect(() => {
-    if (!enabled || compiled.current || assetsLoading || (total > 0 && progress < 100)) return;
+    if (assetsReady) return;
+    frameCount.current = 0;
+    if (timeoutRef.current !== null) {
+      globalThis.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, [assetsReady]);
 
-    let cancelled = false;
-    let frame = 0;
-    let idleId: number | null = null;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  useEffect(() => {
+    if (enabled) return;
+    ready.current = false;
+  }, [enabled]);
 
-    const finish = () => {
-      if (cancelled) return;
-      compiled.current = true;
-      requestAnimationFrame(() => {
-        if (!cancelled) onCompiled?.();
-      });
-    };
-
-    const compileScene = async () => {
-      if (cancelled || compiled.current) return;
-      compiled.current = true;
-      try {
-        scene.updateMatrixWorld(true);
-        camera.updateMatrixWorld(true);
-        const renderer = gl as typeof gl & {
-          compileAsync?: (scene: Scene, camera: Camera) => Promise<void>;
-        };
-
-        renderer.compile(scene, camera);
-        if (typeof renderer.compileAsync === "function") {
-          await renderer.compileAsync(scene, camera);
-        }
-      } catch (error) {
-        console.warn("Arcade shader precompile failed; continuing with warmed scene.", error);
-      } finally {
-        finish();
-      }
-    };
-
-    frame = requestAnimationFrame(() => {
-      timeoutId = globalThis.setTimeout(() => void compileScene(), 500);
-      const requestIdle = (window as typeof window & { requestIdleCallback?: typeof window.requestIdleCallback }).requestIdleCallback;
-      if (typeof requestIdle === "function") {
-        idleId = requestIdle(() => void compileScene(), { timeout: 450 });
-      }
-    });
-
+  useEffect(() => {
     return () => {
-      cancelled = true;
-      cancelAnimationFrame(frame);
-      if (idleId !== null) window.cancelIdleCallback(idleId);
-      if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
+      if (timeoutRef.current !== null) {
+        globalThis.clearTimeout(timeoutRef.current);
+      }
     };
-  }, [assetsLoading, camera, enabled, gl, onCompiled, progress, scene, total]);
+  }, []);
+
+  useFrame(() => {
+    if (!assetsReady || ready.current || timeoutRef.current !== null) return;
+    frameCount.current += 1;
+    if (frameCount.current < 8) return;
+
+    timeoutRef.current = globalThis.setTimeout(() => {
+      timeoutRef.current = null;
+      if (ready.current) return;
+      ready.current = true;
+      onReady?.();
+    }, 1500);
+  });
 
   return null;
 }
@@ -929,7 +907,7 @@ export function ArcadeScene({
           onEnterComplete={onEnter}
           onExitComplete={handleExitComplete}
         />
-        <ArcadeShaderPrecompiler enabled={fullRigReady} onCompiled={onReady} />
+        <ArcadeWarmupGate enabled={fullRigReady} onReady={onReady} />
         <StrictOrbitControls controlsRef={controlsRef} />
       </Suspense>
     </Canvas>

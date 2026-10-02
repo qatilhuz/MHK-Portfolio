@@ -61,7 +61,7 @@ const ArcadeScene = dynamic(
   },
 );
 
-function ArcadeTerminalLoader() {
+function ArcadeTerminalLoader({ exiting = false }: { exiting?: boolean }) {
   const [elapsed, setElapsed] = useState(0);
   const typedLine = terminalFrameAt(elapsed);
 
@@ -76,7 +76,11 @@ function ArcadeTerminalLoader() {
   }, []);
 
   return (
-    <div className="arcade-loader arcade-terminal-loader" role="status" aria-live="polite">
+    <div
+      className={`arcade-loader arcade-terminal-loader${exiting ? " arcade-terminal-loader--exit" : ""}`}
+      role="status"
+      aria-live="polite"
+    >
       <div className="arcade-terminal-window">
         <div className="arcade-terminal-chrome" aria-hidden="true">
           <span />
@@ -127,6 +131,7 @@ export function ArcadeSetup() {
   const [sceneRequested, setSceneRequested] = useState(initialModeRef.current === "exit");
   const [sceneWarm, setSceneWarm] = useState(false);
   const [loaderReleaseReady, setLoaderReleaseReady] = useState(initialModeRef.current === "exit");
+  const [loaderMounted, setLoaderMounted] = useState(initialModeRef.current !== "exit");
   const [sceneNearViewport, setSceneNearViewport] = useState(initialModeRef.current === "exit");
   const [pageVisible, setPageVisible] = useState(true);
 
@@ -155,7 +160,6 @@ export function ArcadeSetup() {
     if (webgl !== true) return;
     const node = rigRef.current;
     let cancelled = false;
-    let idleId: number | null = null;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const requestScene = () => {
@@ -163,16 +167,8 @@ export function ArcadeSetup() {
       setSceneRequested(true);
     };
     const scheduleScene = () => {
-      if (sceneRequested || timeoutId !== null || idleId !== null) return;
-      const sceneStartDelay = 700;
-      timeoutId = globalThis.setTimeout(() => {
-        const requestIdle = (window as typeof window & { requestIdleCallback?: typeof window.requestIdleCallback }).requestIdleCallback;
-        if (typeof requestIdle === "function") {
-          idleId = requestIdle(requestScene, { timeout: 300 });
-        } else {
-          requestScene();
-        }
-      }, sceneStartDelay);
+      if (sceneRequested || timeoutId !== null) return;
+      timeoutId = globalThis.setTimeout(requestScene, 0);
     };
 
     if (initialModeRef.current === "exit" || window.location.hash === "#arcade") {
@@ -200,7 +196,6 @@ export function ArcadeSetup() {
     return () => {
       cancelled = true;
       observer.disconnect();
-      if (idleId !== null) window.cancelIdleCallback(idleId);
       if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
     };
   }, [sceneRequested, webgl]);
@@ -211,9 +206,20 @@ export function ArcadeSetup() {
   }, [router]);
 
   const sceneInteractive = sceneWarm && loaderReleaseReady;
-  const sceneActive = sceneInteractive && sceneNearViewport && pageVisible;
+  const sceneActive = sceneNearViewport && pageVisible;
   const handleSceneReady = useCallback(() => setSceneWarm(true), []);
   const showLoadingOverlay = !sceneInteractive && initialModeRef.current !== "exit";
+  const canvasVisible = sceneInteractive || initialModeRef.current === "exit";
+
+  useEffect(() => {
+    if (initialModeRef.current === "exit") return;
+    if (showLoadingOverlay) {
+      setLoaderMounted(true);
+      return;
+    }
+    const fadeTimer = globalThis.setTimeout(() => setLoaderMounted(false), 450);
+    return () => globalThis.clearTimeout(fadeTimer);
+  }, [showLoadingOverlay]);
 
   const requestArcadeEnter = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     if (!sceneInteractive) {
@@ -238,18 +244,20 @@ export function ArcadeSetup() {
       ) : (
         <>
           {sceneRequested ? (
-            <SceneErrorBoundary fallback={<ArcadeFallback onEnter={goArcade} />}>
-              <Suspense fallback={<ArcadeTerminalLoader />}>
-                <ArcadeScene
-                  active={sceneActive}
-                  initialMode={initialModeRef.current}
-                  onEnter={goArcade}
-                  onReady={handleSceneReady}
-                />
-              </Suspense>
-            </SceneErrorBoundary>
+            <div className="arcade-scene-shell" data-visible={canvasVisible ? "true" : "false"}>
+              <SceneErrorBoundary fallback={<ArcadeFallback onEnter={goArcade} />}>
+                <Suspense fallback={<ArcadeTerminalLoader />}>
+                  <ArcadeScene
+                    active={sceneActive}
+                    initialMode={initialModeRef.current}
+                    onEnter={goArcade}
+                    onReady={handleSceneReady}
+                  />
+                </Suspense>
+              </SceneErrorBoundary>
+            </div>
           ) : null}
-          {showLoadingOverlay ? <ArcadeTerminalLoader /> : null}
+          {loaderMounted ? <ArcadeTerminalLoader exiting={!showLoadingOverlay} /> : null}
           {sceneInteractive ? (
             <button
               type="button"

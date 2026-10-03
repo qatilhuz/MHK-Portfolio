@@ -125,6 +125,9 @@ function Plate({
         roughness={roughness}
         emissive={emissive ?? "#000000"}
         emissiveIntensity={emissiveIntensity}
+        transparent={false}
+        opacity={1}
+        depthWrite
       />
     </mesh>
   );
@@ -288,8 +291,8 @@ export function ArmoredRig({
   });
 
   return (
-    <group ref={root} name="Host">
-        <group name="Hips">
+    <group ref={root} name="Host" visible scale={[1, 1, 1]} renderOrder={1000}>
+      <group name="Hips">
         <Plate args={[0.3, 0.1, 0.2]} position={[0, 0.88, 0]} color={SECONDARY} />
         <Plate args={[0.32, 0.03, 0.12]} position={[0, 0.93, 0.04]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.12} />
         <group name="Spine" position={[0, 0.98, 0]}>
@@ -302,7 +305,7 @@ export function ArmoredRig({
               }}
             >
               <boxGeometry args={[0.42, 0.46, 0.24]} />
-              <meshStandardMaterial color={PRIMARY} metalness={0.12} roughness={0.68} />
+              <meshStandardMaterial color={PRIMARY} metalness={0.12} roughness={0.68} transparent={false} opacity={1} depthWrite />
             </mesh>
             <Plate args={[0.44, 0.04, 0.26]} position={[0, 0.2, 0]} color={SECONDARY} />
             <Plate args={[0.18, 0.22, 0.06]} position={[0, 0.04, 0.12]} color={SECONDARY} />
@@ -351,7 +354,7 @@ export function ArmoredRig({
                   }}
                 >
                   <boxGeometry args={[0.2, 0.22, 0.2]} />
-                  <meshStandardMaterial color={DETAIL} metalness={0.08} roughness={0.55} />
+                  <meshStandardMaterial color={DETAIL} metalness={0.08} roughness={0.55} transparent={false} opacity={1} depthWrite />
                 </mesh>
                 <Plate args={[0.22, 0.08, 0.22]} position={[0, 0.12, 0]} color={PRIMARY} />
                 <Plate args={[0.18, 0.025, 0.04]} position={[0, 0.07, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.22} />
@@ -394,7 +397,7 @@ export function ArmoredRig({
                 }}
               >
                 <boxGeometry args={[0.09, 0.2, 0.11]} />
-                <meshStandardMaterial color={PRIMARY} roughness={0.68} metalness={0.12} />
+                <meshStandardMaterial color={PRIMARY} roughness={0.68} metalness={0.12} transparent={false} opacity={1} depthWrite />
               </mesh>
               <Plate args={[0.11, 0.05, 0.12]} position={[0, -0.08, 0]} color={SECONDARY} />
               <group name="RightForeArm" position={[0, -0.18, 0]}>
@@ -409,7 +412,7 @@ export function ArmoredRig({
                     }}
                   >
                     <boxGeometry args={[0.09, 0.08, 0.09]} />
-                    <meshStandardMaterial color={DETAIL} roughness={0.7} metalness={0.1} />
+                    <meshStandardMaterial color={DETAIL} roughness={0.7} metalness={0.1} transparent={false} opacity={1} depthWrite />
                   </mesh>
                   <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.03]} color={DETAIL} />
                   <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.03]} color={DETAIL} />

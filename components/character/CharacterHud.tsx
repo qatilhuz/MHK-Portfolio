@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Smile } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EMOTES } from "@/data/emotes";
@@ -99,8 +100,14 @@ export function CharacterHud({
         </div>
       ) : null}
 
-      <div ref={panel} className="pointer-events-auto fixed bottom-3 right-3 z-[10024]">
-        {open ? (
+      {typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={panel}
+              className="pointer-events-auto fixed bottom-3 right-3 z-[10024]"
+              style={{ zIndex: 2147483647 }}
+            >
+              {open ? (
           <div
             id={menuId}
             role="menu"
@@ -135,8 +142,11 @@ export function CharacterHud({
           onClick={() => setOpen((value) => !value)}
         >
           <Smile className="h-5 w-5" aria-hidden />
-        </button>
-      </div>
+              </button>
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

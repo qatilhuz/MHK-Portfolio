@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Box3, MathUtils, Raycaster, Vector2, Vector3, type Group } from "three";
+import { Box3, MathUtils, Raycaster, Vector2, Vector3, type Group, type Mesh } from "three";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { materials } from "@/components/three/materials";
 import { characterConfig } from "@/data/characterConfig";
@@ -29,6 +29,15 @@ import type { CharacterDecision } from "@/lib/character/types";
 const FALL_CLIPS = new Set(["Fall", "GetUp", "Recover", "Stagger", "Surprise", "Annoyed"]);
 const EMOTE_LOCK = new Set(["Backflip", "Jump", "Dance", "Sit", "Bow", "Celebrate", "Sleep", "Wake"]);
 const SLEEP_AFTER_MS = 20000;
+const ENTRANCE_OPEN_MS = 720;
+const ENTRANCE_WALK_MS = 2600;
+const ENTRANCE_CLOSE_MS = 900;
+
+type EntrancePhase = "boot" | "opening" | "walking" | "closing" | "done";
+
+function easeInOutCubic(t: number) {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
 
 export function CharacterScene({
   onScreen,
@@ -41,6 +50,11 @@ export function CharacterScene({
   const reduced = useReducedMotion() && characterConfig.accessibility.reducedMotionRespect;
   const group = useRef<Group>(null);
   const pivot = useRef<Group>(null);
+  const doorFrame = useRef<Group>(null);
+  const doorLeft = useRef<Mesh>(null);
+  const doorRight = useRef<Mesh>(null);
+  const doorHalo = useRef<Mesh>(null);
+  const doorCore = useRef<Mesh>(null);
   const look = useRef({ x: 0, y: 0 });
   const lookWeight = useRef(1);
   const lookWeightTarget = useRef(1);
@@ -83,7 +97,17 @@ export function CharacterScene({
   const lineClearTimer = useRef<number | null>(null);
   const lineSerial = useRef(0);
   const idleMessageTimer = useRef<number | null>(null);
+  const doorOpen = useRef(0);
+  const entrance = useRef({
+    phase: "boot" as EntrancePhase,
+    startedAt: 0,
+    startX: -3.9,
+    finalX: 0,
+    doorX: -3.05,
+  });
+  const entranceDone = () => entrance.current.phase === "done";
   const locked = () =>
+    !entranceDone() ||
     asleep.current ||
     waking.current ||
     FALL_CLIPS.has(clipRef.current) ||
@@ -126,12 +150,12 @@ export function CharacterScene({
   );
 
   const noteActivity = () => {
-    if (asleep.current || waking.current) return;
+    if (!entranceDone() || asleep.current || waking.current) return;
     lastActivity.current = performance.now();
   };
 
   const beginSleep = () => {
-    if (asleep.current || waking.current || reduced) return;
+    if (!entranceDone() || asleep.current || waking.current || reduced) return;
     asleep.current = true;
     sleepYaw.current = group.current?.rotation.y ?? loco.current.yaw;
     look.current = { x: 0, y: 0 };
@@ -176,7 +200,7 @@ export function CharacterScene({
   };
 
   const walkToNx = (nx: number, reason: "walking" | "moving-to-section") => {
-    if (asleep.current || waking.current) return;
+    if (!entranceDone() || asleep.current || waking.current) return;
     const n = Math.min(0.97, Math.max(0.03, nx));
     const x = (n - 0.5) * 2 * maxX.current;
     const span = Math.max(0.001, maxX.current * 2);
@@ -189,7 +213,7 @@ export function CharacterScene({
   };
 
   const playEmote = (id: string) => {
-    if (asleep.current || waking.current) return;
+    if (!entranceDone() || asleep.current || waking.current) return;
     const def = emoteById(id);
     if (!def) return;
     const now = performance.now();
@@ -235,7 +259,7 @@ export function CharacterScene({
       window.removeEventListener("keydown", bump);
       window.removeEventListener("touchstart", bump);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- activity callback is ref-driven
 
   useEffect(() => {
     if (!guide?.visible) return;
@@ -347,6 +371,97 @@ export function CharacterScene({
     fallPitch.current = sleeping ? 0 : MathUtils.damp(fallPitch.current, fallTarget.current, 4, delta);
     if (pivot.current) pivot.current.rotation.x = fallPitch.current;
     const now = performance.now();
+
+    const entry = entrance.current;
+    if (entry.phase === "boot") {
+      entry.startedAt = now;
+      entry.startX = -maxX.current - 0.82;
+      entry.finalX = 0;
+      entry.doorX = -maxX.current + 0.36;
+      loco.current.position = { x: entry.startX, y: 0, z: 0 };
+      loco.current.target = { x: entry.startX, y: 0, z: 0 };
+      loco.current.velocity = { x: 0, y: 0, z: 0 };
+      loco.current.yaw = Math.PI / 2;
+      loco.current.targetYaw = Math.PI / 2;
+      loco.current.busyUntil = now + ENTRANCE_OPEN_MS + ENTRANCE_WALK_MS + ENTRANCE_CLOSE_MS;
+      setClip("Idle");
+      entry.phase = "opening";
+    }
+
+    if (entry.phase !== "done") {
+      entry.doorX = -maxX.current + 0.36;
+      look.current = { x: 0, y: 0 };
+      lookWeight.current = 0;
+      lookWeightTarget.current = 0;
+      torso.current = 0;
+      orbit.current = 0;
+      pendingEmote.current = null;
+      inspecting.current = false;
+      lastAngle.current = null;
+    }
+
+    if (entry.phase === "opening") {
+      loco.current.position.x = entry.startX;
+      loco.current.target.x = entry.startX;
+      if (now - entry.startedAt >= ENTRANCE_OPEN_MS) {
+        entry.phase = "walking";
+        entry.startedAt = now;
+        loco.current.target = { x: entry.finalX, y: 0, z: 0 };
+        loco.current.gait = "walk";
+        loco.current.speed = WALK_STRIDE / WALK_CYCLE;
+        if (clipRef.current !== "Walk") setClip("Walk");
+      }
+    } else if (entry.phase === "walking") {
+      const t = Math.min(1, (now - entry.startedAt) / ENTRANCE_WALK_MS);
+      const eased = easeInOutCubic(t);
+      loco.current.position.x = MathUtils.lerp(entry.startX, entry.finalX, eased);
+      loco.current.target.x = entry.finalX;
+      loco.current.yaw = MathUtils.damp(loco.current.yaw, Math.PI / 2, 8, delta);
+      loco.current.targetYaw = Math.PI / 2;
+      if (clipRef.current !== "Walk") setClip("Walk");
+      if (t >= 1) {
+        entry.phase = "closing";
+        entry.startedAt = now;
+        loco.current.position.x = entry.finalX;
+        loco.current.target.x = entry.finalX;
+        loco.current.velocity = { x: 0, y: 0, z: 0 };
+        setClip("Idle");
+      }
+    } else if (entry.phase === "closing") {
+      loco.current.position.x = entry.finalX;
+      loco.current.target.x = entry.finalX;
+      loco.current.yaw = MathUtils.damp(loco.current.yaw, 0, 5, delta);
+      loco.current.targetYaw = 0;
+      if (now - entry.startedAt >= ENTRANCE_CLOSE_MS) {
+        entry.phase = "done";
+        doorOpen.current = 0;
+        lastActivity.current = now;
+        lookWeightTarget.current = 1;
+        loco.current.busyUntil = now + 450;
+        setClip("Idle");
+      }
+    }
+
+    const doorTarget = entry.phase === "opening" || entry.phase === "walking" ? 1 : 0;
+    doorOpen.current = MathUtils.damp(doorOpen.current, doorTarget, 7, delta);
+    if (doorFrame.current) {
+      const active = entry.phase !== "done";
+      doorFrame.current.visible = active;
+      doorFrame.current.position.set(entry.doorX, 0.92, 0.02);
+      doorFrame.current.rotation.y = 0.08;
+    }
+    if (doorLeft.current) doorLeft.current.position.x = -0.17 - doorOpen.current * 0.26;
+    if (doorRight.current) doorRight.current.position.x = 0.17 + doorOpen.current * 0.26;
+    if (doorHalo.current) {
+      doorHalo.current.rotation.z += delta * (0.55 + doorOpen.current * 1.35);
+      const s = 1 + doorOpen.current * 0.08;
+      doorHalo.current.scale.set(s, s, s);
+    }
+    if (doorCore.current) {
+      doorCore.current.scale.set(0.82 + doorOpen.current * 0.18, 1.05 + doorOpen.current * 0.08, 1);
+      doorCore.current.visible = entry.phase !== "done";
+    }
+
     const moving = Math.abs(loco.current.target.x - loco.current.position.x) > 0.12;
     const tourBusy = Boolean(guide?.guided && (guide.phase === "speaking" || guide.phase === "greeting"));
     if (
@@ -420,8 +535,9 @@ export function CharacterScene({
     const aspect = Math.max(1.2, rect.width / Math.max(1, rect.height));
     const halfView = Math.tan((30 * Math.PI) / 360) * 5.6 * aspect;
     maxX.current = Math.max(2.6, halfView - (halfChar.current ?? 0.45) - 0.04);
-    loco.current.position.x = Math.min(maxX.current, Math.max(-maxX.current, loco.current.position.x));
-    loco.current.target.x = Math.min(maxX.current, Math.max(-maxX.current, loco.current.target.x));
+    const leftLimit = entranceDone() ? -maxX.current : -maxX.current - 0.96;
+    loco.current.position.x = Math.min(maxX.current, Math.max(leftLimit, loco.current.position.x));
+    loco.current.target.x = Math.min(maxX.current, Math.max(leftLimit, loco.current.target.x));
     node.position.x = loco.current.position.x;
     node.updateWorldMatrix(true, true);
     box.current.setFromObject(node);
@@ -429,10 +545,10 @@ export function CharacterScene({
     const maxp = box.current.max.clone().project(camera);
     const left = (Math.min(min.x, maxp.x) * 0.5 + 0.5) * rect.width + rect.left;
     const right = (Math.max(min.x, maxp.x) * 0.5 + 0.5) * rect.width + rect.left;
-    if (!sleeping && left < 6) {
+    if (!sleeping && entranceDone() && left < 6) {
       loco.current.position.x += 0.04;
       node.position.x = loco.current.position.x;
-    } else if (!sleeping && right > window.innerWidth - 6) {
+    } else if (!sleeping && entranceDone() && right > window.innerWidth - 6) {
       loco.current.position.x -= 0.04;
       node.position.x = loco.current.position.x;
     }
@@ -530,6 +646,11 @@ export function CharacterScene({
     };
 
     const onPointerDown = (event: PointerEvent) => {
+      if (!entranceDone()) {
+        inspectPointer.current = null;
+        inspectDragged.current = false;
+        return;
+      }
       if (shouldIgnorePageTarget(event)) {
         inspectPointer.current = null;
         inspectDragged.current = false;
@@ -552,6 +673,11 @@ export function CharacterScene({
     };
 
     const onMove = (event: PointerEvent) => {
+      if (!entranceDone()) {
+        document.body.style.cursor = "";
+        lastAngle.current = null;
+        return;
+      }
       const down = inspectPointer.current;
       if (down && down.id === event.pointerId && down.onChar) {
         const dx = event.clientX - down.x;
@@ -602,6 +728,7 @@ export function CharacterScene({
     };
 
     const onClick = (event: MouseEvent) => {
+      if (!entranceDone()) return;
       if (shouldIgnorePageTarget(event)) return;
       const hit = pick(event);
       if (inspectDragged.current) {
@@ -669,6 +796,37 @@ export function CharacterScene({
       <hemisphereLight args={[materials.fill, materials.desk, 0.3]} />
       <directionalLight position={[2.2, 3.6, 4]} intensity={1.05} color={materials.light} />
       <pointLight position={[0.2, 0.8, 1.6]} intensity={0.22} color={ACCENT_LIGHT} />
+      <group ref={doorFrame} name="EntranceDoor" position={[-3.05, 0.92, 0.02]}>
+        <mesh name="DoorBackPlate" position={[0, 0, -0.06]}>
+          <boxGeometry args={[0.88, 1.82, 0.05]} />
+          <meshStandardMaterial color="#07111f" metalness={0.35} roughness={0.42} transparent opacity={0.82} />
+        </mesh>
+        <mesh name="DoorHalo" ref={doorHalo} position={[0, 0, 0.002]}>
+          <torusGeometry args={[0.52, 0.014, 8, 72]} />
+          <meshStandardMaterial color={ACCENT_LIGHT} emissive={ACCENT_LIGHT} emissiveIntensity={1.15} toneMapped={false} />
+        </mesh>
+        <mesh name="DoorCore" ref={doorCore} position={[0, 0, -0.012]}>
+          <boxGeometry args={[0.62, 1.52, 0.025]} />
+          <meshStandardMaterial color="#0f172a" emissive="#0ea5e9" emissiveIntensity={0.28} transparent opacity={0.72} />
+        </mesh>
+        <mesh name="DoorLeftPanel" ref={doorLeft} position={[-0.17, 0, 0.035]} castShadow>
+          <boxGeometry args={[0.38, 1.62, 0.08]} />
+          <meshStandardMaterial color="#111827" metalness={0.58} roughness={0.3} emissive="#082f49" emissiveIntensity={0.24} />
+        </mesh>
+        <mesh name="DoorRightPanel" ref={doorRight} position={[0.17, 0, 0.035]} castShadow>
+          <boxGeometry args={[0.38, 1.62, 0.08]} />
+          <meshStandardMaterial color="#111827" metalness={0.58} roughness={0.3} emissive="#082f49" emissiveIntensity={0.24} />
+        </mesh>
+        <mesh name="DoorTopRail" position={[0, 0.9, 0.045]}>
+          <boxGeometry args={[0.94, 0.06, 0.1]} />
+          <meshStandardMaterial color="#38bdf8" emissive={ACCENT_LIGHT} emissiveIntensity={0.62} toneMapped={false} />
+        </mesh>
+        <mesh name="DoorBottomRail" position={[0, -0.9, 0.045]}>
+          <boxGeometry args={[0.94, 0.06, 0.1]} />
+          <meshStandardMaterial color="#38bdf8" emissive={ACCENT_LIGHT} emissiveIntensity={0.44} toneMapped={false} />
+        </mesh>
+        <pointLight color={ACCENT_LIGHT} distance={2.1} intensity={0.75} position={[0, 0.05, 0.35]} />
+      </group>
       <group ref={group} scale={mobile ? 1.12 : 1.39}>
         <group ref={pivot} position={[0, -0.95, 0]}>
           <group position={[0, 0.95, 0]}>

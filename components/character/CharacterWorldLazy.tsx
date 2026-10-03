@@ -1,40 +1,29 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { characterConfig } from "@/data/characterConfig";
-import { CharacterFallback } from "./CharacterFallback";
 
-const World = dynamic(() => import("./CharacterWorld").then((mod) => mod.CharacterWorld), {
+const loadCharacterWorld = () => import("./CharacterWorld").then((mod) => mod.CharacterWorld);
+
+const World = dynamic(loadCharacterWorld, {
   ssr: false,
-  loading: () => <CharacterFallback label="Guide loading" />,
+  loading: () => null,
 });
 
 export function CharacterWorldLazy() {
   const path = usePathname();
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (path !== "/") {
-      setMounted(false);
-      return undefined;
-    }
-
-    const frame = window.requestAnimationFrame(() => setMounted(true));
-    const fallback = window.setTimeout(() => setMounted(true), 600);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(fallback);
-    };
+    if (path === "/") void loadCharacterWorld();
   }, [path]);
 
   if (!characterConfig.enabled || !characterConfig.is3DModelEnabled) return null;
   if (path !== "/") return null;
-  if (!mounted) return <CharacterFallback label="Guide loading" />;
 
   return (
-    <Suspense fallback={<CharacterFallback label="Guide loading" />}>
+    <Suspense fallback={null}>
       <World />
     </Suspense>
   );

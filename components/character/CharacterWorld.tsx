@@ -44,10 +44,10 @@ export function CharacterWorld() {
 
   return (
     <>
-      {webgl === true ? (
+      {webgl !== false ? (
         <CharacterCanvasBoundary fallback={<CharacterFallback label="Guide fallback" />}>
           <div
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-[80] h-[42vh] opacity-100"
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-[90] h-[46vh] opacity-100"
             data-character-world
             aria-hidden
           >

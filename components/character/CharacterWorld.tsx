@@ -2,7 +2,6 @@
 
 import { Component, useCallback, useState, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
-import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { characterConfig } from "@/data/characterConfig";
 import { CharacterHud } from "./CharacterHud";
 import { CharacterScene } from "./CharacterScene";
@@ -28,7 +27,6 @@ class CharacterCanvasBoundary extends Component<
 }
 
 export function CharacterWorld() {
-  const webgl = useWebGLSupport();
   const [screen, setScreen] = useState({ x: 0, y: 0 });
   const [line, setLine] = useState<string | null>(null);
   const onScreen = useCallback((x: number, y: number) => {
@@ -37,13 +35,13 @@ export function CharacterWorld() {
 
   if (!characterConfig.enabled || !characterConfig.is3DModelEnabled) return null;
 
-  const fallback = <CharacterFallback label={webgl === false ? "Guide fallback" : "Guide loading"} />;
+  const fallback = <CharacterFallback label="Guide fallback" />;
 
   return (
     <>
       <CharacterCanvasBoundary fallback={fallback}>
         <div
-          className="pointer-events-none fixed inset-0 z-[80] h-[100dvh] min-h-[100dvh] w-screen opacity-100"
+          className="pointer-events-none fixed inset-0 z-[50] h-[100dvh] min-h-[100dvh] w-screen opacity-100"
           data-character-world
           aria-hidden
           style={{ display: "block", opacity: 1, overflow: "visible", width: "100vw", height: "100dvh" }}

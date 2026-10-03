@@ -1,0 +1,70 @@
+import { ArrowUpRight } from "lucide-react";
+import { siteConfig } from "@/data/site";
+import { getActiveSocialLinks } from "@/data/social";
+import { Button } from "@/components/ui/Button";
+import { Container } from "@/components/ui/Container";
+import { AmbientBackground } from "@/components/ui/AmbientBackground";
+import { HeroWorkspace } from "@/components/three/HeroWorkspace";
+import { HeroDescription } from "@/components/hero/HeroDescription";
+import { HeroMotion } from "@/components/motion/HeroMotion";
+import { InView } from "@/components/motion/InView";
+
+export function Hero() {
+  const socials = getActiveSocialLinks();
+
+  return (
+    <section
+      id="hero"
+      className="relative overflow-hidden border-b border-border"
+      data-scene="workspace"
+    >
+      <AmbientBackground variant="hero" />
+      <div className="pointer-events-none absolute inset-0 grid-fade" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_at_top,var(--accent-soft),transparent_60%)]"
+        aria-hidden="true"
+      />
+      <Container className="relative grid items-center gap-12 py-20 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:py-28">
+        <div>
+          <HeroMotion role={siteConfig.role} name={siteConfig.displayName} />
+          <HeroDescription />
+          <InView className="mt-8 flex flex-wrap gap-3" stagger="a" y={10} delay={0.28}>
+            <Button href="/projects">
+              Explore My Work
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </Button>
+            <Button
+              href={siteConfig.resumeAvailable ? siteConfig.resumePath : "/#resume"}
+              variant="secondary"
+            >
+              View Resume
+            </Button>
+          </InView>
+          {socials.length > 0 ? (
+            <ul className="mt-8 flex flex-wrap gap-4">
+              {socials.map((link) => (
+                <li key={link.platform}>
+                  <a
+                    href={link.url}
+                    className="text-sm text-muted transition-colors duration-[var(--motion-micro)] hover:text-foreground"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+
+        <div
+          className="scene-slot relative overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface"
+          data-scene-slot="hero-workspace"
+        >
+          <HeroWorkspace />
+        </div>
+      </Container>
+    </section>
+  );
+}

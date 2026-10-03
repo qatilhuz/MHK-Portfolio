@@ -309,7 +309,7 @@ export function ArmoredRig({
   });
 
   return (
-    <group ref={root} name="Host">
+    <group ref={root} name="Host" visible scale={[1, 1, 1]} position={[0, 0, 0]}>
         <group name="Hips">
         <Plate args={[0.3, 0.1, 0.2]} position={[0, 0.88, 0]} color={SECONDARY} />
         <Plate args={[0.32, 0.03, 0.12]} position={[0, 0.93, 0.04]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.12} />

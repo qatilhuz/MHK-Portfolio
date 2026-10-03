@@ -47,16 +47,17 @@ export function CharacterWorld() {
       {webgl !== false ? (
         <CharacterCanvasBoundary fallback={<CharacterFallback label="Guide fallback" />}>
           <div
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-[90] h-[46vh] opacity-100"
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-[90] h-[min(70vh,680px)] min-h-[360px] opacity-100"
             data-character-world
             aria-hidden
+            style={{ display: "block", opacity: 1, overflow: "visible" }}
           >
             <Canvas
               dpr={[1, 1.35]}
               camera={{ position: [0, 1.52, 5.6], fov: 30 }}
               gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
               className="h-full w-full !bg-transparent"
-              style={{ pointerEvents: "none", background: "transparent", display: "block", opacity: 1 }}
+              style={{ pointerEvents: "none", background: "transparent", display: "block", opacity: 1, width: "100%", height: "100%" }}
               aria-hidden
             >
               <CharacterScene onScreen={onScreen} onLine={setLine} />

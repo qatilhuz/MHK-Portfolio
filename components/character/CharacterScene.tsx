@@ -99,9 +99,10 @@ export function CharacterScene({
   const idleMessageTimer = useRef<number | null>(null);
   const doorOpen = useRef(0);
   const entrance = useRef({
-    phase: "boot" as EntrancePhase,
+    // Emergency visibility override: keep the character in-view immediately.
+    phase: "done" as EntrancePhase,
     startedAt: 0,
-    startX: -3.9,
+    startX: 0,
     finalX: 0,
     doorX: -3.05,
   });
@@ -512,10 +513,19 @@ export function CharacterScene({
       node.position.set(0, 0, 0);
       node.updateWorldMatrix(true, true);
       box.current.setFromObject(node);
-      soleY.current = box.current.min.y;
-      halfChar.current = Math.max(0.25, (box.current.max.x - box.current.min.x) / 2);
+      const hasValidBounds =
+        !box.current.isEmpty() &&
+        Number.isFinite(box.current.min.y) &&
+        Number.isFinite(box.current.max.y) &&
+        Number.isFinite(box.current.min.x) &&
+        Number.isFinite(box.current.max.x);
+      soleY.current = hasValidBounds ? box.current.min.y : 0;
+      halfChar.current = hasValidBounds ? Math.max(0.25, (box.current.max.x - box.current.min.x) / 2) : 0.45;
     }
-    node.position.set(loco.current.position.x, -soleY.current, 0);
+    node.visible = true;
+    node.scale.setScalar(mobile ? 1.12 : 1.39);
+    if (!Number.isFinite(loco.current.position.x)) loco.current.position.x = 0;
+    node.position.set(loco.current.position.x, -(soleY.current ?? 0), 0);
     camera.position.set(0, 1.52, 5.6);
     camera.lookAt(0, 1.52, 0);
     if (!inspecting.current && inspectResetAt.current > 0 && now >= inspectResetAt.current) {
@@ -792,11 +802,11 @@ export function CharacterScene({
 
   return (
     <group>
-      <ambientLight intensity={0.42} />
+      <ambientLight intensity={2} />
       <hemisphereLight args={[materials.fill, materials.desk, 0.3]} />
       <directionalLight position={[2.2, 3.6, 4]} intensity={1.05} color={materials.light} />
       <pointLight position={[0.2, 0.8, 1.6]} intensity={0.22} color={ACCENT_LIGHT} />
-      <group ref={doorFrame} name="EntranceDoor" position={[-3.05, 0.92, 0.02]}>
+      <group ref={doorFrame} name="EntranceDoor" position={[-3.05, 0.92, 0.02]} visible={false}>
         <mesh name="DoorBackPlate" position={[0, 0, -0.06]}>
           <boxGeometry args={[0.88, 1.82, 0.05]} />
           <meshStandardMaterial color="#07111f" metalness={0.35} roughness={0.42} transparent opacity={0.82} />
@@ -827,7 +837,7 @@ export function CharacterScene({
         </mesh>
         <pointLight color={ACCENT_LIGHT} distance={2.1} intensity={0.75} position={[0, 0.05, 0.35]} />
       </group>
-      <group ref={group} scale={mobile ? 1.12 : 1.39}>
+      <group ref={group} scale={mobile ? 1.12 : 1.39} visible position={[0, 0, 0]}>
         <group ref={pivot} position={[0, -0.95, 0]}>
           <group position={[0, 0.95, 0]}>
             <CharacterHost

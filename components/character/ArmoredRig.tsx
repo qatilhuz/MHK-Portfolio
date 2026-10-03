@@ -117,7 +117,7 @@ function Plate({
   name?: string;
 }) {
   return (
-    <mesh name={name} position={position} rotation={rotation} castShadow>
+    <mesh name={name} position={position} rotation={rotation} castShadow frustumCulled={false}>
       <boxGeometry args={args} />
       <meshStandardMaterial
         color={color}

@@ -39,6 +39,45 @@ function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
+function ProofOfLifeBot() {
+  return (
+    <group name="ProofOfLifeBot" position={[0, 0.08, 0.55]} scale={1.08} visible renderOrder={999}>
+      <mesh name="ProofBody" position={[0, 0.88, 0]} renderOrder={999}>
+        <boxGeometry args={[0.56, 0.72, 0.32]} />
+        <meshBasicMaterial color="#0f172a" />
+      </mesh>
+      <mesh name="ProofChestGlow" position={[0, 0.92, 0.18]} renderOrder={1000}>
+        <sphereGeometry args={[0.105, 24, 24]} />
+        <meshBasicMaterial color="#38bdf8" toneMapped={false} />
+      </mesh>
+      <mesh name="ProofHead" position={[0, 1.42, 0.02]} renderOrder={999}>
+        <boxGeometry args={[0.42, 0.34, 0.34]} />
+        <meshBasicMaterial color="#e5e7eb" />
+      </mesh>
+      <mesh name="ProofVisor" position={[0, 1.45, 0.205]} renderOrder={1000}>
+        <boxGeometry args={[0.3, 0.075, 0.026]} />
+        <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+      </mesh>
+      <mesh name="ProofLeftArm" position={[-0.42, 0.88, 0]} rotation={[0, 0, 0.12]} renderOrder={999}>
+        <boxGeometry args={[0.14, 0.56, 0.16]} />
+        <meshBasicMaterial color="#334155" />
+      </mesh>
+      <mesh name="ProofRightArm" position={[0.42, 0.88, 0]} rotation={[0, 0, -0.12]} renderOrder={999}>
+        <boxGeometry args={[0.14, 0.56, 0.16]} />
+        <meshBasicMaterial color="#334155" />
+      </mesh>
+      <mesh name="ProofLeftLeg" position={[-0.16, 0.34, 0]} renderOrder={999}>
+        <boxGeometry args={[0.16, 0.52, 0.18]} />
+        <meshBasicMaterial color="#1e293b" />
+      </mesh>
+      <mesh name="ProofRightLeg" position={[0.16, 0.34, 0]} renderOrder={999}>
+        <boxGeometry args={[0.16, 0.52, 0.18]} />
+        <meshBasicMaterial color="#1e293b" />
+      </mesh>
+    </group>
+  );
+}
+
 function EmergencyVisibleBot() {
   return (
     <group name="EmergencyVisibleBot" position={[0, 0, 0.32]} scale={0.9} visible>
@@ -846,6 +885,7 @@ export function CharacterScene({
       <hemisphereLight args={[materials.fill, materials.desk, 0.3]} />
       <directionalLight position={[2.2, 3.6, 4]} intensity={1.05} color={materials.light} />
       <pointLight position={[0.2, 0.8, 1.6]} intensity={0.22} color={ACCENT_LIGHT} />
+      <ProofOfLifeBot />
       <group ref={doorFrame} name="EntranceDoor" position={[-3.05, 0.92, 0.02]} visible={false}>
         <mesh name="DoorBackPlate" position={[0, 0, -0.06]}>
           <boxGeometry args={[0.88, 1.82, 0.05]} />

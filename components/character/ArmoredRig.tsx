@@ -16,10 +16,12 @@ import type { CharacterClip, CharacterHit } from "@/data/character";
 import { createHostClips } from "@/lib/character/clips";
 import { sampleViseme } from "@/lib/character/visemes";
 
-const PRIMARY = "#1a1f2e";
-const SECONDARY = "#2e3444";
-const ACCENT = "#3b82f6";
+const PRIMARY = "#111827";
+const SECONDARY = "#273244";
+const ACCENT = "#38bdf8";
+const ACCENT_DEEP = "#2563eb";
 const DETAIL = "#e5e7eb";
+const SHADOW_GLOW = "#07111f";
 
 function makeZTexture() {
   const canvas = document.createElement("canvas");
@@ -100,10 +102,12 @@ function Plate({
   position,
   rotation,
   color = PRIMARY,
-  metalness = 0.18,
-  roughness = 0.62,
+  metalness = 0.26,
+  roughness = 0.5,
   emissive,
   emissiveIntensity = 0,
+  opacity = 1,
+  toneMapped = true,
   name,
 }: {
   args: [number, number, number];
@@ -114,6 +118,8 @@ function Plate({
   roughness?: number;
   emissive?: string;
   emissiveIntensity?: number;
+  opacity?: number;
+  toneMapped?: boolean;
   name?: string;
 }) {
   return (
@@ -123,8 +129,11 @@ function Plate({
         color={color}
         metalness={metalness}
         roughness={roughness}
-        emissive={emissive ?? "#000000"}
+        emissive={emissive ?? SHADOW_GLOW}
         emissiveIntensity={emissiveIntensity}
+        transparent={opacity < 1}
+        opacity={opacity}
+        toneMapped={toneMapped}
       />
     </mesh>
   );
@@ -185,7 +194,7 @@ export function ArmoredRig({
     incoming.clampWhenFinished = !loop;
     incoming.setEffectiveTimeScale(reducedMotion ? 1.2 : 1);
     incoming.setEffectiveWeight(1);
-    const fade = reducedMotion ? 0.05 : fromFlip ? 0.04 : 0.36;
+    const fade = clip === "Sleep" ? 0.08 : reducedMotion ? 0.05 : fromFlip ? 0.04 : 0.36;
     if (fromFlip) {
       outgoing?.stop();
       outgoing?.setEffectiveWeight(0);
@@ -211,6 +220,23 @@ export function ArmoredRig({
 
   useFrame((_, delta) => {
     mixer.current?.update(delta);
+    const sleeping = clip === "Sleep";
+    if (sleeping) {
+      blink.current = 0;
+      if (head.current) head.current.rotation.y = 0;
+      if (neck.current) neck.current.rotation.y = 0;
+      if (chest.current) chest.current.rotation.y = 0;
+      for (const eye of [leftEye.current, rightEye.current]) {
+        if (!eye) continue;
+        eye.rotation.set(0, 0, 0);
+        eye.scale.y = 0.08;
+      }
+      if (mouth.current) {
+        mouth.current.scale.x = 1;
+        mouth.current.scale.y = 0.22;
+      }
+      return;
+    }
     const greeting = clip === "Wave";
     const walking = clip === "Walk" || clip === "Run" || clip === "Turn";
     const fullBody =
@@ -221,7 +247,6 @@ export function ArmoredRig({
       clip === "Sit" ||
       clip === "Bow" ||
       clip === "Fall" ||
-      clip === "Sleep" ||
       clip === "Wake";
     const contactEmote = clip === "Clap" || clip === "Facepalm" || clip === "Think";
     const w =
@@ -249,15 +274,13 @@ export function ArmoredRig({
     blink.current += delta;
     const wakeT = actions.current.Wake?.time ?? 0;
     const lid =
-      clip === "Sleep"
-        ? 0.08
-        : clip === "Wake"
-          ? Math.min(1, 0.12 + wakeT / 1.2)
-          : clip === "Surprise"
-            ? 1.22
-            : blink.current % 4.2 > 4.05
-              ? 0.35
-              : 1;
+      clip === "Wake"
+        ? Math.min(1, 0.12 + wakeT / 1.2)
+        : clip === "Surprise"
+          ? 1.22
+          : blink.current % 4.2 > 4.05
+            ? 0.35
+            : 1;
     for (const eye of [leftEye.current, rightEye.current]) {
       if (!eye) continue;
       eye.rotation.y = MathUtils.damp(eye.rotation.y, eyeY, 18, delta);
@@ -278,9 +301,7 @@ export function ArmoredRig({
                 ? 0.18
                 : clip === "Think"
                   ? 0.28
-                  : clip === "Sleep"
-                    ? 0.22
-                    : 0.35;
+                  : 0.35;
       const wide = viseme ? viseme.wide : clip === "Wave" || clip === "Laugh" || clip === "Surprise" || clip === "Celebrate" ? 1.18 : 1;
       mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 14, delta);
       mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, wide, 12, delta);
@@ -302,19 +323,41 @@ export function ArmoredRig({
               }}
             >
               <boxGeometry args={[0.42, 0.46, 0.24]} />
-              <meshStandardMaterial color={PRIMARY} metalness={0.12} roughness={0.68} />
+              <meshStandardMaterial
+                color={PRIMARY}
+                metalness={0.32}
+                roughness={0.42}
+                emissive={SHADOW_GLOW}
+                emissiveIntensity={0.18}
+              />
             </mesh>
-            <Plate args={[0.44, 0.04, 0.26]} position={[0, 0.2, 0]} color={SECONDARY} />
-            <Plate args={[0.18, 0.22, 0.06]} position={[0, 0.04, 0.12]} color={SECONDARY} />
+            <Plate args={[0.44, 0.04, 0.26]} position={[0, 0.2, 0]} color={SECONDARY} roughness={0.38} />
+            <Plate args={[0.2, 0.24, 0.055]} position={[0, 0.04, 0.122]} color="#172033" metalness={0.34} roughness={0.34} />
+            <mesh name="CoreGlow" position={[0, 0.12, 0.158]}>
+              <sphereGeometry args={[0.052, 18, 18]} />
+              <meshStandardMaterial color={ACCENT} emissive={ACCENT} emissiveIntensity={1.35} toneMapped={false} />
+            </mesh>
+            <mesh name="CoreRing" position={[0, 0.12, 0.164]}>
+              <torusGeometry args={[0.08, 0.006, 8, 32]} />
+              <meshStandardMaterial color="#bfdbfe" emissive={ACCENT} emissiveIntensity={0.85} toneMapped={false} />
+            </mesh>
+            <pointLight color={ACCENT} distance={1.55} intensity={0.55} position={[0, 0.12, 0.3]} />
             <Plate
-              args={[0.06, 0.06, 0.02]}
-              position={[0, 0.12, 0.15]}
-              color={ACCENT}
+              args={[0.1, 0.28, 0.024]}
+              position={[-0.13, 0.03, 0.13]}
+              color={ACCENT_DEEP}
               emissive={ACCENT}
-              emissiveIntensity={0.45}
+              emissiveIntensity={0.2}
+              toneMapped={false}
             />
-            <Plate args={[0.08, 0.22, 0.05]} position={[-0.12, 0.02, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.18} />
-            <Plate args={[0.08, 0.22, 0.05]} position={[0.12, 0.02, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.18} />
+            <Plate
+              args={[0.1, 0.28, 0.024]}
+              position={[0.13, 0.03, 0.13]}
+              color={ACCENT_DEEP}
+              emissive={ACCENT}
+              emissiveIntensity={0.2}
+              toneMapped={false}
+            />
             <Plate args={[0.03, 0.18, 0.04]} position={[-0.2, 0.02, 0.1]} color={DETAIL} roughness={0.45} />
             <Plate args={[0.03, 0.18, 0.04]} position={[0.2, 0.02, 0.1]} color={DETAIL} roughness={0.45} />
             <Plate args={[0.28, 0.32, 0.1]} position={[0, 0.02, -0.16]} color={SECONDARY} />
@@ -354,16 +397,23 @@ export function ArmoredRig({
                   <meshStandardMaterial color={DETAIL} metalness={0.08} roughness={0.55} />
                 </mesh>
                 <Plate args={[0.22, 0.08, 0.22]} position={[0, 0.12, 0]} color={PRIMARY} />
-                <Plate args={[0.18, 0.025, 0.04]} position={[0, 0.07, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.22} />
+                <Plate
+                  args={[0.19, 0.03, 0.045]}
+                  position={[0, 0.07, 0.102]}
+                  color={ACCENT_DEEP}
+                  emissive={ACCENT}
+                  emissiveIntensity={0.62}
+                  toneMapped={false}
+                />
                 <Plate args={[0.08, 0.1, 0.08]} position={[-0.12, 0.08, 0]} color={PRIMARY} />
                 <Plate args={[0.08, 0.1, 0.08]} position={[0.12, 0.08, 0]} color={PRIMARY} />
                 <group ref={leftEye} name="LeftEye" position={[-0.05, 0.03, 0.11]}>
                   <Plate args={[0.045, 0.03, 0.02]} color={PRIMARY} />
-                  <Plate args={[0.02, 0.02, 0.012]} position={[0, 0, 0.01]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.35} />
+                  <Plate args={[0.02, 0.02, 0.012]} position={[0, 0, 0.01]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.72} toneMapped={false} />
                 </group>
                 <group ref={rightEye} name="RightEye" position={[0.05, 0.03, 0.11]}>
                   <Plate args={[0.045, 0.03, 0.02]} color={PRIMARY} />
-                  <Plate args={[0.02, 0.02, 0.012]} position={[0, 0, 0.01]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.35} />
+                  <Plate args={[0.02, 0.02, 0.012]} position={[0, 0, 0.01]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.72} toneMapped={false} />
                 </group>
                 <group ref={mouth} name="Mouth" position={[0, -0.06, 0.11]}>
                   <Plate args={[0.07, 0.02, 0.015]} color={SECONDARY} />

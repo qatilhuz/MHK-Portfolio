@@ -69,6 +69,23 @@ export const hitReactions: Record<CharacterHit, { clip: CharacterClip; message: 
   shoulder: { clip: "Curious", message: "That tickles the plating." },
 };
 
+export const idleDevMessages = [
+  "Scanning codebase…",
+  "Optimizing shaders…",
+  "Compiling tiny rocket boots…",
+  "Refactoring my snack algorithm…",
+  "Checking Lighthouse vibes…",
+  "I need coffee.",
+  "Polishing pixels…",
+] as const;
+
+export const wakingDevMessages = [
+  "Boot sequence restored.",
+  "Rehydrating personality module…",
+  "Resuming shader patrol…",
+  "Coffee acquired. Systems online.",
+] as const;
+
 export const CLIP_ALIASES: Record<string, CharacterClip> = {
   idle: "Idle",
   Idle: "Idle",

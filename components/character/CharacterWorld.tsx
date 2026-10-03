@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { useGuide } from "@/lib/guide/context";
@@ -28,7 +28,7 @@ export function CharacterWorld() {
   return (
     <>
       {webgl === false ? null : (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[45] h-[38vh]">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[45] h-[38vh]" data-character-world>
           <Canvas
             dpr={[1, 1.35]}
             camera={{ position: [0, 1.52, 5.6], fov: 30 }}
@@ -37,7 +37,9 @@ export function CharacterWorld() {
             style={{ pointerEvents: "none", background: "transparent" }}
             aria-hidden
           >
-            <CharacterScene onScreen={onScreen} onLine={setLine} />
+            <Suspense fallback={null}>
+              <CharacterScene onScreen={onScreen} onLine={setLine} />
+            </Suspense>
           </Canvas>
         </div>
       )}

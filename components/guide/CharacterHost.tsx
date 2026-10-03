@@ -1,10 +1,31 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Component, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { GUIDE_MODEL_PATH } from "@/data/guide";
 import { CLIP_ALIASES, type CharacterClip, type CharacterHit } from "@/data/character";
 import { ArmoredRig } from "@/components/character/ArmoredRig";
+
+class ModelErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode; resetKey: string },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidUpdate(prevProps: { resetKey: string }) {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.failed) {
+      this.setState({ failed: false });
+    }
+  }
+
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
 
 function GltfHost({
   clip,
@@ -74,19 +95,17 @@ export function CharacterHost({
     };
   }, []);
 
-  if (!hasFile) {
-    return (
-      <ArmoredRig clip={clip} look={look} lookWeight={lookWeight} reducedMotion={reducedMotion} onHit={onHit} />
-    );
-  }
+  const proceduralFallback = (
+    <ArmoredRig clip={clip} look={look} lookWeight={lookWeight} reducedMotion={reducedMotion} onHit={onHit} />
+  );
+
+  if (!hasFile) return proceduralFallback;
 
   return (
-    <Suspense
-      fallback={
-        <ArmoredRig clip={clip} look={look} lookWeight={lookWeight} reducedMotion={reducedMotion} onHit={onHit} />
-      }
-    >
-      <GltfHost clip={clip} reducedMotion={reducedMotion} onHit={onHit} />
-    </Suspense>
+    <ModelErrorBoundary fallback={proceduralFallback} resetKey={GUIDE_MODEL_PATH}>
+      <Suspense fallback={proceduralFallback}>
+        <GltfHost clip={clip} reducedMotion={reducedMotion} onHit={onHit} />
+      </Suspense>
+    </ModelErrorBoundary>
   );
 }

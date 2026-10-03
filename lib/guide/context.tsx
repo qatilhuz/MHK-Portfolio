@@ -323,7 +323,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<GuideContextValue>(
     () => ({
-      visible: home,
+      visible: true,
       guided,
       phase,
       index,
@@ -345,7 +345,6 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       clip,
       enableVoice,
       guided,
-      home,
       index,
       look,
       muted,

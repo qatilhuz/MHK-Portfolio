@@ -39,6 +39,46 @@ function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
+function EmergencyVisibleBot() {
+  return (
+    <group name="EmergencyVisibleBot" position={[0, 0, 0.32]} scale={0.9} visible>
+      <mesh name="EmergencyBody" position={[0, 0.74, 0]} castShadow>
+        <boxGeometry args={[0.46, 0.62, 0.26]} />
+        <meshStandardMaterial color="#0f172a" metalness={0.32} roughness={0.34} emissive="#0ea5e9" emissiveIntensity={0.28} />
+      </mesh>
+      <mesh name="EmergencyCore" position={[0, 0.78, 0.15]}>
+        <sphereGeometry args={[0.08, 20, 20]} />
+        <meshStandardMaterial color="#38bdf8" emissive="#38bdf8" emissiveIntensity={1.6} toneMapped={false} />
+      </mesh>
+      <mesh name="EmergencyHead" position={[0, 1.2, 0.02]} castShadow>
+        <boxGeometry args={[0.34, 0.28, 0.28]} />
+        <meshStandardMaterial color="#e5e7eb" metalness={0.18} roughness={0.38} emissive="#dbeafe" emissiveIntensity={0.18} />
+      </mesh>
+      <mesh name="EmergencyVisor" position={[0, 1.22, 0.175]}>
+        <boxGeometry args={[0.23, 0.055, 0.022]} />
+        <meshStandardMaterial color="#38bdf8" emissive="#38bdf8" emissiveIntensity={1.4} toneMapped={false} />
+      </mesh>
+      <mesh name="EmergencyLeftArm" position={[-0.34, 0.76, 0]} rotation={[0, 0, 0.16]} castShadow>
+        <boxGeometry args={[0.11, 0.46, 0.13]} />
+        <meshStandardMaterial color="#1f2937" metalness={0.24} roughness={0.45} />
+      </mesh>
+      <mesh name="EmergencyRightArm" position={[0.34, 0.76, 0]} rotation={[0, 0, -0.16]} castShadow>
+        <boxGeometry args={[0.11, 0.46, 0.13]} />
+        <meshStandardMaterial color="#1f2937" metalness={0.24} roughness={0.45} />
+      </mesh>
+      <mesh name="EmergencyLeftLeg" position={[-0.13, 0.28, 0]} castShadow>
+        <boxGeometry args={[0.13, 0.42, 0.15]} />
+        <meshStandardMaterial color="#273244" metalness={0.22} roughness={0.48} />
+      </mesh>
+      <mesh name="EmergencyRightLeg" position={[0.13, 0.28, 0]} castShadow>
+        <boxGeometry args={[0.13, 0.42, 0.15]} />
+        <meshStandardMaterial color="#273244" metalness={0.22} roughness={0.48} />
+      </mesh>
+      <pointLight color="#38bdf8" distance={2.4} intensity={0.95} position={[0, 1.0, 0.45]} />
+    </group>
+  );
+}
+
 export function CharacterScene({
   onScreen,
   onLine,
@@ -840,6 +880,7 @@ export function CharacterScene({
       <group ref={group} scale={mobile ? 1.12 : 1.39} visible position={[0, 0, 0]}>
         <group ref={pivot} position={[0, -0.95, 0]}>
           <group position={[0, 0.95, 0]}>
+            <EmergencyVisibleBot />
             <CharacterHost
               clip={clip}
               look={look}

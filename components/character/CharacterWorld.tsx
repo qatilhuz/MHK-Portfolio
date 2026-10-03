@@ -3,7 +3,6 @@
 import { Component, useCallback, useState, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
-import { useGuide } from "@/lib/guide/context";
 import { characterConfig } from "@/data/characterConfig";
 import { CharacterHud } from "./CharacterHud";
 import { CharacterScene } from "./CharacterScene";
@@ -29,7 +28,6 @@ class CharacterCanvasBoundary extends Component<
 }
 
 export function CharacterWorld() {
-  const guide = useGuide();
   const webgl = useWebGLSupport();
   const [screen, setScreen] = useState({ x: 0, y: 0 });
   const [line, setLine] = useState<string | null>(null);
@@ -38,7 +36,6 @@ export function CharacterWorld() {
   }, []);
 
   if (!characterConfig.enabled || !characterConfig.is3DModelEnabled) return null;
-  if (!guide?.visible) return null;
 
   const fallback = <CharacterFallback label={webgl === false ? "Guide fallback" : "Guide loading"} />;
 

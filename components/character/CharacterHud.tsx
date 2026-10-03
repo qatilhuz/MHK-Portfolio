@@ -45,8 +45,6 @@ export function CharacterHud({
     };
   }, [open]);
 
-  if (!guide?.visible) return null;
-
   const vw = typeof window !== "undefined" ? window.innerWidth : 360;
   const vh = typeof window !== "undefined" ? window.innerHeight : 640;
   const bubbleW = Math.min(272, Math.max(160, vw - 24));
@@ -61,7 +59,7 @@ export function CharacterHud({
 
   return (
     <>
-      {text || guide.guided ? (
+      {text || guide?.guided ? (
         <div
           className="pointer-events-none fixed z-[56] max-w-[calc(100vw-24px)]"
           style={placed ? { left, top, width: bubbleW } : { left: 12, right: 12, bottom: 16 }}
@@ -69,14 +67,14 @@ export function CharacterHud({
           data-character-ui
         >
           <div
-            className={`${guide.guided ? "pointer-events-auto" : "pointer-events-none"} w-full max-w-[calc(100vw-24px)] overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface/95 px-3 py-2 shadow-[var(--shadow)]`}
+            className={`${guide?.guided ? "pointer-events-auto" : "pointer-events-none"} w-full max-w-[calc(100vw-24px)] overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface/95 px-3 py-2 shadow-[var(--shadow)]`}
           >
             {text ? (
               <p className="break-words text-sm leading-relaxed text-foreground" aria-live="polite">
                 {text}
               </p>
             ) : null}
-            {guide.guided ? (
+            {guide?.guided ? (
               <div className={text ? "mt-2 flex flex-wrap gap-2" : "flex flex-wrap gap-2"}>
                 <Button type="button" size="sm" variant="secondary" onClick={guide.skip}>
                   Skip Intro

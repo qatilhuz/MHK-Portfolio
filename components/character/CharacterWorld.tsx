@@ -30,16 +30,22 @@ export function CharacterWorld() {
       {webgl === false ? null : (
         <div
           data-character-stage
-          className="pointer-events-none fixed bottom-0 left-0 z-[10020] isolate block h-[38vh] w-screen overflow-visible"
+          className="pointer-events-none fixed inset-x-0 bottom-0 block h-[38vh] w-screen overflow-visible"
           style={{
             position: "fixed",
-            bottom: 0,
-            left: 0,
+            inset: "auto 0 0",
+            zIndex: 2147483000,
             width: "100vw",
+            minWidth: "100vw",
             height: "38vh",
+            minHeight: "38vh",
             display: "block",
+            overflow: "visible",
+            pointerEvents: "none",
             visibility: "visible",
             opacity: 1,
+            isolation: "isolate",
+            transform: "translate3d(0, 0, 0)",
           }}
         >
           <Canvas
@@ -48,6 +54,13 @@ export function CharacterWorld() {
             gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
             className="block h-full w-full !bg-transparent"
             style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 1,
+              width: "100vw",
+              height: "38vh",
+              minWidth: "100vw",
+              minHeight: "38vh",
               pointerEvents: "none",
               background: "transparent",
               display: "block",

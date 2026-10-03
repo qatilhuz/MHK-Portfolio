@@ -563,8 +563,7 @@ export function CharacterScene({
 
   return (
     <group>
-      {/* High ambient fill isolates material visibility from directional-light placement. */}
-      <ambientLight intensity={3} />
+      <ambientLight intensity={0.42} />
       <hemisphereLight args={[materials.fill, materials.desk, 0.3]} />
       <directionalLight position={[2.2, 3.6, 4]} intensity={1.05} color={materials.light} />
       <pointLight position={[0.2, 0.8, 1.6]} intensity={0.22} color={ACCENT_LIGHT} />

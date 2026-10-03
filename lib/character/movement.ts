@@ -24,6 +24,25 @@ function travelYaw(dx: number, dz: number) {
   return Math.atan2(dx, dz);
 }
 
+function finite(value: number, fallback = 0) {
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function sanitizeLocomotion(loco: Locomotion) {
+  loco.position.x = finite(loco.position.x);
+  loco.position.y = finite(loco.position.y);
+  loco.position.z = finite(loco.position.z);
+  loco.target.x = finite(loco.target.x, loco.position.x);
+  loco.target.y = finite(loco.target.y, loco.position.y);
+  loco.target.z = finite(loco.target.z, loco.position.z);
+  loco.velocity.x = finite(loco.velocity.x);
+  loco.velocity.y = finite(loco.velocity.y);
+  loco.velocity.z = finite(loco.velocity.z);
+  loco.yaw = finite(loco.yaw, FACE_USER_YAW);
+  loco.targetYaw = finite(loco.targetYaw, FACE_USER_YAW);
+  loco.speed = Math.max(0.01, finite(loco.speed, WALK_STRIDE / WALK_CYCLE));
+}
+
 export function createLocomotion(start: CharacterWorldPosition): Locomotion {
   return {
     position: { ...start },
@@ -39,16 +58,24 @@ export function createLocomotion(start: CharacterWorldPosition): Locomotion {
 }
 
 export function setDestination(loco: Locomotion, dest: CharacterWorldPosition, reason: CharacterMovementState) {
-  loco.target = { ...dest };
-  const dx = dest.x - loco.position.x;
-  const dz = dest.z - loco.position.z;
-  if (Math.hypot(dx, dest.y - loco.position.y, dz) > 0.04) {
+  sanitizeLocomotion(loco);
+  const target = {
+    x: finite(dest.x, loco.position.x),
+    y: finite(dest.y, loco.position.y),
+    z: finite(dest.z, loco.position.z),
+  };
+  loco.target = target;
+  const dx = target.x - loco.position.x;
+  const dz = target.z - loco.position.z;
+  if (Math.hypot(dx, target.y - loco.position.y, dz) > 0.04) {
     loco.targetYaw = travelYaw(dx, dz);
     loco.state = reason;
   }
 }
 
 export function stepLocomotion(loco: Locomotion, delta: number, reduced: boolean) {
+  sanitizeLocomotion(loco);
+  delta = Number.isFinite(delta) ? Math.min(0.1, Math.max(0, delta)) : 0;
   const dx = loco.target.x - loco.position.x;
   const dy = loco.target.y - loco.position.y;
   const dz = loco.target.z - loco.position.z;

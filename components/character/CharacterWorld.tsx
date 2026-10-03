@@ -28,13 +28,32 @@ export function CharacterWorld() {
   return (
     <>
       {webgl === false ? null : (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[10020] isolate h-[38vh]">
+        <div
+          data-character-stage
+          className="pointer-events-none fixed bottom-0 left-0 z-[10020] isolate block h-[38vh] w-screen overflow-visible"
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            width: "100vw",
+            height: "38vh",
+            display: "block",
+            visibility: "visible",
+            opacity: 1,
+          }}
+        >
           <Canvas
             dpr={[1, 1.35]}
             camera={{ position: [0, 1.52, 5.6], fov: 30 }}
             gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-            className="h-full w-full !bg-transparent"
-            style={{ pointerEvents: "none", background: "transparent" }}
+            className="block h-full w-full !bg-transparent"
+            style={{
+              pointerEvents: "none",
+              background: "transparent",
+              display: "block",
+              visibility: "visible",
+              opacity: 1,
+            }}
             aria-hidden
           >
             <CharacterScene onScreen={onScreen} onLine={setLine} />

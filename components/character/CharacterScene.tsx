@@ -22,6 +22,11 @@ import type { CharacterDecision } from "@/lib/character/types";
 const FALL_CLIPS = new Set(["Fall", "GetUp", "Recover", "Stagger", "Surprise", "Annoyed"]);
 const EMOTE_LOCK = new Set(["Backflip", "Jump", "Dance", "Sit", "Bow", "Celebrate", "Sleep", "Wake"]);
 const SLEEP_AFTER_MS = 20000;
+const STAGE_FLOOR_Y = 0;
+
+function finiteOr(value: number, fallback = 0) {
+  return Number.isFinite(value) ? value : fallback;
+}
 
 export function CharacterScene({
   onScreen,
@@ -61,6 +66,8 @@ export function CharacterScene({
   clipRef.current = clip;
   const { camera, gl } = useThree();
   const projected = useRef(new Vector3());
+  const worldPosition = useRef(new Vector3());
+  const worldScale = useRef(new Vector3(1, 1, 1));
 
   const emoteUntil = useRef(0);
   const emoteCool = useRef(0);
@@ -280,16 +287,32 @@ export function CharacterScene({
         playEmote(queued);
       }
     }
-    loco.current.position.y = 0;
+    if (!Number.isFinite(loco.current.position.x) || !Number.isFinite(loco.current.target.x)) {
+      const center = viewportToWorld(0.5);
+      loco.current.position = { ...center };
+      loco.current.target = { ...center };
+      loco.current.velocity = { x: 0, y: 0, z: 0 };
+      loco.current.yaw = 0;
+      loco.current.targetYaw = 0;
+      loco.current.state = "idle";
+    }
+    loco.current.position.y = STAGE_FLOOR_Y;
     loco.current.position.z = 0;
+    loco.current.target.y = STAGE_FLOOR_Y;
+    loco.current.target.z = 0;
     if (soleY.current === null) {
-      node.position.set(0, 0, 0);
+      node.position.set(0, STAGE_FLOOR_Y, 0);
       node.updateWorldMatrix(true, true);
       box.current.setFromObject(node);
-      soleY.current = box.current.min.y;
-      halfChar.current = Math.max(0.25, (box.current.max.x - box.current.min.x) / 2);
+      node.getWorldPosition(worldPosition.current);
+      node.getWorldScale(worldScale.current);
+      const scaleY = Math.max(0.001, Math.abs(worldScale.current.y));
+      const scaleX = Math.max(0.001, Math.abs(worldScale.current.x));
+      soleY.current = finiteOr((box.current.min.y - worldPosition.current.y) / scaleY, 0);
+      halfChar.current = Math.max(0.25, finiteOr((box.current.max.x - box.current.min.x) / (2 * scaleX), 0.45));
     }
-    node.position.set(loco.current.position.x, -soleY.current, 0);
+    const localSole = finiteOr(soleY.current, 0);
+    node.position.set(loco.current.position.x, STAGE_FLOOR_Y - localSole, 0);
     camera.position.set(0, 1.52, 5.6);
     camera.lookAt(0, 1.52, 0);
     if (!inspecting.current && inspectResetAt.current > 0 && now >= inspectResetAt.current) {
@@ -303,9 +326,12 @@ export function CharacterScene({
     const rect = gl.domElement.getBoundingClientRect();
     const aspect = Math.max(1.2, rect.width / Math.max(1, rect.height));
     const halfView = Math.tan((30 * Math.PI) / 360) * 5.6 * aspect;
-    maxX.current = Math.max(2.6, halfView - (halfChar.current ?? 0.45) - 0.04);
-    loco.current.position.x = Math.min(maxX.current, Math.max(-maxX.current, loco.current.position.x));
-    loco.current.target.x = Math.min(maxX.current, Math.max(-maxX.current, loco.current.target.x));
+    node.getWorldScale(worldScale.current);
+    const scaleX = Math.max(0.001, Math.abs(worldScale.current.x));
+    const availableHalfView = Math.max(0.9, halfView - (halfChar.current ?? 0.45) * scaleX - 0.08);
+    maxX.current = Math.max(0.9, availableHalfView / scaleX);
+    loco.current.position.x = MathUtils.clamp(finiteOr(loco.current.position.x), -maxX.current, maxX.current);
+    loco.current.target.x = MathUtils.clamp(finiteOr(loco.current.target.x), -maxX.current, maxX.current);
     node.position.x = loco.current.position.x;
     node.updateWorldMatrix(true, true);
     box.current.setFromObject(node);
@@ -314,13 +340,14 @@ export function CharacterScene({
     const left = (Math.min(min.x, maxp.x) * 0.5 + 0.5) * rect.width + rect.left;
     const right = (Math.max(min.x, maxp.x) * 0.5 + 0.5) * rect.width + rect.left;
     if (left < 6) {
-      loco.current.position.x += 0.04;
+      loco.current.position.x = MathUtils.clamp(loco.current.position.x + 0.04, -maxX.current, maxX.current);
       node.position.x = loco.current.position.x;
     } else if (right > window.innerWidth - 6) {
-      loco.current.position.x -= 0.04;
+      loco.current.position.x = MathUtils.clamp(loco.current.position.x - 0.04, -maxX.current, maxX.current);
       node.position.x = loco.current.position.x;
     }
-    projected.current.set(loco.current.position.x, 0.55, 0).project(camera);
+    projected.current.set(0, 0.55, 0);
+    node.localToWorld(projected.current).project(camera);
     screen.current = {
       x: (projected.current.x * 0.5 + 0.5) * rect.width + rect.left,
       y: (-projected.current.y * 0.5 + 0.5) * rect.height + rect.top,

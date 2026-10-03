@@ -1,10 +1,22 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Component, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { GUIDE_MODEL_PATH } from "@/data/guide";
 import { CLIP_ALIASES, type CharacterClip, type CharacterHit } from "@/data/character";
 import { ArmoredRig } from "@/components/character/ArmoredRig";
+
+class HostAssetBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
 
 function GltfHost({
   clip,
@@ -80,13 +92,15 @@ export function CharacterHost({
     );
   }
 
+  const fallback = (
+    <ArmoredRig clip={clip} look={look} lookWeight={lookWeight} reducedMotion={reducedMotion} onHit={onHit} />
+  );
+
   return (
-    <Suspense
-      fallback={
-        <ArmoredRig clip={clip} look={look} lookWeight={lookWeight} reducedMotion={reducedMotion} onHit={onHit} />
-      }
-    >
-      <GltfHost clip={clip} reducedMotion={reducedMotion} onHit={onHit} />
-    </Suspense>
+    <HostAssetBoundary fallback={fallback}>
+      <Suspense fallback={fallback}>
+        <GltfHost clip={clip} reducedMotion={reducedMotion} onHit={onHit} />
+      </Suspense>
+    </HostAssetBoundary>
   );
 }

@@ -28,7 +28,7 @@ export function CharacterWorld() {
   return (
     <>
       {webgl === false ? null : (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[45] h-[38vh]">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[10020] isolate h-[38vh]">
           <Canvas
             dpr={[1, 1.35]}
             camera={{ position: [0, 1.52, 5.6], fov: 30 }}

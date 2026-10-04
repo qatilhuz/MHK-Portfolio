@@ -21,12 +21,12 @@ import type { CharacterClip, CharacterHit } from "@/data/character";
 import { createHostClips } from "@/lib/character/clips";
 import { sampleViseme } from "@/lib/character/visemes";
 
-const PRIMARY = "#151f2a";
-const SECONDARY = "#3b4b58";
+const PRIMARY = "#020202";
+const SECONDARY = "#303942";
 const ACCENT = "#27e8f2";
 const ACCENT_HOT = "#bafaff";
 const DETAIL = "#91a3b0";
-const JOINT = "#202c36";
+const JOINT = "#1a222a";
 const DARK_JOINT = "#070c12";
 const SCREEN_GLASS = "#02080d";
 
@@ -437,17 +437,11 @@ function Finger({ x, length = 0.058 }: { x: number; length?: number }) {
 function FootAssembly({ side }: { side: "Left" | "Right" }) {
   return (
     <>
-      <Joint name={`${side}AnkleJoint`} position={[0, 0.025, -0.012]} rotation={[Math.PI / 2, 0, 0]} radius={0.05} width={0.085} />
-      <ArmorPart args={[0.19, 0.092, 0.235]} position={[0, -0.025, 0.04]} color={PRIMARY} finish="satin" />
-      <ArmorPart args={[0.165, 0.055, 0.125]} position={[0, -0.012, 0.135]} rotation={[-0.09, 0, 0]} color={SECONDARY} finish="brushed" />
-      <ArmorPart args={[0.155, 0.046, 0.095]} position={[0, -0.024, -0.1]} color={DARK_JOINT} finish="carbon" />
-      <ArmorPart args={[0.11, 0.045, 0.024]} position={[0, -0.005, 0.154]} color={DARK_JOINT} finish="carbon" radius={0.008} />
-      <ArmorPart args={[0.198, 0.03, 0.285]} position={[0, -0.083, 0.04]} color={DARK_JOINT} roughness={0.72} clearcoat={0.15} radius={0.008} />
-      <GlowLine args={[0.012, 0.025, 0.19]} position={[-0.089, -0.03, 0.04]} intensity={1.5} />
-      <GlowLine args={[0.012, 0.025, 0.19]} position={[0.089, -0.03, 0.04]} intensity={1.5} />
-      <GlowLine args={[0.112, 0.009, 0.012]} position={[0, -0.01, 0.205]} intensity={1.2} />
-      <ArmorPart args={[0.052, 0.03, 0.065]} position={[-0.057, -0.052, 0.158]} color={DETAIL} finish="brushed" />
-      <ArmorPart args={[0.052, 0.03, 0.065]} position={[0.057, -0.052, 0.158]} color={DETAIL} finish="brushed" />
+      <Joint name={`${side}AnkleJoint`} position={[0, 0.025, -0.012]} rotation={[Math.PI / 2, 0, 0]} radius={0.042} width={0.07} />
+      <ArmorPart args={[0.155, 0.075, 0.21]} position={[0, -0.025, 0.035]} color={PRIMARY} finish="satin" />
+      <ArmorPart args={[0.135, 0.045, 0.105]} position={[0, -0.012, 0.125]} rotation={[-0.09, 0, 0]} color={SECONDARY} finish="brushed" />
+      <ArmorPart args={[0.165, 0.025, 0.245]} position={[0, -0.072, 0.035]} color={DARK_JOINT} roughness={0.72} clearcoat={0.15} radius={0.008} />
+      <GlowLine args={[0.088, 0.008, 0.009]} position={[0, -0.008, 0.181]} intensity={1.15} />
     </>
   );
 }
@@ -849,66 +843,52 @@ export function ArmoredRig({
       </Environment>
       <group ref={root} name="Host">
         <group name="Hips">
-        <ArmorPart args={[0.39, 0.13, 0.235]} position={[0, 0.87, 0]} color={PRIMARY} finish="satin" />
-        <ArmorPart args={[0.25, 0.095, 0.255]} position={[0, 0.905, 0.005]} color={SECONDARY} finish="brushed" />
-        <ArmorPart args={[0.11, 0.12, 0.24]} position={[-0.145, 0.84, 0]} rotation={[0, 0, -0.12]} color={PRIMARY} finish="satin" />
-        <ArmorPart args={[0.11, 0.12, 0.24]} position={[0.145, 0.84, 0]} rotation={[0, 0, 0.12]} color={PRIMARY} finish="satin" />
-        <Joint name="HipCore" position={[0, 0.9, 0.02]} rotation={[Math.PI / 2, 0, 0]} radius={0.062} width={0.18} />
-        <GlowLine args={[0.29, 0.014, 0.014]} position={[0, 0.94, 0.126]} intensity={1.65} />
-        <GlowLine args={[0.012, 0.075, 0.012]} position={[-0.178, 0.855, 0.12]} rotation={[0, 0, -0.12]} intensity={1.35} />
-        <GlowLine args={[0.012, 0.075, 0.012]} position={[0.178, 0.855, 0.12]} rotation={[0, 0, 0.12]} intensity={1.35} />
+          <ArmorPart args={[0.3, 0.115, 0.14]} position={[0, 0.875, 0]} color={PRIMARY} finish="satin" />
+          <ArmorPart args={[0.19, 0.045, 0.012]} position={[0, 0.895, 0.076]} color={SECONDARY} finish="brushed" />
+          <Joint name="HipCore" position={[0, 0.88, 0]} rotation={[Math.PI / 2, 0, 0]} radius={0.052} width={0.12} />
+          <GlowLine args={[0.215, 0.01, 0.009]} position={[0, 0.93, 0.076]} intensity={1.45} />
 
         <group name="Spine" position={[0, 0.98, 0]}>
-          <mesh position={[0, 0.08, -0.005]} castShadow>
-            <cylinderGeometry args={[0.055, 0.07, 0.24, 16]} />
+          <mesh position={[0, 0.08, 0]} castShadow>
+            <cylinderGeometry args={[0.042, 0.055, 0.22, 16]} />
             <meshPhysicalMaterial color={DARK_JOINT} metalness={0.78} roughness={0.28} clearcoat={0.5} />
           </mesh>
-          <GlowLine args={[0.026, 0.2, 0.02]} position={[0, 0.08, -0.065]} intensity={1.25} />
 
           <group name="Chest" position={[0, 0.2, 0]}>
             <group ref={chestAim} name="ChestAim">
-              <ArmorPart name="Body" args={[0.49, 0.46, 0.25]} color={DARK_JOINT} finish="carbon" onClick={hit("body")} />
-              <ArmorPart args={[0.53, 0.095, 0.285]} position={[0, 0.19, -0.005]} color={PRIMARY} finish="satin" />
-              <ArmorPart args={[0.215, 0.285, 0.078]} position={[-0.118, 0.055, 0.145]} rotation={[0, -0.075, -0.055]} color={SECONDARY} finish="brushed" />
-              <ArmorPart args={[0.215, 0.285, 0.078]} position={[0.118, 0.055, 0.145]} rotation={[0, 0.075, 0.055]} color={SECONDARY} finish="brushed" />
-              <ArmorPart args={[0.175, 0.235, 0.056]} position={[-0.12, 0.06, 0.19]} rotation={[0, -0.06, -0.055]} color={PRIMARY} finish="satin" />
-              <ArmorPart args={[0.175, 0.235, 0.056]} position={[0.12, 0.06, 0.19]} rotation={[0, 0.06, 0.055]} color={PRIMARY} finish="satin" />
-              <ArmorPart args={[0.092, 0.31, 0.045]} position={[0, -0.015, 0.174]} color={DARK_JOINT} finish="carbon" />
-              <ArmorPart args={[0.19, 0.075, 0.065]} position={[0, -0.175, 0.13]} color={PRIMARY} finish="satin" />
-              <ArmorPart args={[0.145, 0.055, 0.058]} position={[0, -0.235, 0.105]} color={SECONDARY} finish="brushed" />
-              <mesh position={[0, 0.105, 0.226]} rotation={[0, 0, Math.PI / 4]}>
-                <octahedronGeometry args={[0.037, 0]} />
+              <ArmorPart
+                name="Body"
+                args={[0.42, 0.42, 0.14]}
+                color={PRIMARY}
+                finish="satin"
+                radius={0.045}
+                onClick={hit("body")}
+              />
+              <mesh position={[0, 0.09, 0.077]} rotation={[0, 0, Math.PI / 4]}>
+                <octahedronGeometry args={[0.027, 0]} />
                 <meshPhysicalMaterial
                   color={ACCENT_HOT}
                   emissive={ACCENT}
-                  emissiveIntensity={2.2}
+                  emissiveIntensity={2}
                   toneMapped={false}
                   metalness={0.28}
                   roughness={0.16}
                   clearcoat={1}
                 />
               </mesh>
-              <GlowLine args={[0.018, 0.235, 0.014]} position={[-0.213, 0.06, 0.207]} rotation={[0, 0, -0.06]} intensity={1.9} />
-              <GlowLine args={[0.018, 0.235, 0.014]} position={[0.213, 0.06, 0.207]} rotation={[0, 0, 0.06]} intensity={1.9} />
-              <GlowLine args={[0.155, 0.011, 0.012]} position={[-0.074, 0.176, 0.218]} rotation={[0, 0, -0.32]} intensity={1.55} />
-              <GlowLine args={[0.155, 0.011, 0.012]} position={[0.074, 0.176, 0.218]} rotation={[0, 0, 0.32]} intensity={1.55} />
-              <GlowLine args={[0.09, 0.009, 0.011]} position={[-0.15, -0.112, 0.219]} rotation={[0, 0, 0.48]} intensity={1.25} />
-              <GlowLine args={[0.09, 0.009, 0.011]} position={[0.15, -0.112, 0.219]} rotation={[0, 0, -0.48]} intensity={1.25} />
-              <ArmorPart args={[0.36, 0.32, 0.09]} position={[0, 0.015, -0.175]} color={PRIMARY} finish="satin" />
+              <GlowLine args={[0.012, 0.25, 0.009]} position={[-0.175, 0.015, 0.076]} intensity={1.55} />
+              <GlowLine args={[0.012, 0.25, 0.009]} position={[0.175, 0.015, 0.076]} intensity={1.55} />
+              <GlowLine args={[0.22, 0.009, 0.009]} position={[0, 0.172, 0.076]} intensity={1.25} />
 
-              <group name="LeftShoulder" position={[-0.29, 0.17, 0]} onClick={hit("shoulder")}>
-                <Joint name="LeftShoulderJoint" radius={0.082} width={0.205} />
-                <ArmorPart args={[0.215, 0.145, 0.225]} position={[-0.035, 0.032, 0]} rotation={[0, 0, 0.08]} color={PRIMARY} finish="satin" />
-                <ArmorPart args={[0.165, 0.06, 0.235]} position={[-0.055, 0.096, 0]} rotation={[0, 0, 0.1]} color={SECONDARY} finish="brushed" />
-                <ArmorPart args={[0.07, 0.09, 0.025]} position={[-0.12, 0.025, 0.12]} color={DARK_JOINT} finish="carbon" />
-                <GlowLine args={[0.015, 0.105, 0.015]} position={[-0.155, 0.035, 0.137]} rotation={[0, 0, 0.1]} intensity={1.65} />
+              <group name="LeftShoulder" position={[-0.26, 0.17, 0]} onClick={hit("shoulder")}>
+                <Joint name="LeftShoulderJoint" radius={0.065} width={0.145} />
+                <ArmorPart args={[0.16, 0.12, 0.14]} position={[-0.028, 0.026, 0]} rotation={[0, 0, 0.06]} color={PRIMARY} finish="satin" />
+                <GlowLine args={[0.085, 0.009, 0.009]} position={[-0.038, 0.079, 0.075]} intensity={1.4} />
               </group>
-              <group name="RightShoulder" position={[0.29, 0.17, 0]} onClick={hit("shoulder")}>
-                <Joint name="RightShoulderJoint" radius={0.082} width={0.205} />
-                <ArmorPart args={[0.215, 0.145, 0.225]} position={[0.035, 0.032, 0]} rotation={[0, 0, -0.08]} color={PRIMARY} finish="satin" />
-                <ArmorPart args={[0.165, 0.06, 0.235]} position={[0.055, 0.096, 0]} rotation={[0, 0, -0.1]} color={SECONDARY} finish="brushed" />
-                <ArmorPart args={[0.07, 0.09, 0.025]} position={[0.12, 0.025, 0.12]} color={DARK_JOINT} finish="carbon" />
-                <GlowLine args={[0.015, 0.105, 0.015]} position={[0.155, 0.035, 0.137]} rotation={[0, 0, -0.1]} intensity={1.65} />
+              <group name="RightShoulder" position={[0.26, 0.17, 0]} onClick={hit("shoulder")}>
+                <Joint name="RightShoulderJoint" radius={0.065} width={0.145} />
+                <ArmorPart args={[0.16, 0.12, 0.14]} position={[0.028, 0.026, 0]} rotation={[0, 0, -0.06]} color={PRIMARY} finish="satin" />
+                <GlowLine args={[0.085, 0.009, 0.009]} position={[0.038, 0.079, 0.075]} intensity={1.4} />
               </group>
 
               <group name="Neck" position={[0, 0.3, 0]}>
@@ -980,22 +960,21 @@ export function ArmoredRig({
               </group>
 
               <group name="LeftArm" position={[-0.32, 0.02, 0]} rotation={[0, 0, 0.12]}>
-                <ArmorPart args={[0.145, 0.215, 0.155]} color={PRIMARY} finish="satin" />
-                <ArmorPart args={[0.16, 0.082, 0.17]} position={[0, 0.045, 0.005]} color={SECONDARY} finish="brushed" />
-                <ArmorPart args={[0.09, 0.15, 0.045]} position={[0, 0, 0.094]} color={DARK_JOINT} finish="carbon" />
-                <GlowLine args={[0.016, 0.128, 0.014]} position={[-0.055, 0, 0.122]} intensity={1.75} />
-                <Piston position={[0.06, -0.02, -0.06]} rotation={[0, 0, -0.08]} length={0.17} />
+                <ArmorPart args={[0.115, 0.205, 0.12]} color={PRIMARY} finish="satin" />
+                <ArmorPart args={[0.125, 0.066, 0.124]} position={[0, 0.05, 0]} color={SECONDARY} finish="brushed" />
+                <ArmorPart args={[0.064, 0.13, 0.018]} position={[0, 0, 0.066]} color={DARK_JOINT} finish="carbon" />
+                <GlowLine args={[0.011, 0.112, 0.009]} position={[-0.044, 0, 0.079]} intensity={1.55} />
+                <Piston position={[0.048, -0.02, -0.045]} rotation={[0, 0, -0.08]} length={0.16} radius={0.009} />
                 <group name="LeftForeArm" position={[0, -0.18, 0]}>
-                  <Joint name="LeftElbowJoint" radius={0.06} width={0.12} />
-                  <ArmorPart args={[0.165, 0.175, 0.165]} position={[0, -0.082, 0]} color={PRIMARY} finish="satin" />
-                  <ArmorPart args={[0.135, 0.14, 0.06]} position={[0, -0.078, 0.088]} color={SECONDARY} finish="brushed" />
-                  <ArmorPart args={[0.08, 0.115, 0.025]} position={[0, -0.076, 0.127]} color={DARK_JOINT} finish="carbon" />
-                  <GlowLine args={[0.014, 0.112, 0.012]} position={[-0.06, -0.078, 0.145]} intensity={1.45} />
+                  <Joint name="LeftElbowJoint" radius={0.05} width={0.1} />
+                  <ArmorPart args={[0.13, 0.165, 0.13]} position={[0, -0.078, 0]} color={PRIMARY} finish="satin" />
+                  <ArmorPart args={[0.09, 0.12, 0.018]} position={[0, -0.074, 0.072]} color={SECONDARY} finish="brushed" />
+                  <GlowLine args={[0.011, 0.1, 0.009]} position={[-0.049, -0.074, 0.084]} intensity={1.35} />
                   <group name="LeftHand" position={[0, -0.18, 0]}>
-                    <Joint name="LeftWristJoint" radius={0.039} width={0.075} />
-                    <ArmorPart args={[0.115, 0.09, 0.11]} position={[0, -0.025, 0]} color={PRIMARY} finish="satin" />
-                    <ArmorPart args={[0.082, 0.05, 0.04]} position={[0, -0.012, 0.067]} color={SECONDARY} finish="brushed" />
-                    <GlowLine args={[0.06, 0.011, 0.011]} position={[0, -0.012, 0.091]} intensity={1.2} />
+                    <Joint name="LeftWristJoint" radius={0.035} width={0.068} />
+                    <ArmorPart args={[0.1, 0.085, 0.09]} position={[0, -0.025, 0]} color={PRIMARY} finish="satin" />
+                    <ArmorPart args={[0.07, 0.044, 0.018]} position={[0, -0.012, 0.05]} color={SECONDARY} finish="brushed" />
+                    <GlowLine args={[0.052, 0.009, 0.008]} position={[0, -0.012, 0.061]} intensity={1.1} />
                     <Finger x={-0.031} />
                     <Finger x={0} length={0.064} />
                     <Finger x={0.031} />
@@ -1007,22 +986,21 @@ export function ArmoredRig({
               </group>
 
               <group name="RightArm" position={[0.32, 0.02, 0]} rotation={[0, 0, -0.12]} onClick={hit("hand")}>
-                <ArmorPart args={[0.145, 0.215, 0.155]} color={PRIMARY} finish="satin" />
-                <ArmorPart args={[0.16, 0.082, 0.17]} position={[0, 0.045, 0.005]} color={SECONDARY} finish="brushed" />
-                <ArmorPart args={[0.09, 0.15, 0.045]} position={[0, 0, 0.094]} color={DARK_JOINT} finish="carbon" />
-                <GlowLine args={[0.016, 0.128, 0.014]} position={[0.055, 0, 0.122]} intensity={1.75} />
-                <Piston position={[-0.06, -0.02, -0.06]} rotation={[0, 0, 0.08]} length={0.17} />
+                <ArmorPart args={[0.115, 0.205, 0.12]} color={PRIMARY} finish="satin" />
+                <ArmorPart args={[0.125, 0.066, 0.124]} position={[0, 0.05, 0]} color={SECONDARY} finish="brushed" />
+                <ArmorPart args={[0.064, 0.13, 0.018]} position={[0, 0, 0.066]} color={DARK_JOINT} finish="carbon" />
+                <GlowLine args={[0.011, 0.112, 0.009]} position={[0.044, 0, 0.079]} intensity={1.55} />
+                <Piston position={[-0.048, -0.02, -0.045]} rotation={[0, 0, 0.08]} length={0.16} radius={0.009} />
                 <group name="RightForeArm" position={[0, -0.18, 0]}>
-                  <Joint name="RightElbowJoint" radius={0.06} width={0.12} />
-                  <ArmorPart args={[0.165, 0.175, 0.165]} position={[0, -0.082, 0]} color={PRIMARY} finish="satin" />
-                  <ArmorPart args={[0.135, 0.14, 0.06]} position={[0, -0.078, 0.088]} color={SECONDARY} finish="brushed" />
-                  <ArmorPart args={[0.08, 0.115, 0.025]} position={[0, -0.076, 0.127]} color={DARK_JOINT} finish="carbon" />
-                  <GlowLine args={[0.014, 0.112, 0.012]} position={[0.06, -0.078, 0.145]} intensity={1.45} />
+                  <Joint name="RightElbowJoint" radius={0.05} width={0.1} />
+                  <ArmorPart args={[0.13, 0.165, 0.13]} position={[0, -0.078, 0]} color={PRIMARY} finish="satin" />
+                  <ArmorPart args={[0.09, 0.12, 0.018]} position={[0, -0.074, 0.072]} color={SECONDARY} finish="brushed" />
+                  <GlowLine args={[0.011, 0.1, 0.009]} position={[0.049, -0.074, 0.084]} intensity={1.35} />
                   <group name="RightHand" position={[0, -0.18, 0]}>
-                    <Joint name="RightWristJoint" radius={0.039} width={0.075} />
-                    <ArmorPart name="RightHand" args={[0.115, 0.09, 0.11]} position={[0, -0.025, 0]} color={PRIMARY} finish="satin" onClick={hit("hand")} />
-                    <ArmorPart args={[0.082, 0.05, 0.04]} position={[0, -0.012, 0.067]} color={SECONDARY} finish="brushed" />
-                    <GlowLine args={[0.06, 0.011, 0.011]} position={[0, -0.012, 0.091]} intensity={1.2} />
+                    <Joint name="RightWristJoint" radius={0.035} width={0.068} />
+                    <ArmorPart name="RightHand" args={[0.1, 0.085, 0.09]} position={[0, -0.025, 0]} color={PRIMARY} finish="satin" onClick={hit("hand")} />
+                    <ArmorPart args={[0.07, 0.044, 0.018]} position={[0, -0.012, 0.05]} color={SECONDARY} finish="brushed" />
+                    <GlowLine args={[0.052, 0.009, 0.008]} position={[0, -0.012, 0.061]} intensity={1.1} />
                     <Finger x={-0.031} />
                     <Finger x={0} length={0.064} />
                     <Finger x={0.031} />
@@ -1038,20 +1016,18 @@ export function ArmoredRig({
         </group>
 
         <group name="LeftUpLeg" position={[-0.09, 0.74, 0]}>
-          <Joint name="LeftHipJoint" position={[0, 0.105, 0]} radius={0.072} width={0.18} />
-          <ArmorPart args={[0.19, 0.27, 0.19]} color={PRIMARY} finish="satin" />
-          <ArmorPart args={[0.205, 0.085, 0.205]} position={[0, 0.078, 0]} color={SECONDARY} finish="brushed" />
-          <ArmorPart args={[0.11, 0.19, 0.05]} position={[0, 0.005, 0.113]} color={DARK_JOINT} finish="carbon" />
-          <GlowLine args={[0.017, 0.158, 0.013]} position={[-0.078, 0.005, 0.144]} intensity={1.75} />
-          <GlowLine args={[0.075, 0.009, 0.011]} position={[-0.028, 0.078, 0.145]} rotation={[0, 0, 0.38]} intensity={1.2} />
-          <Piston position={[-0.07, -0.01, -0.06]} rotation={[0, 0, -0.05]} length={0.19} />
+          <Joint name="LeftHipJoint" position={[0, 0.105, 0]} radius={0.058} width={0.13} />
+          <ArmorPart args={[0.155, 0.265, 0.145]} color={PRIMARY} finish="satin" />
+          <ArmorPart args={[0.165, 0.07, 0.15]} position={[0, 0.08, 0]} color={SECONDARY} finish="brushed" />
+          <ArmorPart args={[0.075, 0.175, 0.018]} position={[0, 0.005, 0.08]} color={DARK_JOINT} finish="carbon" />
+          <GlowLine args={[0.011, 0.148, 0.009]} position={[-0.06, 0.005, 0.092]} intensity={1.55} />
+          <Piston position={[-0.055, -0.01, -0.045]} rotation={[0, 0, -0.05]} length={0.18} radius={0.009} />
           <group name="LeftLeg" position={[0, -0.22, 0]}>
-            <Joint name="LeftKneeJoint" radius={0.072} width={0.135} />
-            <ArmorPart args={[0.185, 0.205, 0.185]} position={[0, -0.092, 0]} color={PRIMARY} finish="satin" />
-            <ArmorPart args={[0.145, 0.16, 0.065]} position={[0, -0.086, 0.1]} color={SECONDARY} finish="brushed" />
-            <ArmorPart args={[0.085, 0.13, 0.025]} position={[0, -0.086, 0.142]} color={DARK_JOINT} finish="carbon" />
-            <GlowLine args={[0.017, 0.125, 0.014]} position={[-0.067, -0.086, 0.16]} intensity={1.55} />
-            <Piston position={[0.068, -0.078, -0.06]} rotation={[0, 0, 0.04]} length={0.18} />
+            <Joint name="LeftKneeJoint" radius={0.058} width={0.1} />
+            <ArmorPart args={[0.15, 0.2, 0.145]} position={[0, -0.09, 0]} color={PRIMARY} finish="satin" />
+            <ArmorPart args={[0.085, 0.14, 0.018]} position={[0, -0.086, 0.081]} color={SECONDARY} finish="brushed" />
+            <GlowLine args={[0.011, 0.115, 0.009]} position={[-0.057, -0.086, 0.093]} intensity={1.4} />
+            <Piston position={[0.055, -0.078, -0.045]} rotation={[0, 0, 0.04]} length={0.17} radius={0.009} />
             <group name="LeftFoot" position={[0, -0.15, 0.025]}>
               <FootAssembly side="Left" />
             </group>
@@ -1059,20 +1035,18 @@ export function ArmoredRig({
         </group>
 
         <group name="RightUpLeg" position={[0.09, 0.74, 0]}>
-          <Joint name="RightHipJoint" position={[0, 0.105, 0]} radius={0.072} width={0.18} />
-          <ArmorPart args={[0.19, 0.27, 0.19]} color={PRIMARY} finish="satin" />
-          <ArmorPart args={[0.205, 0.085, 0.205]} position={[0, 0.078, 0]} color={SECONDARY} finish="brushed" />
-          <ArmorPart args={[0.11, 0.19, 0.05]} position={[0, 0.005, 0.113]} color={DARK_JOINT} finish="carbon" />
-          <GlowLine args={[0.017, 0.158, 0.013]} position={[0.078, 0.005, 0.144]} intensity={1.75} />
-          <GlowLine args={[0.075, 0.009, 0.011]} position={[0.028, 0.078, 0.145]} rotation={[0, 0, -0.38]} intensity={1.2} />
-          <Piston position={[0.07, -0.01, -0.06]} rotation={[0, 0, 0.05]} length={0.19} />
+          <Joint name="RightHipJoint" position={[0, 0.105, 0]} radius={0.058} width={0.13} />
+          <ArmorPart args={[0.155, 0.265, 0.145]} color={PRIMARY} finish="satin" />
+          <ArmorPart args={[0.165, 0.07, 0.15]} position={[0, 0.08, 0]} color={SECONDARY} finish="brushed" />
+          <ArmorPart args={[0.075, 0.175, 0.018]} position={[0, 0.005, 0.08]} color={DARK_JOINT} finish="carbon" />
+          <GlowLine args={[0.011, 0.148, 0.009]} position={[0.06, 0.005, 0.092]} intensity={1.55} />
+          <Piston position={[0.055, -0.01, -0.045]} rotation={[0, 0, 0.05]} length={0.18} radius={0.009} />
           <group name="RightLeg" position={[0, -0.22, 0]}>
-            <Joint name="RightKneeJoint" radius={0.072} width={0.135} />
-            <ArmorPart args={[0.185, 0.205, 0.185]} position={[0, -0.092, 0]} color={PRIMARY} finish="satin" />
-            <ArmorPart args={[0.145, 0.16, 0.065]} position={[0, -0.086, 0.1]} color={SECONDARY} finish="brushed" />
-            <ArmorPart args={[0.085, 0.13, 0.025]} position={[0, -0.086, 0.142]} color={DARK_JOINT} finish="carbon" />
-            <GlowLine args={[0.017, 0.125, 0.014]} position={[0.067, -0.086, 0.16]} intensity={1.55} />
-            <Piston position={[-0.068, -0.078, -0.06]} rotation={[0, 0, -0.04]} length={0.18} />
+            <Joint name="RightKneeJoint" radius={0.058} width={0.1} />
+            <ArmorPart args={[0.15, 0.2, 0.145]} position={[0, -0.09, 0]} color={PRIMARY} finish="satin" />
+            <ArmorPart args={[0.085, 0.14, 0.018]} position={[0, -0.086, 0.081]} color={SECONDARY} finish="brushed" />
+            <GlowLine args={[0.011, 0.115, 0.009]} position={[0.057, -0.086, 0.093]} intensity={1.4} />
+            <Piston position={[-0.055, -0.078, -0.045]} rotation={[0, 0, -0.04]} length={0.17} radius={0.009} />
             <group name="RightFoot" position={[0, -0.15, 0.025]}>
               <FootAssembly side="Right" />
             </group>

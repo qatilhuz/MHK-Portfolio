@@ -1,3 +1,4 @@
+import { MathUtils } from "three";
 import { FACE_USER_YAW } from "./forward";
 import type { CharacterMovementState, CharacterWorldPosition } from "./types";
 
@@ -58,6 +59,9 @@ export function stepLocomotion(loco: Locomotion, delta: number, reduced: boolean
   const max = dist < 0.55 ? cruise * Math.max(0.28, dist / 0.55) : cruise;
 
   if (dist < 0.07) {
+    // Arrival always has an explicit forward-facing target. Damp first, then
+    // settle exactly on zero so idle look-at never inherits travel yaw.
+    loco.targetYaw = FACE_USER_YAW;
     loco.velocity.x *= 0.62;
     loco.velocity.y *= 0.62;
     loco.velocity.z *= 0.62;
@@ -68,9 +72,8 @@ export function stepLocomotion(loco: Locomotion, delta: number, reduced: boolean
       }
     }
     const turn = reduced ? 10 : 3.4;
-    const dyaw = FACE_USER_YAW - loco.yaw;
-    const wrapped = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
-    loco.yaw += wrapped * Math.min(1, turn * delta);
+    loco.yaw = MathUtils.damp(loco.yaw, FACE_USER_YAW, turn, delta);
+    if (Math.abs(loco.yaw - FACE_USER_YAW) < 0.001) loco.yaw = FACE_USER_YAW;
     return dist;
   }
 

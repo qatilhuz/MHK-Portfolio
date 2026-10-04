@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Box3, MathUtils, Raycaster, Vector2, Vector3, type Group } from "three";
+import { Box3, MathUtils, Raycaster, Vector2, Vector3, type Group, type Mesh, type Object3D } from "three";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { materials } from "@/components/three/materials";
 import { characterConfig } from "@/data/characterConfig";
@@ -31,6 +31,24 @@ import type { CharacterDecision } from "@/lib/character/types";
 const FALL_CLIPS = new Set(["Fall", "GetUp", "Recover", "Stagger", "Surprise", "Annoyed"]);
 const EMOTE_LOCK = new Set(["Backflip", "Jump", "Dance", "Sit", "Bow", "Celebrate", "Sleep", "Wake"]);
 const SLEEP_AFTER_MS = 20000;
+
+function isVisibleSolidArmor(object: Object3D, root: Group) {
+  const mesh = object as Mesh;
+  if (!mesh.isMesh || mesh.userData.characterHitSurface !== true) return false;
+
+  let ancestor: Object3D | null = mesh;
+  while (ancestor) {
+    if (!ancestor.visible) return false;
+    if (ancestor === root) break;
+    ancestor = ancestor.parent;
+  }
+  if (ancestor !== root) return false;
+
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  return materials.some(
+    (material) => material.visible && !material.transparent && material.opacity >= 0.99 && material.depthWrite,
+  );
+}
 
 export function CharacterScene({
   onScreen,
@@ -445,8 +463,9 @@ export function CharacterScene({
     const pick = (event: PointerEvent) => {
       ndc.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
       raycaster.setFromCamera(ndc, camera);
-      if (!group.current) return null;
-      return raycaster.intersectObject(group.current, true)[0] ?? null;
+      const root = group.current;
+      if (!root) return null;
+      return raycaster.intersectObject(root, true).find((intersection) => isVisibleSolidArmor(intersection.object, root)) ?? null;
     };
     const regionFrom = (name: string): CharacterHit => {
       const value = name.toLowerCase();

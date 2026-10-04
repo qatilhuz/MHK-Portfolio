@@ -255,6 +255,7 @@ function ArmorPart({
       smoothness={3}
       castShadow
       receiveShadow
+      userData={{ characterHitSurface: true }}
       onClick={onClick}
     >
       <meshPhysicalMaterial

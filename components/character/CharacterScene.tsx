@@ -24,6 +24,7 @@ import { isBottomStageEvent } from "@/lib/character/bounds";
 import { emoteById } from "@/data/emotes";
 import { subscribeEmote } from "@/lib/character/emoteBus";
 import { pointerLook } from "@/lib/character/lookAt";
+import { FACE_USER_YAW } from "@/lib/character/forward";
 import { ARRIVAL_DISTANCE, createLocomotion, RUN_CYCLE, RUN_STRIDE, setDestination, stepLocomotion, WALK_CYCLE, WALK_STRIDE } from "@/lib/character/movement";
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
 import type { CharacterDecision } from "@/lib/character/types";
@@ -386,8 +387,18 @@ export function CharacterScene({
               : "Walk";
         if (clipRef.current !== next) setClip(next);
       } else if (dist <= ARRIVAL_DISTANCE && (clipRef.current === "Walk" || clipRef.current === "Run" || clipRef.current === "Turn")) {
-        // Locomotion now removes travel yaw monotonically and pins the base at
-        // zero. Keep the independent pointer target untouched during centering.
+        // Local +Z faces the camera, so yaw 0 is the requested visual 90°:
+        // perfectly perpendicular to the stage. Reset the complete locomotion
+        // frame now; pointer look remains isolated in ArmoredRig's child pivots.
+        loco.current.targetYaw = FACE_USER_YAW;
+        loco.current.yaw = FACE_USER_YAW;
+        loco.current.velocity = { x: 0, y: 0, z: 0 };
+        loco.current.state = "idle";
+        torso.current = 0;
+        inspectYaw.current = 0;
+        inspectTarget.current = 0;
+        inspectResetAt.current = 0;
+        node.rotation.set(0, FACE_USER_YAW, 0);
         setClip("Idle");
       }
       lookWeightTarget.current =

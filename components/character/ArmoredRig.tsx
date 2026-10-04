@@ -4,6 +4,7 @@ import { Environment, Lightformer, RoundedBox } from "@react-three/drei";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { createContext, useContext, useEffect, useMemo, useRef, type RefObject } from "react";
 import {
+  AdditiveBlending,
   AnimationMixer,
   CanvasTexture,
   Color,
@@ -14,6 +15,7 @@ import {
   SpriteMaterial,
   type AnimationAction,
   type Group as ThreeGroup,
+  type MeshBasicMaterial,
   type MeshPhysicalMaterial,
   type Texture,
 } from "three";
@@ -23,12 +25,14 @@ import { sampleViseme } from "@/lib/character/visemes";
 
 const PRIMARY = "#020202";
 const SECONDARY = "#303942";
-const ACCENT = "#27e8f2";
+const ACCENT = "#00eeff";
 const ACCENT_HOT = "#bafaff";
 const DETAIL = "#91a3b0";
 const JOINT = "#1a222a";
 const DARK_JOINT = "#070c12";
 const SCREEN_GLASS = "#02080d";
+const FLOW_DIM_COLOR = new Color("#00a9c7");
+const FLOW_HOT_COLOR = new Color("#e8ffff");
 
 export type CharacterExpression = "default" | "angry" | "happy" | "sad" | "surprised";
 
@@ -75,6 +79,7 @@ const CarbonFiberContext = createContext<Texture | null>(null);
 
 type FlowLightRegistration = {
   material: MeshPhysicalMaterial;
+  halo: MeshBasicMaterial | null;
   offset: number;
   baseIntensity: number;
 };
@@ -235,8 +240,8 @@ function ArmorPart({
   const isCarbon = surface === "carbon";
   const isPolished = surface === "polished";
   const isSatin = surface === "satin";
-  const resolvedMetalness = metalness ?? (isCarbon ? 0.68 : isPolished ? 0.98 : isSatin ? 0.86 : 0.93);
-  const requestedRoughness = roughness ?? (isCarbon ? 0.48 : isPolished ? 0.08 : isSatin ? 0.2 : 0.17);
+  const resolvedMetalness = metalness ?? (isCarbon ? 0.72 : isPolished ? 0.98 : isSatin ? 0.92 : 0.93);
+  const requestedRoughness = roughness ?? (isCarbon ? 0.42 : isPolished ? 0.08 : isSatin ? 0.14 : 0.17);
   const resolvedRoughness = isPolished ? Math.min(requestedRoughness, 0.12) : requestedRoughness;
   const bevel = radius ?? Math.min(args[0], args[1], args[2]) * 0.18;
   return (
@@ -259,9 +264,9 @@ function ArmorPart({
         roughnessMap={isCarbon ? carbonFiber : null}
         bumpMap={isCarbon ? carbonFiber : null}
         bumpScale={isCarbon ? 0.004 : 0}
-        clearcoat={clearcoat ?? (isCarbon ? 0.78 : isSatin ? 0.86 : 1)}
-        clearcoatRoughness={isCarbon ? 0.24 : isPolished ? 0.035 : isSatin ? 0.12 : 0.08}
-        anisotropy={surface === "brushed" ? 0.62 : isSatin ? 0.18 : 0}
+        clearcoat={clearcoat ?? (isCarbon ? 0.88 : isSatin ? 0.98 : 1)}
+        clearcoatRoughness={isCarbon ? 0.18 : isPolished ? 0.035 : isSatin ? 0.055 : 0.08}
+        anisotropy={surface === "brushed" ? 0.62 : isSatin ? 0.24 : 0}
         anisotropyRotation={Math.PI / 2}
         ior={1.52}
         specularIntensity={1}
@@ -293,34 +298,61 @@ function GlowLine({
   flowOffset?: number;
 }) {
   const materialRef = useRef<MeshPhysicalMaterial>(null);
+  const haloRef = useRef<MeshBasicMaterial>(null);
   const flowLights = useContext(FlowLightContext);
+  const isFlowing = flowOffset !== undefined;
+  const activeIntensity = isFlowing ? Math.max(intensity, 5.8) : intensity;
+  const haloArgs: Vec3 = [args[0] + 0.01, args[1] + 0.01, args[2] + 0.008];
 
   useEffect(() => {
     const material = materialRef.current;
     if (!flowLights || !material || flowOffset === undefined) return;
-    const registration = { material, offset: flowOffset, baseIntensity: intensity };
+    const registration = {
+      material,
+      halo: haloRef.current,
+      offset: flowOffset,
+      baseIntensity: activeIntensity,
+    };
     const registrations = flowLights.current;
     registrations.push(registration);
     return () => {
       const index = registrations.indexOf(registration);
       if (index >= 0) registrations.splice(index, 1);
     };
-  }, [flowLights, flowOffset, intensity]);
+  }, [activeIntensity, flowLights, flowOffset]);
 
   return (
-    <ArmorPart
-      materialRef={materialRef}
-      args={args}
-      position={position}
-      rotation={rotation}
-      color={color}
-      metalness={0.35}
-      roughness={0.2}
-      clearcoat={1}
-      emissive={color}
-      emissiveIntensity={intensity}
-      radius={Math.min(...args) * 0.26}
-    />
+    <group position={position} rotation={rotation}>
+      <ArmorPart
+        materialRef={materialRef}
+        args={args}
+        color={color}
+        metalness={0.18}
+        roughness={0.08}
+        clearcoat={1}
+        emissive={color}
+        emissiveIntensity={activeIntensity}
+        radius={Math.min(...args) * 0.26}
+      />
+      {isFlowing ? (
+        <RoundedBox
+          args={haloArgs}
+          radius={Math.max(0.004, Math.min(...haloArgs) * 0.3)}
+          smoothness={2}
+          renderOrder={3}
+        >
+          <meshBasicMaterial
+            ref={haloRef}
+            color={color}
+            transparent
+            opacity={0.12}
+            blending={AdditiveBlending}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </RoundedBox>
+      ) : null}
+    </group>
   );
 }
 
@@ -500,6 +532,60 @@ function MechanicalCable({
       <cylinderGeometry args={[radius, radius * 0.82, length, 10, 4]} />
       <meshPhysicalMaterial color={DARK_JOINT} metalness={0.74} roughness={0.38} clearcoat={0.45} />
     </mesh>
+  );
+}
+
+function VentBank({
+  position,
+  rotation,
+  scale = 1,
+}: {
+  position: Vec3;
+  rotation?: Vec3;
+  scale?: number;
+}) {
+  return (
+    <group position={position} rotation={rotation} scale={[scale, scale, scale]}>
+      <ArmorPart args={[0.072, 0.055, 0.006]} position={[0, 0, -0.004]} color={JOINT} finish="brushed" radius={0.005} />
+      {[-1, 0, 1].map((row) => (
+        <mesh key={row} position={[0, row * 0.014, 0.003]} castShadow>
+          <boxGeometry args={[0.052, 0.006, 0.008]} />
+          <meshPhysicalMaterial color={DARK_JOINT} metalness={0.72} roughness={0.44} clearcoat={0.42} />
+        </mesh>
+      ))}
+      {([-1, 1] as const).map((side) => (
+        <mesh key={side} position={[side * 0.031, 0.021, 0.007]}>
+          <sphereGeometry args={[0.004, 10, 7]} />
+          <meshPhysicalMaterial color={DETAIL} metalness={0.96} roughness={0.12} clearcoat={1} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function SpineVertebrae({ position }: { position: Vec3 }) {
+  const levels = [-0.12, -0.04, 0.04, 0.12];
+  return (
+    <group position={position}>
+      {levels.map((y, index) => (
+        <group key={y} position={[0, y, 0]} rotation={[0, 0, index % 2 === 0 ? 0.08 : -0.08]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.026, 0.039, 0.014, 8, 1]} />
+            <meshPhysicalMaterial color={SECONDARY} metalness={0.94} roughness={0.15} clearcoat={0.94} clearcoatRoughness={0.06} />
+          </mesh>
+          <mesh position={[0, 0, -0.009]}>
+            <torusGeometry args={[0.022, 0.0045, 7, 16]} />
+            <meshPhysicalMaterial color={DARK_JOINT} metalness={0.82} roughness={0.32} clearcoat={0.5} />
+          </mesh>
+          {index < levels.length - 1 ? (
+            <mesh position={[0, 0.04, 0.004]} castShadow>
+              <cylinderGeometry args={[0.007, 0.007, 0.052, 10]} />
+              <meshPhysicalMaterial color={DETAIL} metalness={0.95} roughness={0.14} clearcoat={0.9} />
+            </mesh>
+          ) : null}
+        </group>
+      ))}
+    </group>
   );
 }
 
@@ -820,17 +906,30 @@ export function ArmoredRig({
     mixer.current?.update(delta);
     const energyTime = state.clock.elapsedTime;
     for (const light of flowLights.current) {
-      const wave = (Math.sin(energyTime * 2.65 - light.offset) + 1) * 0.5;
-      const highlight = wave * wave * wave;
+      const wave = (Math.sin(energyTime * 2.9 - light.offset) + 1) * 0.5;
+      const highlight = wave * wave * wave * wave;
       const targetIntensity = reducedMotion
-        ? light.baseIntensity * 0.92
-        : light.baseIntensity * (0.5 + wave * 0.38 + highlight * 0.92);
+        ? light.baseIntensity * 0.9
+        : light.baseIntensity * (0.74 + highlight * 0.98);
       light.material.emissiveIntensity = MathUtils.damp(
         light.material.emissiveIntensity,
         targetIntensity,
-        reducedMotion ? 14 : 8,
+        reducedMotion ? 14 : 10,
         delta,
       );
+      const heat = reducedMotion ? 0.3 : 0.12 + highlight * 0.88;
+      light.material.emissive.lerpColors(FLOW_DIM_COLOR, FLOW_HOT_COLOR, heat);
+      light.material.color.lerpColors(FLOW_DIM_COLOR, FLOW_HOT_COLOR, heat * 0.62);
+      if (light.halo) {
+        const targetOpacity = reducedMotion ? 0.1 : 0.045 + wave * 0.04 + highlight * 0.3;
+        light.halo.opacity = MathUtils.damp(
+          light.halo.opacity,
+          targetOpacity,
+          reducedMotion ? 14 : 11,
+          delta,
+        );
+        light.halo.color.lerpColors(FLOW_DIM_COLOR, FLOW_HOT_COLOR, heat * 0.75);
+      }
     }
 
     const greeting = clip === "Wave";
@@ -985,6 +1084,22 @@ export function ArmoredRig({
                 onClick={hit("body")}
               />
               <ArmorPart
+                args={[0.14, 0.052, 0.01]}
+                position={[-0.095, 0.158, 0.076]}
+                rotation={[0, 0, -0.09]}
+                color={SECONDARY}
+                finish="brushed"
+                radius={0.007}
+              />
+              <ArmorPart
+                args={[0.14, 0.052, 0.01]}
+                position={[0.095, 0.158, 0.076]}
+                rotation={[0, 0, 0.09]}
+                color={SECONDARY}
+                finish="brushed"
+                radius={0.007}
+              />
+              <ArmorPart
                 args={[0.135, 0.255, 0.008]}
                 position={[-0.098, 0.005, 0.074]}
                 rotation={[0, 0, -0.055]}
@@ -1000,13 +1115,25 @@ export function ArmoredRig({
                 finish="carbon"
                 radius={0.006}
               />
-              <ArmorPart args={[0.085, 0.105, 0.008]} position={[0, -0.12, 0.074]} color={SECONDARY} finish="brushed" radius={0.006} />
-              <mesh position={[0, 0.09, 0.082]} rotation={[0, 0, Math.PI / 4]}>
+              <ArmorPart args={[0.112, 0.036, 0.01]} position={[0, -0.074, 0.076]} color={SECONDARY} finish="brushed" radius={0.006} />
+              <ArmorPart args={[0.096, 0.034, 0.01]} position={[0, -0.122, 0.076]} color={JOINT} finish="brushed" radius={0.006} />
+              <ArmorPart args={[0.08, 0.032, 0.01]} position={[0, -0.168, 0.076]} color={SECONDARY} finish="brushed" radius={0.006} />
+              <VentBank position={[-0.105, 0.055, 0.082]} rotation={[0, 0, -0.055]} scale={0.72} />
+              <VentBank position={[0.105, 0.055, 0.082]} rotation={[0, 0, 0.055]} scale={0.72} />
+              <mesh position={[0, 0.09, 0.081]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+                <cylinderGeometry args={[0.045, 0.052, 0.012, 16, 1]} />
+                <meshPhysicalMaterial color={DARK_JOINT} metalness={0.88} roughness={0.2} clearcoat={0.72} />
+              </mesh>
+              <mesh position={[0, 0.09, 0.091]}>
+                <torusGeometry args={[0.036, 0.005, 8, 24]} />
+                <meshPhysicalMaterial color={DETAIL} metalness={0.98} roughness={0.08} clearcoat={1} />
+              </mesh>
+              <mesh position={[0, 0.09, 0.098]} rotation={[0, 0, Math.PI / 4]}>
                 <octahedronGeometry args={[0.027, 0]} />
                 <meshPhysicalMaterial
                   color={ACCENT_HOT}
                   emissive={ACCENT}
-                  emissiveIntensity={2}
+                  emissiveIntensity={7.5}
                   toneMapped={false}
                   metalness={0.28}
                   roughness={0.16}
@@ -1016,7 +1143,7 @@ export function ArmoredRig({
               <FlowingStrip length={0.25} position={[-0.176, 0.015, 0.082]} phase={0} intensity={1.55} />
               <FlowingStrip length={0.25} position={[0.176, 0.015, 0.082]} phase={1.1} intensity={1.55} />
               <FlowingStrip length={0.22} position={[0, 0.172, 0.082]} axis="x" segments={5} phase={2.2} intensity={1.25} />
-              <FlowingStrip length={0.105} position={[0, -0.12, 0.082]} segments={3} phase={3.2} intensity={1.25} />
+              <FlowingStrip length={0.105} position={[0, -0.12, 0.087]} segments={3} phase={3.2} intensity={1.25} />
 
               <ArmorPart
                 args={[0.135, 0.265, 0.008]}
@@ -1035,19 +1162,34 @@ export function ArmoredRig({
                 radius={0.006}
               />
               <ArmorPart args={[0.07, 0.11, 0.008]} position={[0, 0.1, -0.074]} color={SECONDARY} finish="brushed" radius={0.006} />
-              <FlowingStrip length={0.17} position={[0, -0.06, -0.082]} segments={4} phase={4.1} intensity={1.4} />
+              <VentBank position={[-0.115, -0.09, -0.082]} rotation={[0, Math.PI, 0]} scale={0.68} />
+              <VentBank position={[0.115, -0.09, -0.082]} rotation={[0, Math.PI, 0]} scale={0.68} />
+              <SpineVertebrae position={[0, 0, -0.088]} />
+              <FlowingStrip length={0.17} position={[0, -0.06, -0.102]} segments={4} phase={4.1} intensity={1.4} />
               <FlowingStrip length={0.155} position={[-0.075, 0.045, -0.082]} rotation={[0, 0, -0.48]} phase={5.1} intensity={1.35} />
               <FlowingStrip length={0.155} position={[0.075, 0.045, -0.082]} rotation={[0, 0, 0.48]} phase={6.1} intensity={1.35} />
 
               <group name="LeftShoulder" position={[-0.26, 0.17, 0]} onClick={hit("shoulder")}>
                 <Joint name="LeftShoulderJoint" radius={0.065} width={0.145} />
-                <ArmorPart args={[0.16, 0.12, 0.14]} position={[-0.028, 0.026, 0]} rotation={[0, 0, 0.06]} color={PRIMARY} finish="satin" />
-                <FlowingStrip length={0.085} position={[-0.038, 0.079, 0.075]} axis="x" segments={3} phase={6.4} intensity={1.4} />
+                <ArmorPart args={[0.16, 0.07, 0.13]} position={[-0.028, -0.015, 0]} rotation={[0, 0, 0.045]} color={PRIMARY} finish="satin" />
+                <mesh position={[-0.028, 0.005, 0]} scale={[1.12, 0.78, 0.94]} castShadow receiveShadow>
+                  <sphereGeometry args={[0.075, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2]} />
+                  <meshPhysicalMaterial color={PRIMARY} metalness={0.94} roughness={0.12} clearcoat={1} clearcoatRoughness={0.04} />
+                </mesh>
+                <ArmorPart args={[0.085, 0.046, 0.008]} position={[-0.04, 0.023, 0.071]} color={SECONDARY} finish="brushed" radius={0.006} />
+                <VentBank position={[-0.04, 0.023, 0.078]} scale={0.52} />
+                <FlowingStrip length={0.085} position={[-0.038, 0.079, 0.071]} axis="x" segments={3} phase={6.4} intensity={1.4} />
               </group>
               <group name="RightShoulder" position={[0.26, 0.17, 0]} onClick={hit("shoulder")}>
                 <Joint name="RightShoulderJoint" radius={0.065} width={0.145} />
-                <ArmorPart args={[0.16, 0.12, 0.14]} position={[0.028, 0.026, 0]} rotation={[0, 0, -0.06]} color={PRIMARY} finish="satin" />
-                <FlowingStrip length={0.085} position={[0.038, 0.079, 0.075]} axis="x" segments={3} phase={7} intensity={1.4} />
+                <ArmorPart args={[0.16, 0.07, 0.13]} position={[0.028, -0.015, 0]} rotation={[0, 0, -0.045]} color={PRIMARY} finish="satin" />
+                <mesh position={[0.028, 0.005, 0]} scale={[1.12, 0.78, 0.94]} castShadow receiveShadow>
+                  <sphereGeometry args={[0.075, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2]} />
+                  <meshPhysicalMaterial color={PRIMARY} metalness={0.94} roughness={0.12} clearcoat={1} clearcoatRoughness={0.04} />
+                </mesh>
+                <ArmorPart args={[0.085, 0.046, 0.008]} position={[0.04, 0.023, 0.071]} color={SECONDARY} finish="brushed" radius={0.006} />
+                <VentBank position={[0.04, 0.023, 0.078]} scale={0.52} />
+                <FlowingStrip length={0.085} position={[0.038, 0.079, 0.071]} axis="x" segments={3} phase={7} intensity={1.4} />
               </group>
 
               <group name="Neck" position={[0, 0.3, 0]}>
@@ -1126,8 +1268,14 @@ export function ArmoredRig({
                 <Piston position={[0.048, -0.02, -0.045]} rotation={[0, 0, -0.08]} length={0.16} radius={0.009} />
                 <group name="LeftForeArm" position={[0, -0.18, 0]}>
                   <Joint name="LeftElbowJoint" radius={0.05} width={0.1} />
+                  <mesh position={[0, 0, 0.058]}>
+                    <torusGeometry args={[0.034, 0.005, 8, 22]} />
+                    <meshPhysicalMaterial color={DETAIL} metalness={0.97} roughness={0.1} clearcoat={1} />
+                  </mesh>
                   <ArmorPart args={[0.13, 0.165, 0.13]} position={[0, -0.078, 0]} color={PRIMARY} finish="satin" />
+                  <ArmorPart args={[0.018, 0.112, 0.09]} position={[-0.067, -0.076, 0]} color={SECONDARY} finish="brushed" radius={0.006} />
                   <ArmorPart args={[0.09, 0.12, 0.018]} position={[0, -0.074, 0.072]} color={SECONDARY} finish="brushed" />
+                  <VentBank position={[0.018, -0.074, 0.084]} scale={0.52} />
                   <FlowingStrip length={0.1} position={[-0.049, -0.074, 0.084]} segments={3} phase={9.5} intensity={1.35} />
                   <group name="LeftHand" position={[0, -0.18, 0]}>
                     <Joint name="LeftWristJoint" radius={0.035} width={0.068} />
@@ -1152,8 +1300,14 @@ export function ArmoredRig({
                 <Piston position={[-0.048, -0.02, -0.045]} rotation={[0, 0, 0.08]} length={0.16} radius={0.009} />
                 <group name="RightForeArm" position={[0, -0.18, 0]}>
                   <Joint name="RightElbowJoint" radius={0.05} width={0.1} />
+                  <mesh position={[0, 0, 0.058]}>
+                    <torusGeometry args={[0.034, 0.005, 8, 22]} />
+                    <meshPhysicalMaterial color={DETAIL} metalness={0.97} roughness={0.1} clearcoat={1} />
+                  </mesh>
                   <ArmorPart args={[0.13, 0.165, 0.13]} position={[0, -0.078, 0]} color={PRIMARY} finish="satin" />
+                  <ArmorPart args={[0.018, 0.112, 0.09]} position={[0.067, -0.076, 0]} color={SECONDARY} finish="brushed" radius={0.006} />
                   <ArmorPart args={[0.09, 0.12, 0.018]} position={[0, -0.074, 0.072]} color={SECONDARY} finish="brushed" />
+                  <VentBank position={[-0.018, -0.074, 0.084]} scale={0.52} />
                   <FlowingStrip length={0.1} position={[0.049, -0.074, 0.084]} segments={3} phase={10.1} intensity={1.35} />
                   <group name="RightHand" position={[0, -0.18, 0]}>
                     <Joint name="RightWristJoint" radius={0.035} width={0.068} />
@@ -1183,8 +1337,13 @@ export function ArmoredRig({
           <Piston position={[-0.055, -0.01, -0.045]} rotation={[0, 0, -0.05]} length={0.18} radius={0.009} />
           <group name="LeftLeg" position={[0, -0.22, 0]}>
             <Joint name="LeftKneeJoint" radius={0.058} width={0.1} />
+            <mesh position={[0, 0, 0.067]}>
+              <torusGeometry args={[0.039, 0.006, 8, 24]} />
+              <meshPhysicalMaterial color={DETAIL} metalness={0.97} roughness={0.1} clearcoat={1} />
+            </mesh>
             <ArmorPart args={[0.15, 0.2, 0.145]} position={[0, -0.09, 0]} color={PRIMARY} finish="satin" />
             <ArmorPart args={[0.085, 0.14, 0.018]} position={[0, -0.086, 0.081]} color={SECONDARY} finish="brushed" />
+            <VentBank position={[0.018, -0.086, 0.093]} scale={0.46} />
             <FlowingStrip length={0.115} position={[-0.057, -0.086, 0.093]} segments={3} phase={10.9} intensity={1.4} />
             <Piston position={[0.055, -0.078, -0.045]} rotation={[0, 0, 0.04]} length={0.17} radius={0.009} />
             <group name="LeftFoot" position={[0, -0.15, 0.025]}>
@@ -1202,8 +1361,13 @@ export function ArmoredRig({
           <Piston position={[0.055, -0.01, -0.045]} rotation={[0, 0, 0.05]} length={0.18} radius={0.009} />
           <group name="RightLeg" position={[0, -0.22, 0]}>
             <Joint name="RightKneeJoint" radius={0.058} width={0.1} />
+            <mesh position={[0, 0, 0.067]}>
+              <torusGeometry args={[0.039, 0.006, 8, 24]} />
+              <meshPhysicalMaterial color={DETAIL} metalness={0.97} roughness={0.1} clearcoat={1} />
+            </mesh>
             <ArmorPart args={[0.15, 0.2, 0.145]} position={[0, -0.09, 0]} color={PRIMARY} finish="satin" />
             <ArmorPart args={[0.085, 0.14, 0.018]} position={[0, -0.086, 0.081]} color={SECONDARY} finish="brushed" />
+            <VentBank position={[-0.018, -0.086, 0.093]} scale={0.46} />
             <FlowingStrip length={0.115} position={[0.057, -0.086, 0.093]} segments={3} phase={11.5} intensity={1.4} />
             <Piston position={[-0.055, -0.078, -0.045]} rotation={[0, 0, -0.04]} length={0.17} radius={0.009} />
             <group name="RightFoot" position={[0, -0.15, 0.025]}>

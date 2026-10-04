@@ -41,7 +41,7 @@ function easeInOutCubic(t: number) {
 
 function ProofOfLifeBot() {
   return (
-    <mesh name="ProofOfLifeBot" position={[0, 1, -3]} visible renderOrder={1000}>
+    <mesh name="ProofOfLifeBot" position={[0, 0, -2]} visible renderOrder={1000}>
       <boxGeometry args={[1, 1, 1]} />
       <meshBasicMaterial color="green" />
     </mesh>
@@ -575,8 +575,6 @@ export function CharacterScene({
     node.scale.setScalar(mobile ? 1.12 : 1.39);
     if (!Number.isFinite(loco.current.position.x)) loco.current.position.x = 0;
     node.position.set(loco.current.position.x, -(soleY.current ?? 0), 0);
-    camera.position.set(0, 1.52, 5.6);
-    camera.lookAt(0, 1.52, 0);
     if (!inspecting.current && inspectResetAt.current > 0 && now >= inspectResetAt.current) {
       inspectTarget.current = 0;
       inspectResetAt.current = 0;

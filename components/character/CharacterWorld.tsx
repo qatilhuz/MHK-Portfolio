@@ -67,8 +67,8 @@ export function CharacterWorld() {
         >
           <Canvas
             dpr={[1, 1.35]}
-            gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-            onCreated={({ gl }) => gl.setClearColor("hotpink")}
+            gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+            onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
             style={{ pointerEvents: "none", display: "block", opacity: 1, width: "100%", height: "100%" }}
             aria-hidden
           >

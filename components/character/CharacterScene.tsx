@@ -266,7 +266,7 @@ export function CharacterScene({
     halfChar.current = null;
   }, [characterScale]);
 
-  useEffect(() => subscribeEmote((id) => playEmote(id)), []); // eslint-disable-line react-hooks/exhaustive-deps -- refs only
+  useEffect(() => subscribeEmote((id) => playEmote(id)), []);
 
   useEffect(
     () => () => {
@@ -391,9 +391,6 @@ export function CharacterScene({
               : "Walk";
         if (clipRef.current !== next) setClip(next);
       } else if (dist <= ARRIVAL_DISTANCE && (clipRef.current === "Walk" || clipRef.current === "Run" || clipRef.current === "Turn")) {
-        // Local +Z faces the camera, so yaw 0 is the requested visual 90°:
-        // perfectly perpendicular to the stage. Reset the complete locomotion
-        // frame now; pointer look remains isolated in ArmoredRig's child pivots.
         loco.current.targetYaw = FACE_USER_YAW;
         loco.current.yaw = FACE_USER_YAW;
         loco.current.velocity = { x: 0, y: 0, z: 0 };
@@ -429,6 +426,11 @@ export function CharacterScene({
       halfChar.current = Math.max(0.25, (box.current.max.x - box.current.min.x) / 2);
     }
     node.position.set(loco.current.position.x, -soleY.current, 0);
+    
+    // Restored original camera positioning and lookAt for accurate stage framing
+    camera.position.set(0, 1.52, 5.6);
+    camera.lookAt(0, 1.52, 0);
+
     if (!inspecting.current && inspectResetAt.current > 0 && now >= inspectResetAt.current) {
       inspectTarget.current = 0;
       inspectResetAt.current = 0;
@@ -485,9 +487,6 @@ export function CharacterScene({
       const root = group.current;
       if (!root) return null;
 
-      // The character canvas only occupies the bottom stage. Window-relative
-      // NDC stretched that short canvas over the full page, making valid armor
-      // intersections appear far above the rendered head.
       const rect = gl.domElement.getBoundingClientRect();
       if (
         event.clientX < rect.left ||

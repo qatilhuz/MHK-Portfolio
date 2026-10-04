@@ -1,8 +1,7 @@
 "use client";
 
-import { Component, Suspense, useCallback, useState, type ReactNode } from "react";
+import { Component, useCallback, useState, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
-import { PerspectiveCamera } from "@react-three/drei";
 import { characterConfig } from "@/data/characterConfig";
 import { CharacterHud } from "./CharacterHud";
 import { CharacterScene } from "./CharacterScene";
@@ -27,15 +26,6 @@ class CharacterCanvasBoundary extends Component<
   }
 }
 
-function ProofOfLifeBox() {
-  return (
-    <mesh name="NuclearProofOfLifeGreenBox" position={[0, 0, -2]} visible renderOrder={100000}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshBasicMaterial color="green" />
-    </mesh>
-  );
-}
-
 export function CharacterWorld() {
   const [screen, setScreen] = useState({ x: 0, y: 0 });
   const [line, setLine] = useState<string | null>(null);
@@ -45,40 +35,35 @@ export function CharacterWorld() {
 
   if (!characterConfig.enabled || !characterConfig.is3DModelEnabled) return null;
 
-  const fallback = <CharacterFallback label="Guide fallback" />;
-
   return (
     <>
-      <CharacterCanvasBoundary fallback={fallback}>
+      <CharacterCanvasBoundary fallback={<CharacterFallback label="Guide fallback" />}>
         <div
           data-character-world
           aria-hidden
           style={{
             position: "fixed",
-            top: 0,
             left: 0,
+            right: 0,
+            bottom: 0,
             width: "100vw",
-            height: "100vh",
-            zIndex: 99999,
+            height: "38vh",
+            minHeight: 260,
+            zIndex: 50,
             pointerEvents: "none",
             display: "block",
             opacity: 1,
+            overflow: "visible",
           }}
         >
           <Canvas
             dpr={[1, 1.35]}
+            camera={{ position: [0, 1.52, 5.6], fov: 30, near: 0.1, far: 100 }}
             gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-            onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
-            style={{ pointerEvents: "none", display: "block", opacity: 1, width: "100%", height: "100%" }}
+            style={{ pointerEvents: "none", background: "transparent", display: "block", opacity: 1, width: "100%", height: "100%" }}
             aria-hidden
           >
-            <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={50} />
-            <ProofOfLifeBox />
-            <CharacterCanvasBoundary fallback={null}>
-              <Suspense fallback={null}>
-                <CharacterScene onScreen={onScreen} onLine={setLine} />
-              </Suspense>
-            </CharacterCanvasBoundary>
+            <CharacterScene onScreen={onScreen} onLine={setLine} />
           </Canvas>
         </div>
       </CharacterCanvasBoundary>

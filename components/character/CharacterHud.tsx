@@ -61,7 +61,7 @@ export function CharacterHud({
     <>
       {text || guide?.guided ? (
         <div
-          className="pointer-events-none fixed z-[100000] max-w-[calc(100vw-24px)]"
+          className="pointer-events-none fixed z-[60] max-w-[calc(100vw-24px)]"
           style={placed ? { left, top, width: bubbleW } : { left: 12, right: 12, bottom: 16 }}
           aria-label="Portfolio host"
           data-character-ui
@@ -100,7 +100,7 @@ export function CharacterHud({
         </div>
       ) : null}
 
-      <div ref={panel} className="pointer-events-auto fixed bottom-3 right-3 z-[100000]" data-character-ui>
+      <div ref={panel} className="pointer-events-auto fixed bottom-3 right-3 z-[60]" data-character-ui>
         {open ? (
           <div
             id={menuId}

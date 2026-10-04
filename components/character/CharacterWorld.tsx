@@ -38,29 +38,13 @@ export function CharacterWorld() {
   return (
     <>
       <CharacterCanvasBoundary fallback={<CharacterFallback label="Guide fallback" />}>
-        <div
-          data-character-world
-          aria-hidden
-          style={{
-            position: "fixed",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: "100vw",
-            height: "38vh",
-            minHeight: 260,
-            zIndex: 50,
-            pointerEvents: "none",
-            display: "block",
-            opacity: 1,
-            overflow: "visible",
-          }}
-        >
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[45] h-[38vh]" data-character-world aria-hidden>
           <Canvas
             dpr={[1, 1.35]}
-            camera={{ position: [0, 1.52, 5.6], fov: 30, near: 0.1, far: 100 }}
+            camera={{ position: [0, 1.52, 5.6], fov: 30 }}
             gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-            style={{ pointerEvents: "none", background: "transparent", display: "block", opacity: 1, width: "100%", height: "100%" }}
+            className="h-full w-full !bg-transparent"
+            style={{ pointerEvents: "none", background: "transparent" }}
             aria-hidden
           >
             <CharacterScene onScreen={onScreen} onLine={setLine} />

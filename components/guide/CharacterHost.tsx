@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { GUIDE_MODEL_PATH } from "@/data/guide";
 import { CLIP_ALIASES, type CharacterClip, type CharacterHit } from "@/data/character";
-import { ArmoredRig } from "@/components/character/ArmoredRig";
+import { ArmoredRig, type CharacterExpression } from "@/components/character/ArmoredRig";
 
 function GltfHost({
   clip,
@@ -46,12 +46,14 @@ function GltfHost({
 
 export function CharacterHost({
   clip,
+  expression,
   look,
   lookWeight,
   reducedMotion,
   onHit,
 }: {
   clip: CharacterClip;
+  expression: CharacterExpression;
   look: { current: { x: number; y: number } };
   lookWeight: { current: number };
   reducedMotion: boolean;
@@ -76,14 +78,28 @@ export function CharacterHost({
 
   if (!hasFile) {
     return (
-      <ArmoredRig clip={clip} look={look} lookWeight={lookWeight} reducedMotion={reducedMotion} onHit={onHit} />
+      <ArmoredRig
+        clip={clip}
+        expression={expression}
+        look={look}
+        lookWeight={lookWeight}
+        reducedMotion={reducedMotion}
+        onHit={onHit}
+      />
     );
   }
 
   return (
     <Suspense
       fallback={
-        <ArmoredRig clip={clip} look={look} lookWeight={lookWeight} reducedMotion={reducedMotion} onHit={onHit} />
+        <ArmoredRig
+          clip={clip}
+          expression={expression}
+          look={look}
+          lookWeight={lookWeight}
+          reducedMotion={reducedMotion}
+          onHit={onHit}
+        />
       }
     >
       <GltfHost clip={clip} reducedMotion={reducedMotion} onHit={onHit} />

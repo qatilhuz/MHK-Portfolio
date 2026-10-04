@@ -2,10 +2,11 @@
 
 import { Environment, Lightformer, RoundedBox } from "@react-three/drei";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { createContext, useContext, useEffect, useMemo, useRef } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, type RefObject } from "react";
 import {
   AnimationMixer,
   CanvasTexture,
+  Color,
   LoopRepeat,
   MathUtils,
   RepeatWrapping,
@@ -13,13 +14,14 @@ import {
   SpriteMaterial,
   type AnimationAction,
   type Group as ThreeGroup,
+  type MeshPhysicalMaterial,
   type Texture,
 } from "three";
 import type { CharacterClip, CharacterHit } from "@/data/character";
 import { createHostClips } from "@/lib/character/clips";
 import { sampleViseme } from "@/lib/character/visemes";
 
-const PRIMARY = "#e2e8f0";
+const PRIMARY = "#020202";
 const SECONDARY = "#a8b4c2";
 const ACCENT = "#00d9ff";
 const ACCENT_HOT = "#b8f7ff";
@@ -28,8 +30,26 @@ const JOINT = "#7f8c9c";
 const DARK_JOINT = "#101722";
 const SCREEN_GLASS = "#050505";
 
+export type CharacterExpression = "default" | "angry" | "happy" | "sad";
+
 type Vec3 = [number, number, number];
 type SurfaceFinish = "carbon" | "brushed" | "polished";
+
+type ExpressionStyle = {
+  color: Color;
+  leftTilt: number;
+  rightTilt: number;
+  scaleX: number;
+  scaleY: number;
+  offsetY: number;
+};
+
+const EXPRESSION_STYLES: Record<CharacterExpression, ExpressionStyle> = {
+  default: { color: new Color("#00eeff"), leftTilt: 0, rightTilt: 0, scaleX: 1, scaleY: 1, offsetY: 0 },
+  angry: { color: new Color("#ff0000"), leftTilt: -0.4, rightTilt: 0.4, scaleX: 0.9, scaleY: 0.62, offsetY: 0 },
+  happy: { color: new Color("#ffe34d"), leftTilt: 0.1, rightTilt: -0.1, scaleX: 1.06, scaleY: 0.42, offsetY: 0.008 },
+  sad: { color: new Color("#7ddcff"), leftTilt: 0.28, rightTilt: -0.28, scaleX: 0.94, scaleY: 0.74, offsetY: -0.006 },
+};
 
 const CarbonFiberContext = createContext<Texture | null>(null);
 
@@ -46,6 +66,7 @@ type ArmorPartProps = {
   finish?: SurfaceFinish;
   radius?: number;
   name?: string;
+  materialRef?: RefObject<MeshPhysicalMaterial | null>;
   onClick?: (event: ThreeEvent<MouseEvent>) => void;
 };
 
@@ -170,6 +191,7 @@ function ArmorPart({
   finish,
   radius,
   name,
+  materialRef,
   onClick,
 }: ArmorPartProps) {
   const carbonFiber = useContext(CarbonFiberContext);
@@ -194,6 +216,7 @@ function ArmorPart({
       onClick={onClick}
     >
       <meshPhysicalMaterial
+        ref={materialRef}
         color={color}
         metalness={resolvedMetalness}
         roughness={resolvedRoughness}
@@ -272,9 +295,17 @@ function Joint({
           clearcoatRoughness={0.18}
         />
       </mesh>
+      <mesh position={[0, radius * 0.82, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[radius * 0.46, radius * 0.62, radius * 1.85, 18, 2]} />
+        <meshPhysicalMaterial color={SECONDARY} metalness={0.94} roughness={0.17} clearcoat={0.9} clearcoatRoughness={0.08} />
+      </mesh>
+      <mesh position={[0, -radius * 0.82, 0]} rotation={[0, 0, Math.PI]} castShadow receiveShadow>
+        <cylinderGeometry args={[radius * 0.46, radius * 0.62, radius * 1.85, 18, 2]} />
+        <meshPhysicalMaterial color={SECONDARY} metalness={0.94} roughness={0.17} clearcoat={0.9} clearcoatRoughness={0.08} />
+      </mesh>
       <mesh castShadow>
-        <sphereGeometry args={[radius * 0.72, 18, 12]} />
-        <meshPhysicalMaterial color={DARK_JOINT} metalness={0.82} roughness={0.24} clearcoat={0.5} />
+        <sphereGeometry args={[radius * 0.78, 20, 14]} />
+        <meshPhysicalMaterial color={JOINT} metalness={0.96} roughness={0.14} clearcoat={0.92} clearcoatRoughness={0.08} />
       </mesh>
       <mesh position={[0, 0, radius * 0.72]}>
         <circleGeometry args={[radius * 0.34, 18]} />
@@ -387,10 +418,17 @@ function DigitalFaceScreen() {
   );
 }
 
-function DigitalEye() {
+function DigitalEye({
+  glowMaterial,
+  coreMaterial,
+}: {
+  glowMaterial: RefObject<MeshPhysicalMaterial | null>;
+  coreMaterial: RefObject<MeshPhysicalMaterial | null>;
+}) {
   return (
     <>
       <ArmorPart
+        materialRef={glowMaterial}
         args={[0.056, 0.023, 0.009]}
         color="#002631"
         metalness={0.12}
@@ -402,6 +440,7 @@ function DigitalEye() {
         radius={0.009}
       />
       <ArmorPart
+        materialRef={coreMaterial}
         args={[0.043, 0.012, 0.008]}
         position={[0, 0, 0.008]}
         color="#e8fdff"
@@ -504,12 +543,14 @@ function Antenna() {
 
 export function ArmoredRig({
   clip,
+  expression,
   look,
   lookWeight,
   reducedMotion,
   onHit,
 }: {
   clip: CharacterClip;
+  expression: CharacterExpression;
   look: { current: { x: number; y: number } };
   lookWeight: { current: number };
   reducedMotion: boolean;
@@ -521,6 +562,10 @@ export function ArmoredRig({
   const chestAim = useRef<ThreeGroup>(null);
   const leftEye = useRef<ThreeGroup>(null);
   const rightEye = useRef<ThreeGroup>(null);
+  const leftEyeGlow = useRef<MeshPhysicalMaterial>(null);
+  const leftEyeCore = useRef<MeshPhysicalMaterial>(null);
+  const rightEyeGlow = useRef<MeshPhysicalMaterial>(null);
+  const rightEyeCore = useRef<MeshPhysicalMaterial>(null);
   const mouth = useRef<ThreeGroup>(null);
   const mixer = useRef<AnimationMixer | null>(null);
   const actions = useRef<Record<string, AnimationAction>>({});
@@ -638,11 +683,34 @@ export function ArmoredRig({
             : blink.current % 4.2 > 4.05
               ? 0.35
               : 1;
-    for (const eye of [leftEye.current, rightEye.current]) {
-      if (!eye) continue;
-      eye.rotation.y = MathUtils.damp(eye.rotation.y, eyeY, 18, delta);
-      eye.rotation.x = MathUtils.damp(eye.rotation.x, eyeX, 18, delta);
-      eye.scale.y = MathUtils.damp(eye.scale.y, lid, 18, delta);
+    const expressionStyle = EXPRESSION_STYLES[expression];
+    const eyeBlend = reducedMotion ? 20 : 14;
+    const colorBlend = 1 - Math.exp(-12 * delta);
+    const eyes = [
+      {
+        node: leftEye.current,
+        tilt: expressionStyle.leftTilt,
+        materials: [leftEyeGlow.current, leftEyeCore.current],
+      },
+      {
+        node: rightEye.current,
+        tilt: expressionStyle.rightTilt,
+        materials: [rightEyeGlow.current, rightEyeCore.current],
+      },
+    ];
+    for (const eye of eyes) {
+      if (!eye.node) continue;
+      eye.node.rotation.y = MathUtils.damp(eye.node.rotation.y, eyeY, 18, delta);
+      eye.node.rotation.x = MathUtils.damp(eye.node.rotation.x, eyeX, 18, delta);
+      eye.node.rotation.z = MathUtils.damp(eye.node.rotation.z, eye.tilt, eyeBlend, delta);
+      eye.node.position.y = MathUtils.damp(eye.node.position.y, 0.027 + expressionStyle.offsetY, eyeBlend, delta);
+      eye.node.scale.x = MathUtils.damp(eye.node.scale.x, expressionStyle.scaleX, eyeBlend, delta);
+      eye.node.scale.y = MathUtils.damp(eye.node.scale.y, lid * expressionStyle.scaleY, 18, delta);
+      for (const material of eye.materials) {
+        if (!material) continue;
+        material.emissive.lerp(expressionStyle.color, colorBlend);
+        material.color.lerp(expressionStyle.color, colorBlend * 0.55);
+      }
     }
     if (mouth.current) {
       const viseme = sampleViseme();
@@ -729,13 +797,13 @@ export function ArmoredRig({
               <ArmorPart args={[0.18, 0.065, 0.06]} position={[0, -0.185, 0.015]} color={JOINT} roughness={0.24} />
 
               <group name="LeftShoulder" position={[-0.29, 0.17, 0]} onClick={hit("shoulder")}>
-                <Joint name="LeftShoulderJoint" radius={0.073} width={0.11} />
+                <Joint name="LeftShoulderJoint" radius={0.078} width={0.19} />
                 <ArmorPart args={[0.18, 0.115, 0.205]} position={[-0.012, 0.035, 0]} rotation={[0, 0, 0.08]} color={PRIMARY} roughness={0.2} />
                 <ArmorPart args={[0.13, 0.042, 0.215]} position={[-0.015, 0.09, 0]} rotation={[0, 0, 0.08]} color={DETAIL} roughness={0.22} />
                 <GlowLine args={[0.115, 0.018, 0.018]} position={[-0.02, 0.11, 0.105]} intensity={1.45} />
               </group>
               <group name="RightShoulder" position={[0.29, 0.17, 0]} onClick={hit("shoulder")}>
-                <Joint name="RightShoulderJoint" radius={0.073} width={0.11} />
+                <Joint name="RightShoulderJoint" radius={0.078} width={0.19} />
                 <ArmorPart args={[0.18, 0.115, 0.205]} position={[0.012, 0.035, 0]} rotation={[0, 0, -0.08]} color={PRIMARY} roughness={0.2} />
                 <ArmorPart args={[0.13, 0.042, 0.215]} position={[0.015, 0.09, 0]} rotation={[0, 0, -0.08]} color={DETAIL} roughness={0.22} />
                 <GlowLine args={[0.115, 0.018, 0.018]} position={[0.02, 0.11, 0.105]} intensity={1.45} />
@@ -743,9 +811,17 @@ export function ArmoredRig({
 
               <group name="Neck" position={[0, 0.3, 0]}>
                 <group ref={neckAim} name="NeckAim">
-                  <mesh castShadow>
-                    <cylinderGeometry args={[0.055, 0.07, 0.105, 20]} />
-                    <meshPhysicalMaterial color={JOINT} metalness={0.88} roughness={0.18} clearcoat={0.78} />
+                  <mesh position={[0, 0.02, 0]} castShadow receiveShadow>
+                    <cylinderGeometry args={[0.057, 0.072, 0.15, 20, 2]} />
+                    <meshPhysicalMaterial color={SECONDARY} metalness={0.95} roughness={0.16} clearcoat={0.9} clearcoatRoughness={0.08} />
+                  </mesh>
+                  <mesh position={[0, 0.09, 0]} castShadow receiveShadow>
+                    <sphereGeometry args={[0.064, 22, 16]} />
+                    <meshPhysicalMaterial color={JOINT} metalness={0.96} roughness={0.14} clearcoat={0.94} clearcoatRoughness={0.07} />
+                  </mesh>
+                  <mesh position={[0, 0.125, 0]} castShadow receiveShadow>
+                    <cylinderGeometry args={[0.05, 0.058, 0.09, 20, 2]} />
+                    <meshPhysicalMaterial color={SECONDARY} metalness={0.95} roughness={0.16} clearcoat={0.9} clearcoatRoughness={0.08} />
                   </mesh>
                   <mesh position={[0, 0.012, 0]} rotation={[Math.PI / 2, 0, 0]}>
                     <torusGeometry args={[0.064, 0.011, 8, 24]} />
@@ -773,10 +849,10 @@ export function ArmoredRig({
                       <DigitalFaceScreen />
 
                       <group ref={leftEye} name="LeftEye" position={[-0.047, 0.027, 0.143]}>
-                        <DigitalEye />
+                        <DigitalEye glowMaterial={leftEyeGlow} coreMaterial={leftEyeCore} />
                       </group>
                       <group ref={rightEye} name="RightEye" position={[0.047, 0.027, 0.143]}>
-                        <DigitalEye />
+                        <DigitalEye glowMaterial={rightEyeGlow} coreMaterial={rightEyeCore} />
                       </group>
                       <group ref={mouth} name="Mouth" position={[0, -0.047, 0.143]}>
                         <DigitalMouth />
@@ -851,7 +927,7 @@ export function ArmoredRig({
         </group>
 
         <group name="LeftUpLeg" position={[-0.09, 0.74, 0]}>
-          <Joint name="LeftHipJoint" position={[0, 0.105, 0]} radius={0.058} width={0.09} />
+          <Joint name="LeftHipJoint" position={[0, 0.105, 0]} radius={0.062} width={0.15} />
           <ArmorPart args={[0.145, 0.255, 0.155]} color={PRIMARY} roughness={0.23} />
           <ArmorPart args={[0.16, 0.075, 0.17]} position={[0, 0.075, 0]} color={SECONDARY} roughness={0.21} />
           <ArmorPart args={[0.085, 0.18, 0.04]} position={[0, 0.005, 0.093]} color={DETAIL} />
@@ -871,7 +947,7 @@ export function ArmoredRig({
         </group>
 
         <group name="RightUpLeg" position={[0.09, 0.74, 0]}>
-          <Joint name="RightHipJoint" position={[0, 0.105, 0]} radius={0.058} width={0.09} />
+          <Joint name="RightHipJoint" position={[0, 0.105, 0]} radius={0.062} width={0.15} />
           <ArmorPart args={[0.145, 0.255, 0.155]} color={PRIMARY} roughness={0.23} />
           <ArmorPart args={[0.16, 0.075, 0.17]} position={[0, 0.075, 0]} color={SECONDARY} roughness={0.21} />
           <ArmorPart args={[0.085, 0.18, 0.04]} position={[0, 0.005, 0.093]} color={DETAIL} />

@@ -10,6 +10,7 @@ import { hitReactions, sectionClip, type CharacterClip, type CharacterHit } from
 import { guidedSections } from "@/data/guide";
 import { useGuide } from "@/lib/guide/context";
 import { CharacterHost } from "@/components/guide/CharacterHost";
+import type { CharacterExpression } from "@/components/character/ArmoredRig";
 import { clipForDecision, nextAutonomousDecision } from "@/lib/character/brain";
 import { isBottomStageEvent } from "@/lib/character/bounds";
 import { emoteById } from "@/data/emotes";
@@ -57,6 +58,8 @@ export function CharacterScene({
   const maxX = useRef(3.2);
   const loco = useRef(createLocomotion(viewportToWorld(0.5)));
   const [clip, setClip] = useState<CharacterClip>("Idle");
+  const [expression, setExpression] = useState<CharacterExpression>("default");
+  const expressionReset = useRef<number | null>(null);
   const clipRef = useRef(clip);
   clipRef.current = clip;
   const { camera, gl } = useThree();
@@ -161,6 +164,13 @@ export function CharacterScene({
   };
 
   useEffect(() => subscribeEmote((id) => playEmote(id)), []); // eslint-disable-line react-hooks/exhaustive-deps -- refs only
+
+  useEffect(
+    () => () => {
+      if (expressionReset.current != null) window.clearTimeout(expressionReset.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const bump = () => noteActivity();
@@ -488,8 +498,18 @@ export function CharacterScene({
         lastHead.current = 0;
         event.preventDefault();
         event.stopPropagation();
-        onLine("Hey! I’m getting up.");
-        play("head", "Fall");
+        noteActivity();
+        if (expressionReset.current != null) window.clearTimeout(expressionReset.current);
+        setExpression("angry");
+        setClip("Annoyed");
+        onLine("Double-clicking my face? Not cool.");
+        loco.current.busyUntil = Math.max(loco.current.busyUntil, now + 1300);
+        window.setTimeout(() => setClip("Idle"), 1200);
+        expressionReset.current = window.setTimeout(() => {
+          setExpression("default");
+          expressionReset.current = null;
+          onLine(null);
+        }, 3600);
         return;
       }
       if (region === "head") lastHead.current = now;
@@ -545,6 +565,7 @@ export function CharacterScene({
           <group position={[0, 0.95, 0]}>
             <CharacterHost
               clip={clip}
+              expression={expression}
               look={look}
               lookWeight={lookWeight}
               reducedMotion={reduced}

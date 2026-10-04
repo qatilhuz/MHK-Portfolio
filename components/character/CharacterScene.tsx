@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Box3, MathUtils, Raycaster, Vector2, Vector3, type Group } from "three";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { materials } from "@/components/three/materials";
 import { characterConfig } from "@/data/characterConfig";
-import { hitReactions, sectionClip, type CharacterClip, type CharacterHit } from "@/data/character";
+import {
+  EMOTE_DIALOGUE,
+  RANDOM_IDLE_THOUGHTS,
+  hitReactions,
+  randomCharacterLine,
+  sectionClip,
+  type CharacterClip,
+  type CharacterHit,
+} from "@/data/character";
 import { guidedSections } from "@/data/guide";
 import { useGuide } from "@/lib/guide/context";
 import { CharacterHost } from "@/components/guide/CharacterHost";
@@ -32,6 +40,8 @@ export function CharacterScene({
   onLine: (text: string | null) => void;
 }) {
   const guide = useGuide();
+  const guideDialogueBusy = useRef(false);
+  guideDialogueBusy.current = Boolean(guide?.guided);
   const reduced = useReducedMotion() && characterConfig.accessibility.reducedMotionRespect;
   const group = useRef<Group>(null);
   const pivot = useRef<Group>(null);
@@ -60,6 +70,9 @@ export function CharacterScene({
   const [clip, setClip] = useState<CharacterClip>("Idle");
   const [expression, setExpression] = useState<CharacterExpression>("default");
   const expressionReset = useRef<number | null>(null);
+  const dialogueStartTimer = useRef<number | null>(null);
+  const dialogueClearTimer = useRef<number | null>(null);
+  const dialogueToken = useRef(0);
   const clipRef = useRef(clip);
   clipRef.current = clip;
   const { camera, gl } = useThree();
@@ -132,6 +145,44 @@ export function CharacterScene({
     setDestination(loco.current, { x, y: 0, z: 0 }, reason);
   };
 
+  const cancelTransientDialogue = useCallback(
+    (clearLine = false) => {
+      dialogueToken.current += 1;
+      if (dialogueStartTimer.current != null) {
+        window.clearTimeout(dialogueStartTimer.current);
+        dialogueStartTimer.current = null;
+      }
+      if (dialogueClearTimer.current != null) {
+        window.clearTimeout(dialogueClearTimer.current);
+        dialogueClearTimer.current = null;
+      }
+      if (clearLine) onLine(null);
+    },
+    [onLine],
+  );
+
+  const scheduleTransientDialogue = useCallback(
+    (text: string | null, delayMs: number, visibleMs: number) => {
+      if (!text) return;
+      dialogueToken.current += 1;
+      const token = dialogueToken.current;
+      if (dialogueStartTimer.current != null) window.clearTimeout(dialogueStartTimer.current);
+      if (dialogueClearTimer.current != null) window.clearTimeout(dialogueClearTimer.current);
+      dialogueStartTimer.current = window.setTimeout(() => {
+        dialogueStartTimer.current = null;
+        if (dialogueToken.current !== token || guideDialogueBusy.current || asleep.current || waking.current) return;
+        onLine(text);
+      }, delayMs);
+      dialogueClearTimer.current = window.setTimeout(() => {
+        dialogueClearTimer.current = null;
+        if (dialogueToken.current !== token) return;
+        dialogueToken.current += 1;
+        onLine(null);
+      }, delayMs + visibleMs);
+    },
+    [onLine],
+  );
+
   const playEmote = (id: string) => {
     if (asleep.current || waking.current) return;
     const def = emoteById(id);
@@ -149,9 +200,16 @@ export function CharacterScene({
       return;
     }
     const next = reduced ? def.reducedClip : def.clip;
+    const duration = reduced ? Math.min(def.durationMs, 900) : def.durationMs;
     lookWeightTarget.current = def.fullBody ? 0 : 0.35;
     setClip(next);
-    emoteUntil.current = now + (reduced ? Math.min(def.durationMs, 900) : def.durationMs);
+
+    const dialogue = randomCharacterLine(EMOTE_DIALOGUE[def.clip] ?? []);
+    const dialogueDelay = reduced ? 420 : 480 + Math.random() * 240;
+    const dialogueVisibleMs = Math.max(1600, Math.min(3200, duration - dialogueDelay + 900));
+    scheduleTransientDialogue(dialogue, dialogueDelay, dialogueVisibleMs);
+
+    emoteUntil.current = now + duration;
     emoteCool.current = now + def.cooldownMs;
     loco.current.busyUntil = emoteUntil.current;
     loco.current.target = { ...loco.current.position };
@@ -160,7 +218,7 @@ export function CharacterScene({
         setClip("Idle");
         lookWeightTarget.current = 1;
       }
-    }, (reduced ? Math.min(def.durationMs, 900) : def.durationMs) + 50);
+    }, duration + 50);
   };
 
   useEffect(() => subscribeEmote((id) => playEmote(id)), []); // eslint-disable-line react-hooks/exhaustive-deps -- refs only
@@ -168,9 +226,14 @@ export function CharacterScene({
   useEffect(
     () => () => {
       if (expressionReset.current != null) window.clearTimeout(expressionReset.current);
+      cancelTransientDialogue(false);
     },
-    [],
+    [cancelTransientDialogue],
   );
+
+  useEffect(() => {
+    if (guide?.guided) cancelTransientDialogue(true);
+  }, [cancelTransientDialogue, guide?.guided]);
 
   useEffect(() => {
     const bump = () => noteActivity();
@@ -225,6 +288,15 @@ export function CharacterScene({
       const now = performance.now();
       if (now < manualUntil.current || now < loco.current.busyUntil || locked()) return;
       if (guide.guided && (guide.phase === "speaking" || guide.phase === "greeting")) return;
+      if (!guide.guided && Math.random() < 0.2) {
+        const thought = randomCharacterLine(RANDOM_IDLE_THOUGHTS);
+        lastDecision.current = "RETURN_TO_IDLE";
+        lastActivity.current = now;
+        setClip("Idle");
+        loco.current.busyUntil = now + 3500;
+        scheduleTransientDialogue(thought, 120, 3200);
+        return;
+      }
       const decision = nextAutonomousDecision(lastDecision.current);
       lastDecision.current = decision;
       if (decision === "WANDER" && characterConfig.movement.autonomousWalking) {
@@ -237,7 +309,7 @@ export function CharacterScene({
       window.setTimeout(() => setClip("Idle"), 1800);
     }, 12000 + Math.random() * 8000);
     return () => window.clearInterval(id);
-  }, [guide, reduced]);
+  }, [guide, reduced, scheduleTransientDialogue]);
 
   useFrame((_, delta) => {
     const node = group.current;
@@ -390,6 +462,7 @@ export function CharacterScene({
       if (asleep.current || waking.current) return;
       if (locked() && extra !== "Fall") return;
       pokes.current += 1;
+      cancelTransientDialogue(false);
       onLine(pokes.current > 6 ? "Easy — I still need to host the site." : hitReactions[region].message);
       const next = extra ?? hitReactions[region].clip;
       if (next === "Fall") {
@@ -477,6 +550,7 @@ export function CharacterScene({
         !locked()
       ) {
         hoverCool.current = performance.now() + 9000;
+        cancelTransientDialogue(false);
         onLine("Hello!");
         setClip("Wave");
         window.setTimeout(() => {
@@ -502,6 +576,7 @@ export function CharacterScene({
         if (expressionReset.current != null) window.clearTimeout(expressionReset.current);
         setExpression("angry");
         setClip("Annoyed");
+        cancelTransientDialogue(false);
         onLine("Double-clicking my face? Not cool.");
         loco.current.busyUntil = Math.max(loco.current.busyUntil, now + 1300);
         window.setTimeout(() => setClip("Idle"), 1200);
@@ -550,7 +625,7 @@ export function CharacterScene({
       window.removeEventListener("keydown", onKey);
       document.body.style.cursor = "";
     };
-  }, [camera, gl, guide, onLine]);
+  }, [camera, cancelTransientDialogue, gl, guide, onLine]);
 
   const mobile = typeof window !== "undefined" && window.innerWidth < 768;
 

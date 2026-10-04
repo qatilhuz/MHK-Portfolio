@@ -2,30 +2,36 @@
 
 import { RoundedBox } from "@react-three/drei";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import {
   AnimationMixer,
   CanvasTexture,
   LoopRepeat,
   MathUtils,
+  RepeatWrapping,
   Sprite,
   SpriteMaterial,
   type AnimationAction,
   type Group as ThreeGroup,
+  type Texture,
 } from "three";
 import type { CharacterClip, CharacterHit } from "@/data/character";
 import { createHostClips } from "@/lib/character/clips";
 import { sampleViseme } from "@/lib/character/visemes";
 
-const PRIMARY = "#111827";
-const SECONDARY = "#334155";
-const ACCENT = "#38bdf8";
-const ACCENT_HOT = "#67e8f9";
-const DETAIL = "#dbeafe";
-const JOINT = "#64748b";
-const DARK_JOINT = "#0f172a";
+const PRIMARY = "#080d16";
+const SECONDARY = "#263449";
+const ACCENT = "#16bff7";
+const ACCENT_HOT = "#8be9ff";
+const DETAIL = "#d8e8f5";
+const JOINT = "#718197";
+const DARK_JOINT = "#050912";
+const SCREEN_GLASS = "#01050b";
 
 type Vec3 = [number, number, number];
+type SurfaceFinish = "carbon" | "brushed" | "polished";
+
+const CarbonFiberContext = createContext<Texture | null>(null);
 
 type ArmorPartProps = {
   args: Vec3;
@@ -37,10 +43,45 @@ type ArmorPartProps = {
   clearcoat?: number;
   emissive?: string;
   emissiveIntensity?: number;
+  finish?: SurfaceFinish;
   radius?: number;
   name?: string;
   onClick?: (event: ThreeEvent<MouseEvent>) => void;
 };
+
+function makeCarbonFiberTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = "#b8b8b8";
+    ctx.fillRect(0, 0, 64, 64);
+    for (let y = -8; y < 72; y += 8) {
+      for (let x = -8; x < 72; x += 8) {
+        const alternate = ((x + y) / 8) % 2 === 0;
+        ctx.save();
+        ctx.translate(x + 4, y + 4);
+        ctx.rotate(alternate ? Math.PI / 4 : -Math.PI / 4);
+        const gradient = ctx.createLinearGradient(-5, 0, 5, 0);
+        gradient.addColorStop(0, "#767676");
+        gradient.addColorStop(0.42, alternate ? "#d8d8d8" : "#a0a0a0");
+        gradient.addColorStop(0.58, alternate ? "#9a9a9a" : "#d3d3d3");
+        gradient.addColorStop(1, "#696969");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-6, -2.2, 12, 4.4);
+        ctx.restore();
+      }
+    }
+  }
+  const texture = new CanvasTexture(canvas);
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  texture.repeat.set(4, 7);
+  texture.anisotropy = 4;
+  texture.needsUpdate = true;
+  return texture;
+}
 
 function makeZTexture() {
   const canvas = document.createElement("canvas");
@@ -121,15 +162,21 @@ function ArmorPart({
   position,
   rotation,
   color = PRIMARY,
-  metalness = 0.72,
-  roughness = 0.28,
-  clearcoat = 0.7,
+  metalness,
+  roughness,
+  clearcoat,
   emissive,
   emissiveIntensity = 0,
+  finish,
   radius,
   name,
   onClick,
 }: ArmorPartProps) {
+  const carbonFiber = useContext(CarbonFiberContext);
+  const surface: SurfaceFinish =
+    finish ?? (color === PRIMARY || color === DARK_JOINT ? "carbon" : color === DETAIL ? "polished" : "brushed");
+  const isCarbon = surface === "carbon";
+  const isPolished = surface === "polished";
   const bevel = radius ?? Math.min(args[0], args[1], args[2]) * 0.18;
   return (
     <RoundedBox
@@ -145,10 +192,21 @@ function ArmorPart({
     >
       <meshPhysicalMaterial
         color={color}
-        metalness={metalness}
-        roughness={roughness}
-        clearcoat={clearcoat}
-        clearcoatRoughness={0.16}
+        metalness={metalness ?? (isCarbon ? 0.58 : isPolished ? 0.94 : 0.86)}
+        roughness={roughness ?? (isCarbon ? 0.5 : isPolished ? 0.14 : 0.27)}
+        roughnessMap={isCarbon ? carbonFiber : null}
+        bumpMap={isCarbon ? carbonFiber : null}
+        bumpScale={isCarbon ? 0.004 : 0}
+        clearcoat={clearcoat ?? (isCarbon ? 0.82 : 0.94)}
+        clearcoatRoughness={isCarbon ? 0.24 : isPolished ? 0.08 : 0.17}
+        anisotropy={surface === "brushed" ? 0.58 : 0}
+        anisotropyRotation={Math.PI / 2}
+        ior={1.48}
+        specularIntensity={isCarbon ? 0.72 : 1}
+        specularColor={isCarbon ? "#9bc5df" : "#ffffff"}
+        sheen={isCarbon ? 0.24 : 0.05}
+        sheenColor={isCarbon ? "#1e5f7a" : "#ffffff"}
+        sheenRoughness={0.42}
         emissive={emissive ?? "#000000"}
         emissiveIntensity={emissiveIntensity}
         toneMapped={emissiveIntensity < 1}
@@ -270,15 +328,176 @@ function FootAssembly({ side }: { side: "Left" | "Right" }) {
   return (
     <>
       <Joint name={`${side}AnkleJoint`} position={[0, 0.025, -0.012]} rotation={[Math.PI / 2, 0, 0]} radius={0.044} width={0.07} />
-      <ArmorPart args={[0.155, 0.075, 0.19]} position={[0, -0.025, 0.035]} color={SECONDARY} roughness={0.25} />
-      <ArmorPart args={[0.13, 0.045, 0.095]} position={[0, -0.015, 0.115]} rotation={[-0.09, 0, 0]} color={PRIMARY} roughness={0.24} />
-      <ArmorPart args={[0.14, 0.035, 0.075]} position={[0, -0.026, -0.075]} color={PRIMARY} roughness={0.32} />
+      <ArmorPart args={[0.155, 0.075, 0.19]} position={[0, -0.025, 0.035]} color={SECONDARY} />
+      <ArmorPart args={[0.13, 0.045, 0.095]} position={[0, -0.015, 0.115]} rotation={[-0.09, 0, 0]} color={PRIMARY} />
+      <ArmorPart args={[0.14, 0.035, 0.075]} position={[0, -0.026, -0.075]} color={PRIMARY} />
       <ArmorPart args={[0.16, 0.025, 0.225]} position={[0, -0.07, 0.035]} color={DARK_JOINT} roughness={0.72} clearcoat={0.15} radius={0.008} />
-      <GlowLine args={[0.012, 0.022, 0.15]} position={[-0.071, -0.03, 0.04]} intensity={1.15} />
-      <GlowLine args={[0.012, 0.022, 0.15]} position={[0.071, -0.03, 0.04]} intensity={1.15} />
-      <ArmorPart args={[0.044, 0.028, 0.055]} position={[-0.047, -0.05, 0.135]} color={DETAIL} roughness={0.28} />
-      <ArmorPart args={[0.044, 0.028, 0.055]} position={[0.047, -0.05, 0.135]} color={DETAIL} roughness={0.28} />
+      <GlowLine args={[0.012, 0.022, 0.15]} position={[-0.071, -0.03, 0.04]} intensity={1.5} />
+      <GlowLine args={[0.012, 0.022, 0.15]} position={[0.071, -0.03, 0.04]} intensity={1.5} />
+      <GlowLine args={[0.09, 0.009, 0.012]} position={[0, -0.015, 0.164]} intensity={1.2} />
+      <ArmorPart args={[0.044, 0.028, 0.055]} position={[-0.047, -0.05, 0.135]} color={DETAIL} />
+      <ArmorPart args={[0.044, 0.028, 0.055]} position={[0.047, -0.05, 0.135]} color={DETAIL} />
     </>
+  );
+}
+
+function DigitalFaceScreen() {
+  return (
+    <group name="HeadDisplay">
+      <ArmorPart
+        name="HeadScreenBezel"
+        args={[0.194, 0.158, 0.018]}
+        position={[0, 0.002, 0.111]}
+        color={DARK_JOINT}
+        roughness={0.54}
+        clearcoat={0.72}
+        finish="carbon"
+        radius={0.025}
+      />
+      <RoundedBox
+        name="HeadScreenGlass"
+        args={[0.174, 0.138, 0.012]}
+        position={[0, 0.002, 0.123]}
+        radius={0.021}
+        smoothness={4}
+        castShadow
+      >
+        <meshPhysicalMaterial
+          color={SCREEN_GLASS}
+          metalness={0.32}
+          roughness={0.12}
+          clearcoat={1}
+          clearcoatRoughness={0.035}
+          transmission={0.08}
+          thickness={0.16}
+          ior={1.52}
+          specularIntensity={1}
+          specularColor="#b9edff"
+          transparent
+          opacity={0.98}
+        />
+      </RoundedBox>
+      <GlowLine args={[0.132, 0.004, 0.004]} position={[0, 0.048, 0.132]} intensity={0.4} />
+      <GlowLine args={[0.146, 0.003, 0.003]} position={[0, 0.001, 0.132]} intensity={0.28} />
+      <GlowLine args={[0.128, 0.003, 0.003]} position={[0, -0.046, 0.132]} intensity={0.24} />
+      <GlowLine args={[0.009, 0.095, 0.005]} position={[-0.079, 0.002, 0.132]} intensity={0.72} />
+      <GlowLine args={[0.009, 0.095, 0.005]} position={[0.079, 0.002, 0.132]} intensity={0.72} />
+    </group>
+  );
+}
+
+function DigitalEye() {
+  return (
+    <>
+      <ArmorPart
+        args={[0.052, 0.022, 0.009]}
+        color="#062d3e"
+        metalness={0.15}
+        roughness={0.22}
+        clearcoat={1}
+        emissive={ACCENT}
+        emissiveIntensity={1.15}
+        finish="polished"
+        radius={0.009}
+      />
+      <ArmorPart
+        args={[0.039, 0.011, 0.008]}
+        position={[0, 0, 0.008]}
+        color={ACCENT_HOT}
+        metalness={0.08}
+        roughness={0.08}
+        clearcoat={1}
+        emissive={ACCENT_HOT}
+        emissiveIntensity={3.8}
+        finish="polished"
+        radius={0.005}
+      />
+      <GlowLine args={[0.009, 0.009, 0.004]} position={[-0.016, 0, 0.014]} color="#e7fbff" intensity={4.2} />
+    </>
+  );
+}
+
+function DigitalMouth() {
+  return (
+    <>
+      <ArmorPart
+        args={[0.083, 0.026, 0.009]}
+        color="#041c28"
+        metalness={0.12}
+        roughness={0.24}
+        clearcoat={1}
+        emissive={ACCENT}
+        emissiveIntensity={0.72}
+        finish="polished"
+        radius={0.009}
+      />
+      <GlowLine args={[0.061, 0.007, 0.006]} position={[0, 0.006, 0.009]} color={ACCENT_HOT} intensity={3.2} />
+      <GlowLine args={[0.045, 0.005, 0.006]} position={[0, -0.006, 0.009]} intensity={2.2} />
+    </>
+  );
+}
+
+function Headphones() {
+  return (
+    <group name="Headphones">
+      <mesh name="HeadphoneBand" position={[0, 0.055, -0.012]} castShadow>
+        <torusGeometry args={[0.137, 0.014, 10, 36, Math.PI]} />
+        <meshPhysicalMaterial
+          color={DARK_JOINT}
+          metalness={0.64}
+          roughness={0.48}
+          clearcoat={0.78}
+          clearcoatRoughness={0.2}
+          anisotropy={0.42}
+        />
+      </mesh>
+      <mesh name="HeadphoneEnergyBand" position={[0, 0.055, 0.003]}>
+        <torusGeometry args={[0.137, 0.0035, 6, 36, Math.PI]} />
+        <meshPhysicalMaterial color={ACCENT_HOT} emissive={ACCENT} emissiveIntensity={2.4} toneMapped={false} />
+      </mesh>
+      {([-1, 1] as const).map((side) => (
+        <group key={side} name={side < 0 ? "HeadLeftEarpiece" : "HeadRightEarpiece"} position={[side * 0.137, 0.045, 0]}>
+          <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+            <cylinderGeometry args={[0.052, 0.046, 0.038, 24, 2]} />
+            <meshPhysicalMaterial
+              color={SECONDARY}
+              metalness={0.9}
+              roughness={0.18}
+              clearcoat={0.95}
+              clearcoatRoughness={0.08}
+              anisotropy={0.55}
+            />
+          </mesh>
+          <mesh rotation={[0, Math.PI / 2, 0]} position={[side * 0.021, 0, 0]}>
+            <torusGeometry args={[0.035, 0.006, 8, 24]} />
+            <meshPhysicalMaterial color={ACCENT_HOT} emissive={ACCENT} emissiveIntensity={2.6} toneMapped={false} />
+          </mesh>
+          <ArmorPart args={[0.026, 0.065, 0.052]} position={[side * 0.025, -0.052, 0]} color={PRIMARY} finish="carbon" radius={0.009} />
+          <GlowLine args={[0.006, 0.042, 0.007]} position={[side * 0.041, -0.052, 0.027]} intensity={1.8} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function Antenna() {
+  return (
+    <group name="HeadAntenna" position={[0.071, 0.145, -0.018]} rotation={[0.08, 0, -0.16]}>
+      <mesh castShadow>
+        <sphereGeometry args={[0.023, 16, 10]} />
+        <meshPhysicalMaterial color={JOINT} metalness={0.92} roughness={0.14} clearcoat={0.9} />
+      </mesh>
+      <mesh position={[0, 0.056, 0]} castShadow>
+        <cylinderGeometry args={[0.006, 0.011, 0.105, 12]} />
+        <meshPhysicalMaterial color={DETAIL} metalness={0.95} roughness={0.12} clearcoat={1} />
+      </mesh>
+      <ArmorPart args={[0.024, 0.074, 0.014]} position={[0.002, 0.12, 0]} rotation={[0, 0, -0.08]} color={PRIMARY} finish="carbon" radius={0.006} />
+      <GlowLine args={[0.007, 0.057, 0.006]} position={[0.002, 0.12, 0.009]} intensity={2} />
+      <mesh position={[0.004, 0.168, 0]}>
+        <sphereGeometry args={[0.017, 16, 10]} />
+        <meshPhysicalMaterial color={ACCENT_HOT} emissive={ACCENT_HOT} emissiveIntensity={3.3} toneMapped={false} />
+      </mesh>
+    </group>
   );
 }
 
@@ -307,6 +526,12 @@ export function ArmoredRig({
   const current = useRef("Idle");
   const blink = useRef(0);
   const clips = useMemo(() => createHostClips(), []);
+  const carbonFiber = useMemo(
+    () => (typeof document === "undefined" ? null : makeCarbonFiberTexture()),
+    [],
+  );
+
+  useEffect(() => () => carbonFiber?.dispose(), [carbonFiber]);
 
   useEffect(() => {
     if (!root.current) return;
@@ -452,8 +677,9 @@ export function ArmoredRig({
   };
 
   return (
-    <group ref={root} name="Host">
-      <group name="Hips">
+    <CarbonFiberContext.Provider value={carbonFiber}>
+      <group ref={root} name="Host">
+        <group name="Hips">
         <ArmorPart args={[0.31, 0.11, 0.21]} position={[0, 0.88, 0]} color={SECONDARY} />
         <ArmorPart args={[0.19, 0.09, 0.235]} position={[0, 0.9, 0]} color={PRIMARY} roughness={0.22} />
         <Joint name="HipCore" position={[0, 0.9, 0.02]} rotation={[Math.PI / 2, 0, 0]} radius={0.055} width={0.12} />
@@ -484,8 +710,12 @@ export function ArmoredRig({
                   clearcoat={1}
                 />
               </mesh>
-              <GlowLine args={[0.026, 0.2, 0.018]} position={[-0.105, 0.035, 0.155]} rotation={[0, 0, -0.08]} intensity={1.55} />
-              <GlowLine args={[0.026, 0.2, 0.018]} position={[0.105, 0.035, 0.155]} rotation={[0, 0, 0.08]} intensity={1.55} />
+              <GlowLine args={[0.026, 0.2, 0.018]} position={[-0.105, 0.035, 0.155]} rotation={[0, 0, -0.08]} intensity={1.75} />
+              <GlowLine args={[0.026, 0.2, 0.018]} position={[0.105, 0.035, 0.155]} rotation={[0, 0, 0.08]} intensity={1.75} />
+              <GlowLine args={[0.13, 0.011, 0.012]} position={[-0.064, 0.147, 0.16]} rotation={[0, 0, -0.38]} intensity={1.55} />
+              <GlowLine args={[0.13, 0.011, 0.012]} position={[0.064, 0.147, 0.16]} rotation={[0, 0, 0.38]} intensity={1.55} />
+              <GlowLine args={[0.082, 0.009, 0.011]} position={[-0.12, -0.108, 0.155]} rotation={[0, 0, 0.42]} intensity={1.15} />
+              <GlowLine args={[0.082, 0.009, 0.011]} position={[0.12, -0.108, 0.155]} rotation={[0, 0, -0.42]} intensity={1.15} />
               <ArmorPart args={[0.055, 0.24, 0.045]} position={[-0.19, 0.02, 0.115]} rotation={[0, 0, -0.06]} color={DETAIL} roughness={0.2} />
               <ArmorPart args={[0.055, 0.24, 0.045]} position={[0.19, 0.02, 0.115]} rotation={[0, 0, 0.06]} color={DETAIL} roughness={0.2} />
               <ArmorPart args={[0.29, 0.3, 0.085]} position={[0, 0.02, -0.17]} color={SECONDARY} roughness={0.3} />
@@ -518,68 +748,34 @@ export function ArmoredRig({
 
                   <group name="Head" position={[0, 0.18, 0]}>
                     <group ref={headAim} name="HeadAim">
-                      <ArmorPart name="Head" args={[0.215, 0.225, 0.205]} color={DETAIL} metalness={0.62} roughness={0.2} onClick={hit("head")} />
-                      <ArmorPart args={[0.24, 0.09, 0.225]} position={[0, 0.11, -0.005]} color={PRIMARY} roughness={0.19} />
-                      <ArmorPart args={[0.19, 0.035, 0.045]} position={[0, 0.065, 0.109]} color={DARK_JOINT} roughness={0.16} />
-                      <GlowLine args={[0.175, 0.015, 0.014]} position={[0, 0.081, 0.134]} color={ACCENT_HOT} intensity={2.1} />
-                      <ArmorPart args={[0.08, 0.12, 0.09]} position={[-0.125, 0.055, -0.004]} color={PRIMARY} roughness={0.21} />
-                      <ArmorPart args={[0.08, 0.12, 0.09]} position={[0.125, 0.055, -0.004]} color={PRIMARY} roughness={0.21} />
-                      <mesh position={[-0.13, 0.05, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-                        <cylinderGeometry args={[0.032, 0.032, 0.025, 18]} />
-                        <meshPhysicalMaterial color={JOINT} metalness={0.9} roughness={0.18} clearcoat={0.75} />
-                      </mesh>
-                      <mesh position={[0.13, 0.05, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-                        <cylinderGeometry args={[0.032, 0.032, 0.025, 18]} />
-                        <meshPhysicalMaterial color={JOINT} metalness={0.9} roughness={0.18} clearcoat={0.75} />
-                      </mesh>
-                      <ArmorPart args={[0.13, 0.055, 0.065]} position={[0, -0.105, 0.055]} color={SECONDARY} roughness={0.23} />
-                      <GlowLine args={[0.085, 0.012, 0.014]} position={[0, -0.115, 0.092]} intensity={1.25} />
+                      <ArmorPart
+                        name="Head"
+                        args={[0.218, 0.226, 0.208]}
+                        color={SECONDARY}
+                        finish="brushed"
+                        onClick={hit("head")}
+                      />
+                      <ArmorPart args={[0.238, 0.088, 0.226]} position={[0, 0.112, -0.006]} color={PRIMARY} finish="carbon" />
+                      <ArmorPart args={[0.128, 0.028, 0.205]} position={[0, 0.149, -0.003]} color={DETAIL} finish="polished" />
+                      <ArmorPart args={[0.068, 0.105, 0.086]} position={[-0.124, 0.052, -0.005]} color={PRIMARY} finish="carbon" />
+                      <ArmorPart args={[0.068, 0.105, 0.086]} position={[0.124, 0.052, -0.005]} color={PRIMARY} finish="carbon" />
+                      <Headphones />
+                      <DigitalFaceScreen />
 
-                      <group ref={leftEye} name="LeftEye" position={[-0.052, 0.025, 0.111]}>
-                        <ArmorPart args={[0.052, 0.036, 0.025]} color={DARK_JOINT} roughness={0.16} />
-                        <ArmorPart
-                          args={[0.024, 0.021, 0.013]}
-                          position={[0, 0, 0.016]}
-                          color={ACCENT_HOT}
-                          metalness={0.25}
-                          roughness={0.12}
-                          emissive={ACCENT}
-                          emissiveIntensity={2.4}
-                          clearcoat={1}
-                        />
+                      <group ref={leftEye} name="LeftEye" position={[-0.047, 0.027, 0.143]}>
+                        <DigitalEye />
                       </group>
-                      <group ref={rightEye} name="RightEye" position={[0.052, 0.025, 0.111]}>
-                        <ArmorPart args={[0.052, 0.036, 0.025]} color={DARK_JOINT} roughness={0.16} />
-                        <ArmorPart
-                          args={[0.024, 0.021, 0.013]}
-                          position={[0, 0, 0.016]}
-                          color={ACCENT_HOT}
-                          metalness={0.25}
-                          roughness={0.12}
-                          emissive={ACCENT}
-                          emissiveIntensity={2.4}
-                          clearcoat={1}
-                        />
+                      <group ref={rightEye} name="RightEye" position={[0.047, 0.027, 0.143]}>
+                        <DigitalEye />
                       </group>
-                      <group ref={mouth} name="Mouth" position={[0, -0.057, 0.111]}>
-                        <ArmorPart
-                          args={[0.075, 0.021, 0.017]}
-                          color={ACCENT_HOT}
-                          metalness={0.35}
-                          roughness={0.16}
-                          emissive={ACCENT}
-                          emissiveIntensity={1.15}
-                          clearcoat={1}
-                        />
+                      <group ref={mouth} name="Mouth" position={[0, -0.047, 0.143]}>
+                        <DigitalMouth />
                       </group>
-                      <mesh position={[0.075, 0.155, -0.02]} rotation={[0.08, 0, -0.18]} castShadow>
-                        <cylinderGeometry args={[0.008, 0.012, 0.1, 12]} />
-                        <meshPhysicalMaterial color={JOINT} metalness={0.88} roughness={0.18} clearcoat={0.7} />
-                      </mesh>
-                      <mesh position={[0.083, 0.21, -0.01]}>
-                        <sphereGeometry args={[0.017, 14, 10]} />
-                        <meshPhysicalMaterial color={ACCENT_HOT} emissive={ACCENT} emissiveIntensity={2} toneMapped={false} />
-                      </mesh>
+
+                      <ArmorPart args={[0.142, 0.052, 0.067]} position={[0, -0.107, 0.046]} color={SECONDARY} finish="brushed" />
+                      <ArmorPart args={[0.104, 0.026, 0.052]} position={[0, -0.125, 0.075]} color={PRIMARY} finish="carbon" />
+                      <GlowLine args={[0.088, 0.009, 0.012]} position={[0, -0.126, 0.106]} intensity={1.7} />
+                      <Antenna />
                       <SleepZs active={clip === "Sleep"} />
                     </group>
                   </group>
@@ -589,8 +785,9 @@ export function ArmoredRig({
               <group name="LeftArm" position={[-0.32, 0.02, 0]} rotation={[0, 0, 0.12]}>
                 <ArmorPart args={[0.105, 0.205, 0.125]} color={PRIMARY} roughness={0.22} />
                 <ArmorPart args={[0.125, 0.075, 0.14]} position={[0, 0.045, 0.005]} color={SECONDARY} roughness={0.22} />
-                <ArmorPart args={[0.075, 0.145, 0.035]} position={[0, 0, 0.073]} color={DETAIL} roughness={0.2} />
-                <GlowLine args={[0.018, 0.12, 0.014]} position={[0, 0, 0.095]} intensity={1.35} />
+                <ArmorPart args={[0.075, 0.145, 0.035]} position={[0, 0, 0.073]} color={DETAIL} />
+                <GlowLine args={[0.018, 0.12, 0.014]} position={[0, 0, 0.095]} intensity={1.7} />
+                <GlowLine args={[0.062, 0.009, 0.011]} position={[-0.024, 0.058, 0.101]} rotation={[0, 0, 0.42]} intensity={1.2} />
                 <Piston position={[0.048, -0.02, -0.045]} rotation={[0, 0, -0.08]} />
                 <group name="LeftForeArm" position={[0, -0.18, 0]}>
                   <Joint name="LeftElbowJoint" radius={0.053} width={0.09} />
@@ -615,8 +812,9 @@ export function ArmoredRig({
               <group name="RightArm" position={[0.32, 0.02, 0]} rotation={[0, 0, -0.12]} onClick={hit("hand")}>
                 <ArmorPart args={[0.105, 0.205, 0.125]} color={PRIMARY} roughness={0.22} />
                 <ArmorPart args={[0.125, 0.075, 0.14]} position={[0, 0.045, 0.005]} color={SECONDARY} roughness={0.22} />
-                <ArmorPart args={[0.075, 0.145, 0.035]} position={[0, 0, 0.073]} color={DETAIL} roughness={0.2} />
-                <GlowLine args={[0.018, 0.12, 0.014]} position={[0, 0, 0.095]} intensity={1.35} />
+                <ArmorPart args={[0.075, 0.145, 0.035]} position={[0, 0, 0.073]} color={DETAIL} />
+                <GlowLine args={[0.018, 0.12, 0.014]} position={[0, 0, 0.095]} intensity={1.7} />
+                <GlowLine args={[0.062, 0.009, 0.011]} position={[0.024, 0.058, 0.101]} rotation={[0, 0, -0.42]} intensity={1.2} />
                 <Piston position={[-0.048, -0.02, -0.045]} rotation={[0, 0, 0.08]} />
                 <group name="RightForeArm" position={[0, -0.18, 0]}>
                   <Joint name="RightElbowJoint" radius={0.053} width={0.09} />
@@ -646,8 +844,9 @@ export function ArmoredRig({
           <Joint name="LeftHipJoint" position={[0, 0.105, 0]} radius={0.058} width={0.09} />
           <ArmorPart args={[0.145, 0.255, 0.155]} color={PRIMARY} roughness={0.23} />
           <ArmorPart args={[0.16, 0.075, 0.17]} position={[0, 0.075, 0]} color={SECONDARY} roughness={0.21} />
-          <ArmorPart args={[0.085, 0.18, 0.04]} position={[0, 0.005, 0.093]} color={DETAIL} roughness={0.2} />
-          <GlowLine args={[0.017, 0.145, 0.013]} position={[0, 0.005, 0.119]} intensity={1.35} />
+          <ArmorPart args={[0.085, 0.18, 0.04]} position={[0, 0.005, 0.093]} color={DETAIL} />
+          <GlowLine args={[0.017, 0.145, 0.013]} position={[0, 0.005, 0.119]} intensity={1.7} />
+          <GlowLine args={[0.067, 0.009, 0.011]} position={[-0.02, 0.07, 0.12]} rotation={[0, 0, 0.38]} intensity={1.2} />
           <Piston position={[-0.052, -0.01, -0.045]} rotation={[0, 0, -0.05]} />
           <group name="LeftLeg" position={[0, -0.22, 0]}>
             <Joint name="LeftKneeJoint" radius={0.061} width={0.105} />
@@ -665,8 +864,9 @@ export function ArmoredRig({
           <Joint name="RightHipJoint" position={[0, 0.105, 0]} radius={0.058} width={0.09} />
           <ArmorPart args={[0.145, 0.255, 0.155]} color={PRIMARY} roughness={0.23} />
           <ArmorPart args={[0.16, 0.075, 0.17]} position={[0, 0.075, 0]} color={SECONDARY} roughness={0.21} />
-          <ArmorPart args={[0.085, 0.18, 0.04]} position={[0, 0.005, 0.093]} color={DETAIL} roughness={0.2} />
-          <GlowLine args={[0.017, 0.145, 0.013]} position={[0, 0.005, 0.119]} intensity={1.35} />
+          <ArmorPart args={[0.085, 0.18, 0.04]} position={[0, 0.005, 0.093]} color={DETAIL} />
+          <GlowLine args={[0.017, 0.145, 0.013]} position={[0, 0.005, 0.119]} intensity={1.7} />
+          <GlowLine args={[0.067, 0.009, 0.011]} position={[0.02, 0.07, 0.12]} rotation={[0, 0, -0.38]} intensity={1.2} />
           <Piston position={[0.052, -0.01, -0.045]} rotation={[0, 0, 0.05]} />
           <group name="RightLeg" position={[0, -0.22, 0]}>
             <Joint name="RightKneeJoint" radius={0.061} width={0.105} />
@@ -681,5 +881,6 @@ export function ArmoredRig({
         </group>
       </group>
     </group>
+    </CarbonFiberContext.Provider>
   );
 }

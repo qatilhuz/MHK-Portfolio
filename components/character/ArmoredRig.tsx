@@ -826,9 +826,11 @@ export function ArmoredRig({
   onHit: (region: CharacterHit) => void;
 }) {
   const root = useRef<ThreeGroup>(null);
-  const headAim = useRef<ThreeGroup>(null);
-  const neckAim = useRef<ThreeGroup>(null);
+  const hipsAim = useRef<ThreeGroup>(null);
+  const spineAim = useRef<ThreeGroup>(null);
   const chestAim = useRef<ThreeGroup>(null);
+  const neckAim = useRef<ThreeGroup>(null);
+  const headAim = useRef<ThreeGroup>(null);
   const leftEye = useRef<ThreeGroup>(null);
   const rightEye = useRef<ThreeGroup>(null);
   const leftEyeGlow = useRef<MeshPhysicalMaterial>(null);
@@ -946,25 +948,35 @@ export function ArmoredRig({
       clip === "Wake";
     const contactEmote = clip === "Clap" || clip === "Facepalm" || clip === "Think";
     const w =
-      (reducedMotion ? 0.2 : lookWeight.current) *
+      lookWeight.current *
+      (reducedMotion ? 0.2 : 1) *
       (fullBody || contactEmote ? 0 : greeting ? 0.22 : walking ? 0.18 : 1);
     const aim = look.current;
     const yaw = MathUtils.clamp(aim.x * 0.62 * w, -0.65, 0.65);
     const pitch = MathUtils.clamp(aim.y * 0.46 * w, -0.38, 0.4);
     const damp = reducedMotion ? 14 : 16;
 
-    if (headAim.current) {
-      headAim.current.rotation.y = MathUtils.damp(headAim.current.rotation.y, yaw * 0.72, damp, delta);
-      headAim.current.rotation.x = MathUtils.damp(headAim.current.rotation.x, pitch * 0.72, damp, delta);
+    // These non-animation-target child pivots keep procedural aim additive:
+    // authored rotations remain on Hips/Spine/Chest/Neck/Head while the full
+    // chain shares extreme pointer motion instead of forcing it through the neck.
+    if (hipsAim.current) {
+      hipsAim.current.rotation.y = MathUtils.damp(hipsAim.current.rotation.y, yaw * 0.03, 6, delta);
     }
-    if (neckAim.current) {
-      neckAim.current.rotation.y = MathUtils.damp(neckAim.current.rotation.y, yaw * 0.28, damp, delta);
-      neckAim.current.rotation.x = MathUtils.damp(neckAim.current.rotation.x, pitch * 0.22, damp, delta);
+    if (spineAim.current) {
+      spineAim.current.rotation.y = MathUtils.damp(spineAim.current.rotation.y, yaw * 0.09, 7, delta);
+      spineAim.current.rotation.x = MathUtils.damp(spineAim.current.rotation.x, pitch * 0.11, 7, delta);
     }
     if (chestAim.current) {
-      const chestYaw = walking ? 0 : yaw * 0.08;
-      chestAim.current.rotation.y = MathUtils.damp(chestAim.current.rotation.y, chestYaw, 7, delta);
-      chestAim.current.rotation.x = MathUtils.damp(chestAim.current.rotation.x, pitch * 0.025, 7, delta);
+      chestAim.current.rotation.y = MathUtils.damp(chestAim.current.rotation.y, yaw * 0.18, 8, delta);
+      chestAim.current.rotation.x = MathUtils.damp(chestAim.current.rotation.x, pitch * 0.12, 8, delta);
+    }
+    if (neckAim.current) {
+      neckAim.current.rotation.y = MathUtils.damp(neckAim.current.rotation.y, yaw * 0.2, damp, delta);
+      neckAim.current.rotation.x = MathUtils.damp(neckAim.current.rotation.x, pitch * 0.2, damp, delta);
+    }
+    if (headAim.current) {
+      headAim.current.rotation.y = MathUtils.damp(headAim.current.rotation.y, yaw * 0.5, damp, delta);
+      headAim.current.rotation.x = MathUtils.damp(headAim.current.rotation.x, pitch * 0.57, damp, delta);
     }
 
     const eyeY = MathUtils.clamp(aim.x * 0.2 * w, -0.18, 0.18);
@@ -1062,12 +1074,14 @@ export function ArmoredRig({
       </Environment>
       <group ref={root} name="Host">
         <group name="Hips">
+          <group ref={hipsAim} name="HipsAim">
           <ArmorPart args={[0.3, 0.115, 0.14]} position={[0, 0.875, 0]} color={PRIMARY} finish="satin" />
           <ArmorPart args={[0.19, 0.045, 0.012]} position={[0, 0.895, 0.076]} color={SECONDARY} finish="brushed" />
           <Joint name="HipCore" position={[0, 0.88, 0]} rotation={[Math.PI / 2, 0, 0]} radius={0.052} width={0.12} />
           <FlowingStrip length={0.215} position={[0, 0.93, 0.076]} axis="x" segments={5} phase={7.1} intensity={1.45} />
 
         <group name="Spine" position={[0, 0.98, 0]}>
+          <group ref={spineAim} name="SpineAim">
           <mesh position={[0, 0.08, 0]} castShadow>
             <cylinderGeometry args={[0.042, 0.055, 0.22, 16]} />
             <meshPhysicalMaterial color={DARK_JOINT} metalness={0.78} roughness={0.28} clearcoat={0.5} />
@@ -1326,6 +1340,8 @@ export function ArmoredRig({
               </group>
             </group>
           </group>
+          </group>
+        </group>
         </group>
 
         <group name="LeftUpLeg" position={[-0.09, 0.74, 0]}>

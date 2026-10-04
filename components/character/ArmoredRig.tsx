@@ -176,6 +176,10 @@ function SleepZs({ active }: { active: boolean }) {
         opacity: 0,
       });
       const sprite = new Sprite(mat);
+      // Sprite.raycast ignores opacity/visibility, so sleeping particles must opt
+      // out explicitly or they create a large ghost target above the head.
+      sprite.raycast = () => undefined;
+      sprite.userData.ignoreCharacterRaycast = true;
       sprite.scale.set(0.08, 0.08, 1);
       node.add(sprite);
       sprites.current.push(sprite);
@@ -342,6 +346,7 @@ function GlowLine({
           radius={Math.max(0.004, Math.min(...haloArgs) * 0.3)}
           smoothness={2}
           renderOrder={3}
+          raycast={() => null}
         >
           <meshBasicMaterial
             ref={haloRef}

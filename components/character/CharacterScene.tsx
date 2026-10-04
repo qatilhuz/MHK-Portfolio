@@ -24,6 +24,7 @@ import { isBottomStageEvent } from "@/lib/character/bounds";
 import { emoteById } from "@/data/emotes";
 import { subscribeEmote } from "@/lib/character/emoteBus";
 import { pointerLook } from "@/lib/character/lookAt";
+import { FACE_USER_YAW } from "@/lib/character/forward";
 import { createLocomotion, RUN_CYCLE, RUN_STRIDE, setDestination, stepLocomotion, WALK_CYCLE, WALK_STRIDE } from "@/lib/character/movement";
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
 import type { CharacterDecision } from "@/lib/character/types";
@@ -386,6 +387,13 @@ export function CharacterScene({
               : "Walk";
         if (clipRef.current !== next) setClip(next);
       } else if (dist <= 0.08 && (clipRef.current === "Walk" || clipRef.current === "Run" || clipRef.current === "Turn")) {
+        // A walk can end without another pointermove, leaving both travel yaw
+        // and the last procedural look direction stale. Center both targets;
+        // movement and the rig's additive pivots damp the visible turn smoothly.
+        loco.current.targetYaw = FACE_USER_YAW;
+        look.current.x = 0;
+        look.current.y = 0;
+        torso.current = 0;
         setClip("Idle");
       }
       lookWeightTarget.current =
@@ -461,10 +469,26 @@ export function CharacterScene({
     const raycaster = new Raycaster();
     const ndc = new Vector2();
     const pick = (event: PointerEvent) => {
-      ndc.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
-      raycaster.setFromCamera(ndc, camera);
       const root = group.current;
       if (!root) return null;
+
+      // The character canvas only occupies the bottom stage. Window-relative
+      // NDC stretched that short canvas over the full page, making valid armor
+      // intersections appear far above the rendered head.
+      const rect = gl.domElement.getBoundingClientRect();
+      if (
+        event.clientX < rect.left ||
+        event.clientX > rect.right ||
+        event.clientY < rect.top ||
+        event.clientY > rect.bottom
+      ) {
+        return null;
+      }
+      ndc.set(
+        ((event.clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1,
+        -((event.clientY - rect.top) / Math.max(1, rect.height)) * 2 + 1,
+      );
+      raycaster.setFromCamera(ndc, camera);
       return raycaster.intersectObject(root, true).find((intersection) => isVisibleSolidArmor(intersection.object, root)) ?? null;
     };
     const regionFrom = (name: string): CharacterHit => {

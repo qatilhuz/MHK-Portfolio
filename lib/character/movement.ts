@@ -58,7 +58,7 @@ export function stepLocomotion(loco: Locomotion, delta: number, reduced: boolean
   const cruise = reduced ? 2.2 : loco.speed;
   const max = dist < 0.55 ? cruise * Math.max(0.28, dist / 0.55) : cruise;
 
-  if (dist < 0.07) {
+  if (dist <= 0.08) {
     // Arrival always has an explicit forward-facing target. Damp first, then
     // settle exactly on zero so idle look-at never inherits travel yaw.
     loco.targetYaw = FACE_USER_YAW;

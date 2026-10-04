@@ -387,13 +387,9 @@ export function CharacterScene({
               : "Walk";
         if (clipRef.current !== next) setClip(next);
       } else if (dist <= 0.08 && (clipRef.current === "Walk" || clipRef.current === "Run" || clipRef.current === "Turn")) {
-        // A walk can end without another pointermove, leaving both travel yaw
-        // and the last procedural look direction stale. Center both targets;
-        // movement and the rig's additive pivots damp the visible turn smoothly.
+        // Center only the locomotion frame. The live pointer target must survive
+        // arrival so additive head/torso tracking continues while base yaw settles.
         loco.current.targetYaw = FACE_USER_YAW;
-        look.current.x = 0;
-        look.current.y = 0;
-        torso.current = 0;
         setClip("Idle");
       }
       lookWeightTarget.current =

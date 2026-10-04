@@ -71,8 +71,8 @@ export function stepLocomotion(loco: Locomotion, delta: number, reduced: boolean
         loco.state = "idle";
       }
     }
-    const turn = reduced ? 10 : 3.4;
-    loco.yaw = MathUtils.damp(loco.yaw, FACE_USER_YAW, turn, delta);
+    const turn = reduced ? 10 : 4;
+    loco.yaw = MathUtils.damp(loco.yaw, loco.targetYaw, turn, delta);
     if (Math.abs(loco.yaw - FACE_USER_YAW) < 0.001) loco.yaw = FACE_USER_YAW;
     return dist;
   }

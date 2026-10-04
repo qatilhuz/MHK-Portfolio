@@ -24,8 +24,7 @@ import { isBottomStageEvent } from "@/lib/character/bounds";
 import { emoteById } from "@/data/emotes";
 import { subscribeEmote } from "@/lib/character/emoteBus";
 import { pointerLook } from "@/lib/character/lookAt";
-import { FACE_USER_YAW } from "@/lib/character/forward";
-import { createLocomotion, RUN_CYCLE, RUN_STRIDE, setDestination, stepLocomotion, WALK_CYCLE, WALK_STRIDE } from "@/lib/character/movement";
+import { ARRIVAL_DISTANCE, createLocomotion, RUN_CYCLE, RUN_STRIDE, setDestination, stepLocomotion, WALK_CYCLE, WALK_STRIDE } from "@/lib/character/movement";
 import { pickSafeZone, viewportToWorld, worldToViewport } from "@/lib/character/safeZones";
 import type { CharacterDecision } from "@/lib/character/types";
 
@@ -386,10 +385,9 @@ export function CharacterScene({
               ? "Run"
               : "Walk";
         if (clipRef.current !== next) setClip(next);
-      } else if (dist <= 0.08 && (clipRef.current === "Walk" || clipRef.current === "Run" || clipRef.current === "Turn")) {
-        // Center only the locomotion frame. The live pointer target must survive
-        // arrival so additive head/torso tracking continues while base yaw settles.
-        loco.current.targetYaw = FACE_USER_YAW;
+      } else if (dist <= ARRIVAL_DISTANCE && (clipRef.current === "Walk" || clipRef.current === "Run" || clipRef.current === "Turn")) {
+        // Locomotion owns the brief opposite counter-turn and final centering.
+        // Keep the live pointer target untouched so look-at remains responsive.
         setClip("Idle");
       }
       lookWeightTarget.current =

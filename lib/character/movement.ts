@@ -2,12 +2,16 @@ import { MathUtils } from "three";
 import { FACE_USER_YAW } from "./forward";
 import type { CharacterMovementState, CharacterWorldPosition } from "./types";
 
+type YawSettlePhase = "travel" | "counter" | "center";
+
 export type Locomotion = {
   position: CharacterWorldPosition;
   target: CharacterWorldPosition;
   velocity: CharacterWorldPosition;
   yaw: number;
   targetYaw: number;
+  counterYaw: number;
+  yawSettlePhase: YawSettlePhase;
   speed: number;
   gait: "walk" | "run";
   state: CharacterMovementState;
@@ -19,6 +23,10 @@ export const WALK_CYCLE = 1;
 export const WALK_STRIDE = 0.7;
 export const RUN_CYCLE = 0.55;
 export const RUN_STRIDE = 1.15;
+export const ARRIVAL_DISTANCE = 0.08;
+
+const COUNTER_YAW = 0.035;
+const COUNTER_CAPTURE_EPSILON = 0.006;
 
 function travelYaw(dx: number, dz: number) {
   if (Math.abs(dx) < 0.002 && Math.abs(dz) < 0.002) return FACE_USER_YAW;
@@ -32,6 +40,8 @@ export function createLocomotion(start: CharacterWorldPosition): Locomotion {
     velocity: { x: 0, y: 0, z: 0 },
     yaw: 0,
     targetYaw: 0,
+    counterYaw: 0,
+    yawSettlePhase: "center",
     speed: WALK_STRIDE / WALK_CYCLE,
     gait: "walk",
     state: "idle",
@@ -45,6 +55,8 @@ export function setDestination(loco: Locomotion, dest: CharacterWorldPosition, r
   const dz = dest.z - loco.position.z;
   if (Math.hypot(dx, dest.y - loco.position.y, dz) > 0.04) {
     loco.targetYaw = travelYaw(dx, dz);
+    loco.counterYaw = 0;
+    loco.yawSettlePhase = "travel";
     loco.state = reason;
   }
 }
@@ -58,10 +70,7 @@ export function stepLocomotion(loco: Locomotion, delta: number, reduced: boolean
   const cruise = reduced ? 2.2 : loco.speed;
   const max = dist < 0.55 ? cruise * Math.max(0.28, dist / 0.55) : cruise;
 
-  if (dist <= 0.08) {
-    // Arrival always has an explicit forward-facing target. Damp first, then
-    // settle exactly on zero so idle look-at never inherits travel yaw.
-    loco.targetYaw = FACE_USER_YAW;
+  if (dist <= ARRIVAL_DISTANCE) {
     loco.velocity.x *= 0.62;
     loco.velocity.y *= 0.62;
     loco.velocity.z *= 0.62;
@@ -71,9 +80,27 @@ export function stepLocomotion(loco: Locomotion, delta: number, reduced: boolean
         loco.state = "idle";
       }
     }
-    const turn = reduced ? 10 : 4;
-    loco.yaw = MathUtils.damp(loco.yaw, loco.targetYaw, turn, delta);
-    if (Math.abs(loco.yaw - FACE_USER_YAW) < 0.001) loco.yaw = FACE_USER_YAW;
+
+    if (loco.yawSettlePhase === "travel") {
+      const travelDirection = Math.sign(loco.yaw);
+      loco.counterYaw = !reduced && Math.abs(loco.yaw) > 0.08 ? -travelDirection * COUNTER_YAW : FACE_USER_YAW;
+      loco.yawSettlePhase = loco.counterYaw === FACE_USER_YAW ? "center" : "counter";
+    }
+
+    if (loco.yawSettlePhase === "counter") {
+      // Briefly aim a couple of degrees opposite the travel turn. This absorbs
+      // residual yaw like a landing adjustment before the base returns to zero.
+      loco.targetYaw = loco.counterYaw;
+      loco.yaw = MathUtils.damp(loco.yaw, loco.targetYaw, 5.2, delta);
+      if (Math.abs(loco.yaw - loco.counterYaw) < COUNTER_CAPTURE_EPSILON) {
+        loco.yawSettlePhase = "center";
+        loco.targetYaw = FACE_USER_YAW;
+      }
+    } else {
+      loco.targetYaw = FACE_USER_YAW;
+      loco.yaw = MathUtils.damp(loco.yaw, loco.targetYaw, reduced ? 10 : 4, delta);
+      if (Math.abs(loco.yaw - FACE_USER_YAW) < 0.001) loco.yaw = FACE_USER_YAW;
+    }
     return dist;
   }
 

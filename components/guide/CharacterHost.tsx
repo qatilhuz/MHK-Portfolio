@@ -1,47 +1,30 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useAnimations, useGLTF } from "@react-three/drei";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { GUIDE_MODEL_PATH } from "@/data/guide";
-import { CLIP_ALIASES, type CharacterClip, type CharacterHit } from "@/data/character";
+import type { CharacterClip, CharacterHit } from "@/data/character";
 import { ArmoredRig, type CharacterExpression } from "@/components/character/ArmoredRig";
 
-function GltfHost({
-  clip,
-  reducedMotion,
-  onHit,
-}: {
-  clip: CharacterClip;
-  reducedMotion: boolean;
-  onHit: (region: CharacterHit) => void;
-}) {
-  const gltf = useGLTF(GUIDE_MODEL_PATH);
-  const { actions, names } = useAnimations(gltf.animations, gltf.scene);
-  const resolved = useMemo(() => {
-    const direct = names.find((name) => CLIP_ALIASES[name] === clip || name === clip);
-    return direct ?? names.find((name) => CLIP_ALIASES[name] === "Idle") ?? names[0];
-  }, [clip, names]);
+const GltfHost = lazy(() => import("./GltfHost").then((module) => ({ default: module.GltfHost })));
 
-  useEffect(() => {
-    if (!resolved || !actions[resolved]) return;
-    const action = actions[resolved];
-    action?.reset().fadeIn(reducedMotion ? 0 : 0.3).play();
-    return () => {
-      action?.fadeOut(reducedMotion ? 0 : 0.3);
-    };
-  }, [actions, reducedMotion, resolved]);
+let guideModelAvailable: boolean | undefined;
+let guideModelProbe: Promise<boolean> | null = null;
 
-  return (
-    <primitive
-      object={gltf.scene}
-      position={[0, -0.95, 0]}
-      scale={1.05}
-      onClick={(event: { stopPropagation: () => void }) => {
-        event.stopPropagation();
-        onHit("body");
-      }}
-    />
-  );
+function probeGuideModel() {
+  if (guideModelAvailable !== undefined) return Promise.resolve(guideModelAvailable);
+  if (!guideModelProbe) {
+    guideModelProbe = fetch(GUIDE_MODEL_PATH, { method: "HEAD" })
+      .then((response) => {
+        const len = Number(response.headers.get("content-length") ?? "0");
+        return response.ok && len > 2048;
+      })
+      .catch(() => false)
+      .then((available) => {
+        guideModelAvailable = available;
+        return available;
+      });
+  }
+  return guideModelProbe;
 }
 
 export function CharacterHost({
@@ -59,49 +42,33 @@ export function CharacterHost({
   reducedMotion: boolean;
   onHit: (region: CharacterHit) => void;
 }) {
-  const [hasFile, setHasFile] = useState(false);
+  const [hasFile, setHasFile] = useState(() => guideModelAvailable === true);
 
   useEffect(() => {
     let live = true;
-    fetch(GUIDE_MODEL_PATH, { method: "HEAD" })
-      .then((response) => {
-        const len = Number(response.headers.get("content-length") ?? "0");
-        if (live && response.ok && len > 2048) setHasFile(true);
-      })
-      .catch(() => {
-        if (live) setHasFile(false);
-      });
+    void probeGuideModel().then((available) => {
+      if (live) setHasFile(available);
+    });
     return () => {
       live = false;
     };
   }, []);
 
-  if (!hasFile) {
-    return (
-      <ArmoredRig
-        clip={clip}
-        expression={expression}
-        look={look}
-        lookWeight={lookWeight}
-        reducedMotion={reducedMotion}
-        onHit={onHit}
-      />
-    );
-  }
+  const fallback = (
+    <ArmoredRig
+      clip={clip}
+      expression={expression}
+      look={look}
+      lookWeight={lookWeight}
+      reducedMotion={reducedMotion}
+      onHit={onHit}
+    />
+  );
+
+  if (!hasFile) return fallback;
 
   return (
-    <Suspense
-      fallback={
-        <ArmoredRig
-          clip={clip}
-          expression={expression}
-          look={look}
-          lookWeight={lookWeight}
-          reducedMotion={reducedMotion}
-          onHit={onHit}
-        />
-      }
-    >
+    <Suspense fallback={fallback}>
       <GltfHost clip={clip} reducedMotion={reducedMotion} onHit={onHit} />
     </Suspense>
   );

@@ -1,6 +1,7 @@
 import { AnimationClip, InterpolateSmooth, NumberKeyframeTrack } from "three";
 
 const SMOOTH_TRANSLATION_CLIPS = new Set(["Idle", "Talk", "Think", "Walk", "Run", "Turn", "Sleep", "Relax"]);
+let cachedHostClips: AnimationClip[] | null = null;
 
 function loop(name: string, duration: number, tracks: NumberKeyframeTrack[]) {
   if (name !== "Backflip") {
@@ -18,7 +19,8 @@ function loop(name: string, duration: number, tracks: NumberKeyframeTrack[]) {
 }
 
 export function createHostClips(): AnimationClip[] {
-  return [
+  if (cachedHostClips) return cachedHostClips;
+  cachedHostClips = [
     loop("Idle", 5.2, [
       new NumberKeyframeTrack(
         "Hips.position[y]",
@@ -598,4 +600,5 @@ export function createHostClips(): AnimationClip[] {
       new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.5, 2.4], [0, 0.12, 0]),
     ]),
   ];
+  return cachedHostClips;
 }

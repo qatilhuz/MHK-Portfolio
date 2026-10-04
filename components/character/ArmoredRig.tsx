@@ -77,6 +77,49 @@ const CLIP_EXPRESSIONS: Partial<Record<CharacterClip, CharacterExpression>> = {
   Backflip: "surprised",
 };
 
+const FULL_BODY_LOOK_CLIPS = new Set<CharacterClip>([
+  "Backflip",
+  "Jump",
+  "Dance",
+  "Celebrate",
+  "Sit",
+  "Bow",
+  "Fall",
+  "Sleep",
+  "Wake",
+]);
+const CONTACT_LOOK_CLIPS = new Set<CharacterClip>(["Clap", "Facepalm", "Think"]);
+
+function animateDigitalEye(
+  node: ThreeGroup | null,
+  glow: MeshPhysicalMaterial | null,
+  core: MeshPhysicalMaterial | null,
+  eyeY: number,
+  eyeX: number,
+  tilt: number,
+  lid: number,
+  style: ExpressionStyle,
+  eyeBlend: number,
+  colorBlend: number,
+  delta: number,
+) {
+  if (!node) return;
+  node.rotation.y = MathUtils.damp(node.rotation.y, eyeY, 18, delta);
+  node.rotation.x = MathUtils.damp(node.rotation.x, eyeX, 18, delta);
+  node.rotation.z = MathUtils.damp(node.rotation.z, tilt, eyeBlend, delta);
+  node.position.y = MathUtils.damp(node.position.y, 0.027 + style.offsetY, eyeBlend, delta);
+  node.scale.x = MathUtils.damp(node.scale.x, style.scaleX, eyeBlend, delta);
+  node.scale.y = MathUtils.damp(node.scale.y, lid * style.scaleY, 18, delta);
+  if (glow) {
+    glow.emissive.lerp(style.color, colorBlend);
+    glow.color.lerp(style.color, colorBlend * 0.55);
+  }
+  if (core) {
+    core.emissive.lerp(style.color, colorBlend);
+    core.color.lerp(style.color, colorBlend * 0.55);
+  }
+}
+
 const CarbonFiberContext = createContext<Texture | null>(null);
 
 type FlowLightRegistration = {
@@ -856,6 +899,17 @@ export function ArmoredRig({
     () => (typeof document === "undefined" ? null : makeCarbonFiberTexture()),
     [],
   );
+  const walking = clip === "Walk" || clip === "Run" || clip === "Turn";
+  const clipLookScale =
+    FULL_BODY_LOOK_CLIPS.has(clip) || CONTACT_LOOK_CLIPS.has(clip)
+      ? 0
+      : clip === "Wave"
+        ? 0.35
+        : walking
+          ? 0.85
+          : 1;
+  const resolvedExpression = expression === "default" ? (CLIP_EXPRESSIONS[clip] ?? "default") : expression;
+  const expressionStyle = EXPRESSION_STYLES[resolvedExpression];
 
   useEffect(() => () => carbonFiber?.dispose(), [carbonFiber]);
 
@@ -942,23 +996,7 @@ export function ArmoredRig({
       }
     }
 
-    const greeting = clip === "Wave";
-    const walking = clip === "Walk" || clip === "Run" || clip === "Turn";
-    const fullBody =
-      clip === "Backflip" ||
-      clip === "Jump" ||
-      clip === "Dance" ||
-      clip === "Celebrate" ||
-      clip === "Sit" ||
-      clip === "Bow" ||
-      clip === "Fall" ||
-      clip === "Sleep" ||
-      clip === "Wake";
-    const contactEmote = clip === "Clap" || clip === "Facepalm" || clip === "Think";
-    const w =
-      lookWeight.current *
-      (reducedMotion ? 0.2 : 1) *
-      (fullBody || contactEmote ? 0 : greeting ? 0.35 : walking ? 0.85 : 1);
+    const w = lookWeight.current * (reducedMotion ? 0.2 : 1) * clipLookScale;
     const aim = look.current;
     const requestedYaw = MathUtils.clamp(aim.x * MAX_LOOK_YAW, -MAX_LOOK_YAW, MAX_LOOK_YAW);
     const requestedPitch = MathUtils.clamp(aim.y * MAX_LOOK_PITCH, -MAX_LOOK_PITCH, MAX_LOOK_PITCH);
@@ -998,7 +1036,6 @@ export function ArmoredRig({
     const eyeY = MathUtils.clamp(aim.x * 0.2 * w, -0.18, 0.18);
     const eyeX = MathUtils.clamp(aim.y * 0.14 * w, -0.12, 0.12);
     blink.current += delta;
-    const resolvedExpression = expression === "default" ? (CLIP_EXPRESSIONS[clip] ?? "default") : expression;
     const wakeT = actions.current.Wake?.time ?? 0;
     const lid =
       clip === "Sleep"
@@ -1010,35 +1047,34 @@ export function ArmoredRig({
             : blink.current % 4.2 > 4.05
               ? 0.35
               : 1;
-    const expressionStyle = EXPRESSION_STYLES[resolvedExpression];
     const eyeBlend = reducedMotion ? 20 : 14;
     const colorBlend = 1 - Math.exp(-12 * delta);
-    const eyes = [
-      {
-        node: leftEye.current,
-        tilt: expressionStyle.leftTilt,
-        materials: [leftEyeGlow.current, leftEyeCore.current],
-      },
-      {
-        node: rightEye.current,
-        tilt: expressionStyle.rightTilt,
-        materials: [rightEyeGlow.current, rightEyeCore.current],
-      },
-    ];
-    for (const eye of eyes) {
-      if (!eye.node) continue;
-      eye.node.rotation.y = MathUtils.damp(eye.node.rotation.y, eyeY, 18, delta);
-      eye.node.rotation.x = MathUtils.damp(eye.node.rotation.x, eyeX, 18, delta);
-      eye.node.rotation.z = MathUtils.damp(eye.node.rotation.z, eye.tilt, eyeBlend, delta);
-      eye.node.position.y = MathUtils.damp(eye.node.position.y, 0.027 + expressionStyle.offsetY, eyeBlend, delta);
-      eye.node.scale.x = MathUtils.damp(eye.node.scale.x, expressionStyle.scaleX, eyeBlend, delta);
-      eye.node.scale.y = MathUtils.damp(eye.node.scale.y, lid * expressionStyle.scaleY, 18, delta);
-      for (const material of eye.materials) {
-        if (!material) continue;
-        material.emissive.lerp(expressionStyle.color, colorBlend);
-        material.color.lerp(expressionStyle.color, colorBlend * 0.55);
-      }
-    }
+    animateDigitalEye(
+      leftEye.current,
+      leftEyeGlow.current,
+      leftEyeCore.current,
+      eyeY,
+      eyeX,
+      expressionStyle.leftTilt,
+      lid,
+      expressionStyle,
+      eyeBlend,
+      colorBlend,
+      delta,
+    );
+    animateDigitalEye(
+      rightEye.current,
+      rightEyeGlow.current,
+      rightEyeCore.current,
+      eyeY,
+      eyeX,
+      expressionStyle.rightTilt,
+      lid,
+      expressionStyle,
+      eyeBlend,
+      colorBlend,
+      delta,
+    );
     if (mouth.current) {
       const viseme = sampleViseme();
       const talk = viseme

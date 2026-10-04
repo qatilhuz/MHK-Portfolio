@@ -32,6 +32,7 @@ import type { CharacterDecision } from "@/lib/character/types";
 const FALL_CLIPS = new Set(["Fall", "GetUp", "Recover", "Stagger", "Surprise", "Annoyed"]);
 const EMOTE_LOCK = new Set(["Backflip", "Jump", "Dance", "Sit", "Bow", "Celebrate", "Sleep", "Wake"]);
 const SLEEP_AFTER_MS = 20000;
+const IGNORE_HOST_HIT = () => undefined;
 
 function isVisibleSolidArmor(object: Object3D, root: Group) {
   const mesh = object as Mesh;
@@ -86,6 +87,7 @@ export function CharacterScene({
   const lastDecision = useRef<CharacterDecision>("RETURN_TO_IDLE");
   const pokes = useRef(0);
   const screen = useRef({ x: 0, y: 0 });
+  const reportedScreen = useRef({ x: 0, y: 0 });
   const box = useRef(new Box3());
   const soleY = useRef<number | null>(null);
   const halfChar = useRef<number | null>(null);
@@ -101,6 +103,8 @@ export function CharacterScene({
   clipRef.current = clip;
   const { camera, gl } = useThree();
   const projected = useRef(new Vector3());
+  const projectedMin = useRef(new Vector3());
+  const projectedMax = useRef(new Vector3());
 
   const emoteUntil = useRef(0);
   const emoteCool = useRef(0);
@@ -445,8 +449,8 @@ export function CharacterScene({
     node.position.x = loco.current.position.x;
     node.updateWorldMatrix(true, true);
     box.current.setFromObject(node);
-    const min = box.current.min.clone().project(camera);
-    const maxp = box.current.max.clone().project(camera);
+    const min = projectedMin.current.copy(box.current.min).project(camera);
+    const maxp = projectedMax.current.copy(box.current.max).project(camera);
     const left = (Math.min(min.x, maxp.x) * 0.5 + 0.5) * rect.width + rect.left;
     const right = (Math.max(min.x, maxp.x) * 0.5 + 0.5) * rect.width + rect.left;
     const edgePaddingPx = mobile ? 18 : 6;
@@ -463,11 +467,17 @@ export function CharacterScene({
       node.position.x = loco.current.position.x;
     }
     projected.current.set(loco.current.position.x, 0.55, 0).project(camera);
-    screen.current = {
-      x: (projected.current.x * 0.5 + 0.5) * rect.width + rect.left,
-      y: (-projected.current.y * 0.5 + 0.5) * rect.height + rect.top,
-    };
-    onScreen(screen.current.x, screen.current.y);
+    screen.current.x = (projected.current.x * 0.5 + 0.5) * rect.width + rect.left;
+    screen.current.y = (-projected.current.y * 0.5 + 0.5) * rect.height + rect.top;
+    if (
+      Math.abs(reportedScreen.current.x - screen.current.x) +
+        Math.abs(reportedScreen.current.y - screen.current.y) >
+      2
+    ) {
+      reportedScreen.current.x = screen.current.x;
+      reportedScreen.current.y = screen.current.y;
+      onScreen(screen.current.x, screen.current.y);
+    }
   });
 
   useEffect(() => {
@@ -719,7 +729,7 @@ export function CharacterScene({
               look={look}
               lookWeight={lookWeight}
               reducedMotion={reduced}
-              onHit={() => undefined}
+              onHit={IGNORE_HOST_HIT}
             />
           </group>
         </group>

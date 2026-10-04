@@ -1,10 +1,27 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { EarthCanvas } from "@/components/contact/EarthCanvas";
-import { StarsCanvas } from "@/components/contact/StarsCanvas";
 import { InView } from "@/components/motion/InView";
 import { Section } from "@/components/ui/Section";
 import { getActiveSocialLinks } from "@/data/social";
 import { ContactForm } from "./ContactForm";
+
+const EarthCanvas = dynamic(
+  () => import("@/components/contact/EarthCanvas").then((module) => module.EarthCanvas),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="relative h-full w-full overflow-hidden" aria-hidden="true">
+        <div className="absolute left-1/2 top-1/2 aspect-square w-[min(72%,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_35%_28%,#d9f1ff_0%,#3269a2_12%,#123560_36%,#07182f_72%)] shadow-[0_0_90px_rgba(59,130,246,0.3)]" />
+      </div>
+    ),
+  },
+);
+const StarsCanvas = dynamic(
+  () => import("@/components/contact/StarsCanvas").then((module) => module.StarsCanvas),
+  { ssr: false },
+);
 
 export function ContactPreview() {
   const socials = getActiveSocialLinks();

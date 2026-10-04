@@ -950,9 +950,9 @@ export function ArmoredRig({
     const w =
       lookWeight.current *
       (reducedMotion ? 0.2 : 1) *
-      (fullBody || contactEmote ? 0 : greeting ? 0.22 : walking ? 0.18 : 1);
+      (fullBody || contactEmote ? 0 : greeting ? 0.35 : walking ? 0.85 : 1);
     const aim = look.current;
-    const yaw = MathUtils.clamp(aim.x * 0.62 * w, -0.65, 0.65);
+    const yaw = MathUtils.clamp(aim.x * 0.92 * w, -0.92, 0.92);
     const pitch = MathUtils.clamp(aim.y * 0.46 * w, -0.38, 0.4);
     const damp = reducedMotion ? 14 : 16;
 
@@ -960,22 +960,22 @@ export function ArmoredRig({
     // authored rotations remain on Hips/Spine/Chest/Neck/Head while the full
     // chain shares extreme pointer motion instead of forcing it through the neck.
     if (hipsAim.current) {
-      hipsAim.current.rotation.y = MathUtils.damp(hipsAim.current.rotation.y, yaw * 0.03, 6, delta);
+      hipsAim.current.rotation.y = MathUtils.damp(hipsAim.current.rotation.y, yaw * 0.36, 8, delta);
     }
     if (spineAim.current) {
-      spineAim.current.rotation.y = MathUtils.damp(spineAim.current.rotation.y, yaw * 0.09, 7, delta);
+      spineAim.current.rotation.y = MathUtils.damp(spineAim.current.rotation.y, yaw * 0.1, 8, delta);
       spineAim.current.rotation.x = MathUtils.damp(spineAim.current.rotation.x, pitch * 0.11, 7, delta);
     }
     if (chestAim.current) {
-      chestAim.current.rotation.y = MathUtils.damp(chestAim.current.rotation.y, yaw * 0.18, 8, delta);
+      chestAim.current.rotation.y = MathUtils.damp(chestAim.current.rotation.y, yaw * 0.38, 9, delta);
       chestAim.current.rotation.x = MathUtils.damp(chestAim.current.rotation.x, pitch * 0.12, 8, delta);
     }
     if (neckAim.current) {
-      neckAim.current.rotation.y = MathUtils.damp(neckAim.current.rotation.y, yaw * 0.2, damp, delta);
+      neckAim.current.rotation.y = MathUtils.damp(neckAim.current.rotation.y, yaw * 0.08, damp, delta);
       neckAim.current.rotation.x = MathUtils.damp(neckAim.current.rotation.x, pitch * 0.2, damp, delta);
     }
     if (headAim.current) {
-      headAim.current.rotation.y = MathUtils.damp(headAim.current.rotation.y, yaw * 0.5, damp, delta);
+      headAim.current.rotation.y = MathUtils.damp(headAim.current.rotation.y, yaw * 0.08, damp, delta);
       headAim.current.rotation.x = MathUtils.damp(headAim.current.rotation.x, pitch * 0.57, damp, delta);
     }
 
@@ -1206,8 +1206,25 @@ export function ArmoredRig({
                 <FlowingStrip length={0.085} position={[0.038, 0.079, 0.071]} axis="x" segments={3} phase={7} intensity={1.4} />
               </group>
 
-              <group name="Neck" position={[0, 0.3, 0]}>
+              <group name="Neck" position={[0, 0.275, 0]}>
                 <group ref={neckAim} name="NeckAim">
+                  <group name="NeckBaseCoupler">
+                    <mesh position={[0, -0.035, 0]} castShadow receiveShadow>
+                      <cylinderGeometry args={[0.078, 0.105, 0.12, 24, 3]} />
+                      <meshPhysicalMaterial color={DARK_JOINT} metalness={0.88} roughness={0.22} clearcoat={0.7} clearcoatRoughness={0.12} />
+                    </mesh>
+                    <mesh position={[0, -0.088, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
+                      <torusGeometry args={[0.093, 0.013, 10, 32]} />
+                      <meshPhysicalMaterial color={SECONDARY} metalness={0.95} roughness={0.14} clearcoat={0.92} />
+                    </mesh>
+                    <mesh position={[0, 0.022, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
+                      <torusGeometry args={[0.076, 0.009, 8, 28]} />
+                      <meshPhysicalMaterial color={DETAIL} metalness={0.97} roughness={0.1} clearcoat={1} />
+                    </mesh>
+                    <MechanicalCable position={[-0.078, -0.02, -0.018]} rotation={[0, 0, -0.08]} length={0.1} radius={0.011} />
+                    <MechanicalCable position={[0.078, -0.02, -0.018]} rotation={[0, 0, 0.08]} length={0.1} radius={0.011} />
+                    <GlowLine args={[0.066, 0.009, 0.01]} position={[0, -0.035, 0.099]} intensity={1.35} />
+                  </group>
                   <mesh position={[0, 0.045, 0]} castShadow receiveShadow>
                     <cylinderGeometry args={[0.052, 0.067, 0.16, 20, 3]} />
                     <meshPhysicalMaterial color={DARK_JOINT} metalness={0.78} roughness={0.34} clearcoat={0.62} clearcoatRoughness={0.2} />
@@ -1234,7 +1251,7 @@ export function ArmoredRig({
                   <MechanicalCable position={[0.043, 0.085, -0.045]} rotation={[0.08, 0, 0.12]} length={0.16} />
                   <FlowingStrip length={0.105} position={[0, 0.07, 0.062]} segments={3} thickness={0.014} depth={0.014} phase={5.7} intensity={1.7} />
 
-                  <group name="Head" position={[0, 0.18, 0]}>
+                  <group name="Head" position={[0, 0.165, 0]}>
                     <group ref={headAim} name="HeadAim">
                       <ArmorPart
                         name="Head"

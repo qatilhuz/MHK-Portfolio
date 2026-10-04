@@ -31,6 +31,7 @@ const DETAIL = "#91a3b0";
 const JOINT = "#1a222a";
 const DARK_JOINT = "#070c12";
 const SCREEN_GLASS = "#02080d";
+const MAX_LOOK_YAW = 0.52;
 const FLOW_DIM_COLOR = new Color("#00a9c7");
 const FLOW_HOT_COLOR = new Color("#e8ffff");
 
@@ -952,30 +953,37 @@ export function ArmoredRig({
       (reducedMotion ? 0.2 : 1) *
       (fullBody || contactEmote ? 0 : greeting ? 0.35 : walking ? 0.85 : 1);
     const aim = look.current;
-    const yaw = MathUtils.clamp(aim.x * 0.92 * w, -0.92, 0.92);
+    const requestedYaw = MathUtils.clamp(aim.x * MAX_LOOK_YAW, -MAX_LOOK_YAW, MAX_LOOK_YAW);
+    const yaw = requestedYaw * w;
     const pitch = MathUtils.clamp(aim.y * 0.46 * w, -0.38, 0.4);
     const damp = reducedMotion ? 14 : 16;
+    const idleBaseBlend = clip === "Idle" ? w : 0;
 
-    // These non-animation-target child pivots keep procedural aim additive:
-    // authored rotations remain on Hips/Spine/Chest/Neck/Head while the full
-    // chain shares extreme pointer motion instead of forcing it through the neck.
+    // Additive child pivots preserve authored clips. At idle, each pivot also
+    // cancels its named parent's authored Y offset in proportion to look weight,
+    // so the visible extreme is an exact mirror instead of adding on one side.
     if (hipsAim.current) {
-      hipsAim.current.rotation.y = MathUtils.damp(hipsAim.current.rotation.y, yaw * 0.36, 8, delta);
+      const targetYaw = yaw * 0.36 - (hipsAim.current.parent?.rotation.y ?? 0) * idleBaseBlend;
+      hipsAim.current.rotation.y = MathUtils.damp(hipsAim.current.rotation.y, targetYaw, 8, delta);
     }
     if (spineAim.current) {
-      spineAim.current.rotation.y = MathUtils.damp(spineAim.current.rotation.y, yaw * 0.1, 8, delta);
+      const targetYaw = yaw * 0.1 - (spineAim.current.parent?.rotation.y ?? 0) * idleBaseBlend;
+      spineAim.current.rotation.y = MathUtils.damp(spineAim.current.rotation.y, targetYaw, 8, delta);
       spineAim.current.rotation.x = MathUtils.damp(spineAim.current.rotation.x, pitch * 0.11, 7, delta);
     }
     if (chestAim.current) {
-      chestAim.current.rotation.y = MathUtils.damp(chestAim.current.rotation.y, yaw * 0.38, 9, delta);
+      const targetYaw = yaw * 0.38 - (chestAim.current.parent?.rotation.y ?? 0) * idleBaseBlend;
+      chestAim.current.rotation.y = MathUtils.damp(chestAim.current.rotation.y, targetYaw, 9, delta);
       chestAim.current.rotation.x = MathUtils.damp(chestAim.current.rotation.x, pitch * 0.12, 8, delta);
     }
     if (neckAim.current) {
-      neckAim.current.rotation.y = MathUtils.damp(neckAim.current.rotation.y, yaw * 0.08, damp, delta);
+      const targetYaw = yaw * 0.08 - (neckAim.current.parent?.rotation.y ?? 0) * idleBaseBlend;
+      neckAim.current.rotation.y = MathUtils.damp(neckAim.current.rotation.y, targetYaw, damp, delta);
       neckAim.current.rotation.x = MathUtils.damp(neckAim.current.rotation.x, pitch * 0.2, damp, delta);
     }
     if (headAim.current) {
-      headAim.current.rotation.y = MathUtils.damp(headAim.current.rotation.y, yaw * 0.08, damp, delta);
+      const targetYaw = yaw * 0.08 - (headAim.current.parent?.rotation.y ?? 0) * idleBaseBlend;
+      headAim.current.rotation.y = MathUtils.damp(headAim.current.rotation.y, targetYaw, damp, delta);
       headAim.current.rotation.x = MathUtils.damp(headAim.current.rotation.x, pitch * 0.57, damp, delta);
     }
 

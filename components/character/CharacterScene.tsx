@@ -386,8 +386,8 @@ export function CharacterScene({
               : "Walk";
         if (clipRef.current !== next) setClip(next);
       } else if (dist <= ARRIVAL_DISTANCE && (clipRef.current === "Walk" || clipRef.current === "Run" || clipRef.current === "Turn")) {
-        // Locomotion owns the brief opposite counter-turn and final centering.
-        // Keep the live pointer target untouched so look-at remains responsive.
+        // Locomotion now removes travel yaw monotonically and pins the base at
+        // zero. Keep the independent pointer target untouched during centering.
         setClip("Idle");
       }
       lookWeightTarget.current =

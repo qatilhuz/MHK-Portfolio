@@ -49,25 +49,27 @@ export function CharacterHud({
 
   const vw = typeof window !== "undefined" ? window.innerWidth : 360;
   const vh = typeof window !== "undefined" ? window.innerHeight : 640;
-  const bubbleW = Math.min(272, Math.max(160, vw - 24));
+  const bubbleMaxW = Math.min(272, vw * 0.85, vw - 24);
   const placed = x > 1 && y > 1;
   const preferRight = placed && x < vw * 0.45;
-  let left = 12;
-  if (placed) {
-    left = preferRight ? x + 12 : x - bubbleW - 12;
-    left = Math.min(vw - bubbleW - 12, Math.max(12, left));
-  }
   const top = placed ? Math.min(vh - 140, Math.max(8, y - 96)) : undefined;
+  const anchorLeft = Math.min(vw - 92, Math.max(12, x + 12));
+  const anchorRight = Math.min(vw - 92, Math.max(12, vw - x + 12));
+  const bubbleStyle = !placed
+    ? { left: 12, bottom: 16, maxWidth: bubbleMaxW }
+    : preferRight
+      ? { left: anchorLeft, top, maxWidth: Math.max(80, Math.min(bubbleMaxW, vw - anchorLeft - 12)) }
+      : { right: anchorRight, top, maxWidth: Math.max(80, Math.min(bubbleMaxW, vw - anchorRight - 12)) };
 
   return (
     <>
       {text || guide.guided ? (
         <div
-          className="pointer-events-none fixed z-[56] max-w-[calc(100vw-24px)]"
-          style={placed ? { left, top, width: bubbleW } : { left: 12, right: 12, bottom: 16 }}
+          className="pointer-events-none fixed z-[56] w-fit min-w-[80px] max-w-[85vw] sm:max-w-[272px]"
+          style={bubbleStyle}
           aria-label="Portfolio host"
         >
-          <div className="pointer-events-auto w-full max-w-[calc(100vw-24px)] overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface/95 px-3 py-2 shadow-[var(--shadow)]">
+          <div className="pointer-events-auto inline-block w-fit min-w-[80px] max-w-full overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface/95 px-4 py-2 shadow-[var(--shadow)]">
             {text ? (
               <p className="break-words text-sm leading-relaxed text-foreground" aria-live="polite">
                 {text}

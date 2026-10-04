@@ -43,6 +43,11 @@ export function CharacterScene({
   const guideDialogueBusy = useRef(false);
   guideDialogueBusy.current = Boolean(guide?.guided);
   const reduced = useReducedMotion() && characterConfig.accessibility.reducedMotionRespect;
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === "undefined" ? 1024 : window.innerWidth,
+  );
+  const mobile = viewportWidth < 768;
+  const characterScale = mobile ? (viewportWidth < 480 ? 0.86 : 0.94) : 1.39;
   const group = useRef<Group>(null);
   const pivot = useRef<Group>(null);
   const look = useRef({ x: 0, y: 0 });
@@ -135,8 +140,10 @@ export function CharacterScene({
   const walkToNx = (nx: number, reason: "walking" | "moving-to-section") => {
     if (asleep.current || waking.current) return;
     const n = Math.min(0.97, Math.max(0.03, nx));
-    const x = (n - 0.5) * 2 * maxX.current;
-    const span = Math.max(0.001, maxX.current * 2);
+    const boundary = Math.max(0.35, maxX.current);
+    const requestedX = (n - 0.5) * 2 * boundary;
+    const x = MathUtils.clamp(requestedX, -boundary, boundary);
+    const span = Math.max(0.001, boundary * 2);
     const currentNx = loco.current.position.x / span + 0.5;
     const distPx = Math.abs(n - currentNx) * window.innerWidth;
     const run = !reduced && distPx > window.innerWidth * 0.45;
@@ -220,6 +227,21 @@ export function CharacterScene({
       }
     }, duration + 50);
   };
+
+  useEffect(() => {
+    const syncViewport = () => {
+      const width = window.innerWidth;
+      setViewportWidth((current) => (Math.abs(current - width) > 1 ? width : current));
+    };
+    syncViewport();
+    window.addEventListener("resize", syncViewport, { passive: true });
+    return () => window.removeEventListener("resize", syncViewport);
+  }, []);
+
+  useEffect(() => {
+    soleY.current = null;
+    halfChar.current = null;
+  }, [characterScale]);
 
   useEffect(() => subscribeEmote((id) => playEmote(id)), []); // eslint-disable-line react-hooks/exhaustive-deps -- refs only
 
@@ -383,11 +405,12 @@ export function CharacterScene({
     node.rotation.y += (faceYaw - node.rotation.y) * Math.min(1, 8 * delta);
     torso.current *= 0.94;
     const rect = gl.domElement.getBoundingClientRect();
-    const aspect = Math.max(1.2, rect.width / Math.max(1, rect.height));
+    const aspect = rect.width / Math.max(1, rect.height);
     const halfView = Math.tan((30 * Math.PI) / 360) * 5.6 * aspect;
-    maxX.current = Math.max(2.6, halfView - (halfChar.current ?? 0.45) - 0.04);
-    loco.current.position.x = Math.min(maxX.current, Math.max(-maxX.current, loco.current.position.x));
-    loco.current.target.x = Math.min(maxX.current, Math.max(-maxX.current, loco.current.target.x));
+    const edgePaddingWorld = mobile ? Math.max(0.15, halfView * 0.08) : Math.max(0.08, halfView * 0.025);
+    maxX.current = Math.max(mobile ? 0.4 : 0.8, halfView - (halfChar.current ?? 0.45) - edgePaddingWorld);
+    loco.current.position.x = MathUtils.clamp(loco.current.position.x, -maxX.current, maxX.current);
+    loco.current.target.x = MathUtils.clamp(loco.current.target.x, -maxX.current, maxX.current);
     node.position.x = loco.current.position.x;
     node.updateWorldMatrix(true, true);
     box.current.setFromObject(node);
@@ -395,11 +418,17 @@ export function CharacterScene({
     const maxp = box.current.max.clone().project(camera);
     const left = (Math.min(min.x, maxp.x) * 0.5 + 0.5) * rect.width + rect.left;
     const right = (Math.max(min.x, maxp.x) * 0.5 + 0.5) * rect.width + rect.left;
-    if (left < 6) {
-      loco.current.position.x += 0.04;
+    const edgePaddingPx = mobile ? 18 : 6;
+    const worldPerPixel = (halfView * 2) / Math.max(1, rect.width);
+    if (left < rect.left + edgePaddingPx) {
+      const correction = (rect.left + edgePaddingPx - left) * worldPerPixel + 0.02;
+      loco.current.position.x = Math.min(maxX.current, loco.current.position.x + correction);
+      loco.current.target.x = Math.max(loco.current.target.x, loco.current.position.x);
       node.position.x = loco.current.position.x;
-    } else if (right > window.innerWidth - 6) {
-      loco.current.position.x -= 0.04;
+    } else if (right > rect.right - edgePaddingPx) {
+      const correction = (right - (rect.right - edgePaddingPx)) * worldPerPixel + 0.02;
+      loco.current.position.x = Math.max(-maxX.current, loco.current.position.x - correction);
+      loco.current.target.x = Math.min(loco.current.target.x, loco.current.position.x);
       node.position.x = loco.current.position.x;
     }
     projected.current.set(loco.current.position.x, 0.55, 0).project(camera);
@@ -627,15 +656,13 @@ export function CharacterScene({
     };
   }, [camera, cancelTransientDialogue, gl, guide, onLine]);
 
-  const mobile = typeof window !== "undefined" && window.innerWidth < 768;
-
   return (
     <group>
       <ambientLight intensity={0.42} />
       <hemisphereLight args={[materials.fill, materials.desk, 0.3]} />
       <directionalLight position={[2.2, 3.6, 4]} intensity={1.05} color={materials.light} />
       <pointLight position={[0.2, 0.8, 1.6]} intensity={0.22} color={ACCENT_LIGHT} />
-      <group ref={group} scale={mobile ? 1.12 : 1.39}>
+      <group ref={group} scale={characterScale}>
         <group ref={pivot} position={[0, -0.95, 0]}>
           <group position={[0, 0.95, 0]}>
             <CharacterHost

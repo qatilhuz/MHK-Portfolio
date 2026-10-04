@@ -1,7 +1,8 @@
 "use client";
 
+import { RoundedBox } from "@react-three/drei";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
 import {
   AnimationMixer,
   CanvasTexture,
@@ -16,10 +17,30 @@ import type { CharacterClip, CharacterHit } from "@/data/character";
 import { createHostClips } from "@/lib/character/clips";
 import { sampleViseme } from "@/lib/character/visemes";
 
-const PRIMARY = "#1a1f2e";
-const SECONDARY = "#2e3444";
-const ACCENT = "#3b82f6";
-const DETAIL = "#e5e7eb";
+const PRIMARY = "#111827";
+const SECONDARY = "#334155";
+const ACCENT = "#38bdf8";
+const ACCENT_HOT = "#67e8f9";
+const DETAIL = "#dbeafe";
+const JOINT = "#64748b";
+const DARK_JOINT = "#0f172a";
+
+type Vec3 = [number, number, number];
+
+type ArmorPartProps = {
+  args: Vec3;
+  position?: Vec3;
+  rotation?: Vec3;
+  color?: string;
+  metalness?: number;
+  roughness?: number;
+  clearcoat?: number;
+  emissive?: string;
+  emissiveIntensity?: number;
+  radius?: number;
+  name?: string;
+  onClick?: (event: ThreeEvent<MouseEvent>) => void;
+};
 
 function makeZTexture() {
   const canvas = document.createElement("canvas");
@@ -95,38 +116,169 @@ function SleepZs({ active }: { active: boolean }) {
   return <group ref={group} name="SleepZs" />;
 }
 
-function Plate({
+function ArmorPart({
   args,
   position,
   rotation,
   color = PRIMARY,
-  metalness = 0.18,
-  roughness = 0.62,
+  metalness = 0.72,
+  roughness = 0.28,
+  clearcoat = 0.7,
   emissive,
   emissiveIntensity = 0,
+  radius,
   name,
-}: {
-  args: [number, number, number];
-  position?: [number, number, number];
-  rotation?: [number, number, number];
-  color?: string;
-  metalness?: number;
-  roughness?: number;
-  emissive?: string;
-  emissiveIntensity?: number;
-  name?: string;
-}) {
+  onClick,
+}: ArmorPartProps) {
+  const bevel = radius ?? Math.min(args[0], args[1], args[2]) * 0.18;
   return (
-    <mesh name={name} position={position} rotation={rotation} castShadow>
-      <boxGeometry args={args} />
-      <meshStandardMaterial
+    <RoundedBox
+      name={name}
+      args={args}
+      position={position}
+      rotation={rotation}
+      radius={Math.max(0.003, bevel)}
+      smoothness={3}
+      castShadow
+      receiveShadow
+      onClick={onClick}
+    >
+      <meshPhysicalMaterial
         color={color}
         metalness={metalness}
         roughness={roughness}
+        clearcoat={clearcoat}
+        clearcoatRoughness={0.16}
         emissive={emissive ?? "#000000"}
         emissiveIntensity={emissiveIntensity}
+        toneMapped={emissiveIntensity < 1}
       />
-    </mesh>
+    </RoundedBox>
+  );
+}
+
+function GlowLine({
+  args,
+  position,
+  rotation,
+  color = ACCENT,
+  intensity = 1.4,
+}: {
+  args: Vec3;
+  position?: Vec3;
+  rotation?: Vec3;
+  color?: string;
+  intensity?: number;
+}) {
+  return (
+    <ArmorPart
+      args={args}
+      position={position}
+      rotation={rotation}
+      color={color}
+      metalness={0.35}
+      roughness={0.2}
+      clearcoat={1}
+      emissive={color}
+      emissiveIntensity={intensity}
+      radius={Math.min(...args) * 0.26}
+    />
+  );
+}
+
+function Joint({
+  name,
+  position,
+  rotation = [0, 0, Math.PI / 2],
+  radius = 0.052,
+  width = 0.085,
+}: {
+  name: string;
+  position?: Vec3;
+  rotation?: Vec3;
+  radius?: number;
+  width?: number;
+}) {
+  return (
+    <group name={name} position={position}>
+      <mesh rotation={rotation} castShadow receiveShadow>
+        <cylinderGeometry args={[radius, radius * 0.92, width, 20, 2]} />
+        <meshPhysicalMaterial
+          color={JOINT}
+          metalness={0.92}
+          roughness={0.2}
+          clearcoat={0.65}
+          clearcoatRoughness={0.18}
+        />
+      </mesh>
+      <mesh castShadow>
+        <sphereGeometry args={[radius * 0.72, 18, 12]} />
+        <meshPhysicalMaterial color={DARK_JOINT} metalness={0.82} roughness={0.24} clearcoat={0.5} />
+      </mesh>
+      <mesh position={[0, 0, radius * 0.72]}>
+        <circleGeometry args={[radius * 0.34, 18]} />
+        <meshPhysicalMaterial
+          color={ACCENT_HOT}
+          emissive={ACCENT}
+          emissiveIntensity={1.8}
+          toneMapped={false}
+          metalness={0.25}
+          roughness={0.18}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function Piston({ position, rotation }: { position: Vec3; rotation?: Vec3 }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh castShadow>
+        <cylinderGeometry args={[0.012, 0.012, 0.13, 12]} />
+        <meshPhysicalMaterial color={DETAIL} metalness={0.9} roughness={0.16} clearcoat={0.85} />
+      </mesh>
+      <mesh position={[0, -0.03, 0]} castShadow>
+        <cylinderGeometry args={[0.018, 0.018, 0.07, 12]} />
+        <meshPhysicalMaterial color={DARK_JOINT} metalness={0.75} roughness={0.3} clearcoat={0.45} />
+      </mesh>
+    </group>
+  );
+}
+
+function Finger({ x, length = 0.058 }: { x: number; length?: number }) {
+  return (
+    <group position={[x, -0.035, 0.026]}>
+      <ArmorPart args={[0.019, length * 0.55, 0.026]} position={[0, -length * 0.2, 0]} color={DETAIL} roughness={0.24} radius={0.006} />
+      <mesh position={[0, -length * 0.5, 0]} castShadow>
+        <sphereGeometry args={[0.011, 12, 8]} />
+        <meshPhysicalMaterial color={JOINT} metalness={0.82} roughness={0.22} clearcoat={0.65} />
+      </mesh>
+      <ArmorPart
+        args={[0.017, length * 0.48, 0.022]}
+        position={[0, -length * 0.72, 0.004]}
+        rotation={[-0.12, 0, 0]}
+        color={DETAIL}
+        roughness={0.22}
+        radius={0.005}
+      />
+      <GlowLine args={[0.007, length * 0.36, 0.006]} position={[0, -length * 0.72, 0.017]} intensity={0.9} />
+    </group>
+  );
+}
+
+function FootAssembly({ side }: { side: "Left" | "Right" }) {
+  return (
+    <>
+      <Joint name={`${side}AnkleJoint`} position={[0, 0.025, -0.012]} rotation={[Math.PI / 2, 0, 0]} radius={0.044} width={0.07} />
+      <ArmorPart args={[0.155, 0.075, 0.19]} position={[0, -0.025, 0.035]} color={SECONDARY} roughness={0.25} />
+      <ArmorPart args={[0.13, 0.045, 0.095]} position={[0, -0.015, 0.115]} rotation={[-0.09, 0, 0]} color={PRIMARY} roughness={0.24} />
+      <ArmorPart args={[0.14, 0.035, 0.075]} position={[0, -0.026, -0.075]} color={PRIMARY} roughness={0.32} />
+      <ArmorPart args={[0.16, 0.025, 0.225]} position={[0, -0.07, 0.035]} color={DARK_JOINT} roughness={0.72} clearcoat={0.15} radius={0.008} />
+      <GlowLine args={[0.012, 0.022, 0.15]} position={[-0.071, -0.03, 0.04]} intensity={1.15} />
+      <GlowLine args={[0.012, 0.022, 0.15]} position={[0.071, -0.03, 0.04]} intensity={1.15} />
+      <ArmorPart args={[0.044, 0.028, 0.055]} position={[-0.047, -0.05, 0.135]} color={DETAIL} roughness={0.28} />
+      <ArmorPart args={[0.044, 0.028, 0.055]} position={[0.047, -0.05, 0.135]} color={DETAIL} roughness={0.28} />
+    </>
   );
 }
 
@@ -144,9 +296,9 @@ export function ArmoredRig({
   onHit: (region: CharacterHit) => void;
 }) {
   const root = useRef<ThreeGroup>(null);
-  const head = useRef<ThreeGroup>(null);
-  const neck = useRef<ThreeGroup>(null);
-  const chest = useRef<ThreeGroup>(null);
+  const headAim = useRef<ThreeGroup>(null);
+  const neckAim = useRef<ThreeGroup>(null);
+  const chestAim = useRef<ThreeGroup>(null);
   const leftEye = useRef<ThreeGroup>(null);
   const rightEye = useRef<ThreeGroup>(null);
   const mouth = useRef<ThreeGroup>(null);
@@ -179,10 +331,10 @@ export function ArmoredRig({
     const outgoing = list[current.current];
     if (!incoming || current.current === clip) return;
     const fromFlip = current.current === "Backflip";
-    const loop = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Run" || clip === "Sleep";
+    const repeats = clip === "Idle" || clip === "Talk" || clip === "Walk" || clip === "Run" || clip === "Sleep";
     incoming.reset();
-    incoming.setLoop(LoopRepeat, loop ? Infinity : 1);
-    incoming.clampWhenFinished = !loop;
+    incoming.setLoop(LoopRepeat, repeats ? Infinity : 1);
+    incoming.clampWhenFinished = !repeats;
     incoming.setEffectiveTimeScale(reducedMotion ? 1.2 : 1);
     incoming.setEffectiveWeight(1);
     const fade = reducedMotion ? 0.05 : fromFlip ? 0.04 : 0.36;
@@ -231,19 +383,21 @@ export function ArmoredRig({
     const yaw = MathUtils.clamp(aim.x * 0.62 * w, -0.65, 0.65);
     const pitch = MathUtils.clamp(aim.y * 0.46 * w, -0.38, 0.4);
     const damp = reducedMotion ? 14 : 16;
-    if (w > 0.04) {
-      if (head.current) {
-        head.current.rotation.y = MathUtils.damp(head.current.rotation.y, yaw, damp, delta);
-        head.current.rotation.x = MathUtils.damp(head.current.rotation.x, pitch, damp, delta);
-      }
-      if (neck.current) {
-        neck.current.rotation.y = MathUtils.damp(neck.current.rotation.y, yaw * 0.3, damp, delta);
-        neck.current.rotation.x = MathUtils.damp(neck.current.rotation.x, pitch * 0.2, damp, delta);
-      }
-      if (chest.current && !walking) {
-        chest.current.rotation.y = MathUtils.damp(chest.current.rotation.y, yaw * 0.08, 6, delta);
-      }
+
+    if (headAim.current) {
+      headAim.current.rotation.y = MathUtils.damp(headAim.current.rotation.y, yaw * 0.72, damp, delta);
+      headAim.current.rotation.x = MathUtils.damp(headAim.current.rotation.x, pitch * 0.72, damp, delta);
     }
+    if (neckAim.current) {
+      neckAim.current.rotation.y = MathUtils.damp(neckAim.current.rotation.y, yaw * 0.28, damp, delta);
+      neckAim.current.rotation.x = MathUtils.damp(neckAim.current.rotation.x, pitch * 0.22, damp, delta);
+    }
+    if (chestAim.current) {
+      const chestYaw = walking ? 0 : yaw * 0.08;
+      chestAim.current.rotation.y = MathUtils.damp(chestAim.current.rotation.y, chestYaw, 7, delta);
+      chestAim.current.rotation.x = MathUtils.damp(chestAim.current.rotation.x, pitch * 0.025, 7, delta);
+    }
+
     const eyeY = MathUtils.clamp(aim.x * 0.2 * w, -0.18, 0.18);
     const eyeX = MathUtils.clamp(aim.y * 0.14 * w, -0.12, 0.12);
     blink.current += delta;
@@ -281,170 +435,247 @@ export function ArmoredRig({
                   : clip === "Sleep"
                     ? 0.22
                     : 0.35;
-      const wide = viseme ? viseme.wide : clip === "Wave" || clip === "Laugh" || clip === "Surprise" || clip === "Celebrate" ? 1.18 : 1;
+      const wide =
+        viseme
+          ? viseme.wide
+          : clip === "Wave" || clip === "Laugh" || clip === "Surprise" || clip === "Celebrate"
+            ? 1.18
+            : 1;
       mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 14, delta);
       mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, wide, 12, delta);
     }
   });
 
+  const hit = (region: CharacterHit) => (event: ThreeEvent<MouseEvent>) => {
+    event.stopPropagation();
+    onHit(region);
+  };
+
   return (
     <group ref={root} name="Host">
-        <group name="Hips">
-        <Plate args={[0.3, 0.1, 0.2]} position={[0, 0.88, 0]} color={SECONDARY} />
-        <Plate args={[0.32, 0.03, 0.12]} position={[0, 0.93, 0.04]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.12} />
+      <group name="Hips">
+        <ArmorPart args={[0.31, 0.11, 0.21]} position={[0, 0.88, 0]} color={SECONDARY} />
+        <ArmorPart args={[0.19, 0.09, 0.235]} position={[0, 0.9, 0]} color={PRIMARY} roughness={0.22} />
+        <Joint name="HipCore" position={[0, 0.9, 0.02]} rotation={[Math.PI / 2, 0, 0]} radius={0.055} width={0.12} />
+        <GlowLine args={[0.25, 0.018, 0.018]} position={[0, 0.94, 0.1]} intensity={1.65} />
+
         <group name="Spine" position={[0, 0.98, 0]}>
-          <group ref={chest} name="Chest" position={[0, 0.2, 0]}>
-            <mesh
-              name="Body"
-              onClick={(e) => {
-                e.stopPropagation();
-                onHit("body");
-              }}
-            >
-              <boxGeometry args={[0.42, 0.46, 0.24]} />
-              <meshStandardMaterial color={PRIMARY} metalness={0.12} roughness={0.68} />
-            </mesh>
-            <Plate args={[0.44, 0.04, 0.26]} position={[0, 0.2, 0]} color={SECONDARY} />
-            <Plate args={[0.18, 0.22, 0.06]} position={[0, 0.04, 0.12]} color={SECONDARY} />
-            <Plate
-              args={[0.06, 0.06, 0.02]}
-              position={[0, 0.12, 0.15]}
-              color={ACCENT}
-              emissive={ACCENT}
-              emissiveIntensity={0.45}
-            />
-            <Plate args={[0.08, 0.22, 0.05]} position={[-0.12, 0.02, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.18} />
-            <Plate args={[0.08, 0.22, 0.05]} position={[0.12, 0.02, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.18} />
-            <Plate args={[0.03, 0.18, 0.04]} position={[-0.2, 0.02, 0.1]} color={DETAIL} roughness={0.45} />
-            <Plate args={[0.03, 0.18, 0.04]} position={[0.2, 0.02, 0.1]} color={DETAIL} roughness={0.45} />
-            <Plate args={[0.28, 0.32, 0.1]} position={[0, 0.02, -0.16]} color={SECONDARY} />
-            <group
-              name="LeftShoulder"
-              position={[-0.28, 0.18, 0]}
-              onClick={(e) => {
-                e.stopPropagation();
-                onHit("shoulder");
-              }}
-            >
-              <Plate args={[0.16, 0.14, 0.18]} color={PRIMARY} />
-              <Plate args={[0.12, 0.04, 0.2]} position={[0, 0.07, 0]} color={SECONDARY} />
-            </group>
-            <group
-              name="RightShoulder"
-              position={[0.28, 0.18, 0]}
-              onClick={(e) => {
-                e.stopPropagation();
-                onHit("shoulder");
-              }}
-            >
-              <Plate args={[0.16, 0.14, 0.18]} color={PRIMARY} />
-              <Plate args={[0.12, 0.04, 0.2]} position={[0, 0.07, 0]} color={SECONDARY} />
-            </group>
-            <group ref={neck} name="Neck" position={[0, 0.3, 0]}>
-              <Plate args={[0.09, 0.08, 0.09]} color={DETAIL} roughness={0.55} />
-              <group ref={head} name="Head" position={[0, 0.18, 0]}>
-                <mesh
-                  name="Head"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onHit("head");
-                  }}
-                >
-                  <boxGeometry args={[0.2, 0.22, 0.2]} />
-                  <meshStandardMaterial color={DETAIL} metalness={0.08} roughness={0.55} />
-                </mesh>
-                <Plate args={[0.22, 0.08, 0.22]} position={[0, 0.12, 0]} color={PRIMARY} />
-                <Plate args={[0.18, 0.025, 0.04]} position={[0, 0.07, 0.1]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.22} />
-                <Plate args={[0.08, 0.1, 0.08]} position={[-0.12, 0.08, 0]} color={PRIMARY} />
-                <Plate args={[0.08, 0.1, 0.08]} position={[0.12, 0.08, 0]} color={PRIMARY} />
-                <group ref={leftEye} name="LeftEye" position={[-0.05, 0.03, 0.11]}>
-                  <Plate args={[0.045, 0.03, 0.02]} color={PRIMARY} />
-                  <Plate args={[0.02, 0.02, 0.012]} position={[0, 0, 0.01]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.35} />
-                </group>
-                <group ref={rightEye} name="RightEye" position={[0.05, 0.03, 0.11]}>
-                  <Plate args={[0.045, 0.03, 0.02]} color={PRIMARY} />
-                  <Plate args={[0.02, 0.02, 0.012]} position={[0, 0, 0.01]} color={ACCENT} emissive={ACCENT} emissiveIntensity={0.35} />
-                </group>
-                <group ref={mouth} name="Mouth" position={[0, -0.06, 0.11]}>
-                  <Plate args={[0.07, 0.02, 0.015]} color={SECONDARY} />
-                </group>
-                <SleepZs active={clip === "Sleep"} />
-              </group>
-            </group>
-            <group name="LeftArm" position={[-0.32, 0.02, 0]} rotation={[0, 0, 0.12]}>
-              <Plate args={[0.09, 0.2, 0.11]} color={PRIMARY} />
-              <Plate args={[0.11, 0.05, 0.12]} position={[0, -0.08, 0]} color={SECONDARY} />
-              <group name="LeftForeArm" position={[0, -0.18, 0]}>
-                <Plate args={[0.1, 0.05, 0.11]} position={[0, 0.02, 0]} color={PRIMARY} />
-                <Plate args={[0.08, 0.12, 0.1]} color={SECONDARY} />
-                <group name="LeftHand" position={[0, -0.12, 0]}>
-                  <Plate args={[0.09, 0.08, 0.09]} color={DETAIL} roughness={0.7} />
-                  <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.03]} color={DETAIL} />
-                  <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.03]} color={DETAIL} />
-                  <Plate args={[0.02, 0.05, 0.02]} position={[0.03, -0.05, 0.03]} color={DETAIL} />
-                  <Plate args={[0.018, 0.045, 0.018]} position={[-0.05, -0.01, 0.02]} color={DETAIL} />
-                </group>
-              </group>
-            </group>
-            <group name="RightArm" position={[0.32, 0.02, 0]} rotation={[0, 0, -0.12]}>
-              <mesh
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onHit("hand");
-                }}
-              >
-                <boxGeometry args={[0.09, 0.2, 0.11]} />
-                <meshStandardMaterial color={PRIMARY} roughness={0.68} metalness={0.12} />
+          <mesh position={[0, 0.08, -0.005]} castShadow>
+            <cylinderGeometry args={[0.055, 0.07, 0.24, 16]} />
+            <meshPhysicalMaterial color={DARK_JOINT} metalness={0.78} roughness={0.28} clearcoat={0.5} />
+          </mesh>
+          <GlowLine args={[0.026, 0.2, 0.02]} position={[0, 0.08, -0.065]} intensity={1.25} />
+
+          <group name="Chest" position={[0, 0.2, 0]}>
+            <group ref={chestAim} name="ChestAim">
+              <ArmorPart name="Body" args={[0.4, 0.43, 0.23]} color={PRIMARY} roughness={0.24} onClick={hit("body")} />
+              <ArmorPart args={[0.46, 0.09, 0.27]} position={[0, 0.19, -0.005]} color={SECONDARY} roughness={0.22} />
+              <ArmorPart args={[0.22, 0.22, 0.065]} position={[0, 0.055, 0.125]} color={SECONDARY} roughness={0.2} />
+              <ArmorPart args={[0.12, 0.13, 0.075]} position={[0, 0.085, 0.155]} color={PRIMARY} roughness={0.18} />
+              <mesh position={[0, 0.105, 0.199]} rotation={[0, 0, Math.PI / 4]}>
+                <octahedronGeometry args={[0.045, 0]} />
+                <meshPhysicalMaterial
+                  color={ACCENT_HOT}
+                  emissive={ACCENT}
+                  emissiveIntensity={2.2}
+                  toneMapped={false}
+                  metalness={0.28}
+                  roughness={0.16}
+                  clearcoat={1}
+                />
               </mesh>
-              <Plate args={[0.11, 0.05, 0.12]} position={[0, -0.08, 0]} color={SECONDARY} />
-              <group name="RightForeArm" position={[0, -0.18, 0]}>
-                <Plate args={[0.1, 0.05, 0.11]} position={[0, 0.02, 0]} color={PRIMARY} />
-                <Plate args={[0.08, 0.12, 0.1]} color={SECONDARY} />
-                <group name="RightHand" position={[0, -0.12, 0]}>
-                  <mesh
-                    name="RightHand"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onHit("hand");
-                    }}
-                  >
-                    <boxGeometry args={[0.09, 0.08, 0.09]} />
-                    <meshStandardMaterial color={DETAIL} roughness={0.7} metalness={0.1} />
+              <GlowLine args={[0.026, 0.2, 0.018]} position={[-0.105, 0.035, 0.155]} rotation={[0, 0, -0.08]} intensity={1.55} />
+              <GlowLine args={[0.026, 0.2, 0.018]} position={[0.105, 0.035, 0.155]} rotation={[0, 0, 0.08]} intensity={1.55} />
+              <ArmorPart args={[0.055, 0.24, 0.045]} position={[-0.19, 0.02, 0.115]} rotation={[0, 0, -0.06]} color={DETAIL} roughness={0.2} />
+              <ArmorPart args={[0.055, 0.24, 0.045]} position={[0.19, 0.02, 0.115]} rotation={[0, 0, 0.06]} color={DETAIL} roughness={0.2} />
+              <ArmorPart args={[0.29, 0.3, 0.085]} position={[0, 0.02, -0.17]} color={SECONDARY} roughness={0.3} />
+              <ArmorPart args={[0.18, 0.065, 0.06]} position={[0, -0.185, 0.015]} color={JOINT} roughness={0.24} />
+
+              <group name="LeftShoulder" position={[-0.29, 0.17, 0]} onClick={hit("shoulder")}>
+                <Joint name="LeftShoulderJoint" radius={0.073} width={0.11} />
+                <ArmorPart args={[0.18, 0.115, 0.205]} position={[-0.012, 0.035, 0]} rotation={[0, 0, 0.08]} color={PRIMARY} roughness={0.2} />
+                <ArmorPart args={[0.13, 0.042, 0.215]} position={[-0.015, 0.09, 0]} rotation={[0, 0, 0.08]} color={DETAIL} roughness={0.22} />
+                <GlowLine args={[0.115, 0.018, 0.018]} position={[-0.02, 0.11, 0.105]} intensity={1.45} />
+              </group>
+              <group name="RightShoulder" position={[0.29, 0.17, 0]} onClick={hit("shoulder")}>
+                <Joint name="RightShoulderJoint" radius={0.073} width={0.11} />
+                <ArmorPart args={[0.18, 0.115, 0.205]} position={[0.012, 0.035, 0]} rotation={[0, 0, -0.08]} color={PRIMARY} roughness={0.2} />
+                <ArmorPart args={[0.13, 0.042, 0.215]} position={[0.015, 0.09, 0]} rotation={[0, 0, -0.08]} color={DETAIL} roughness={0.22} />
+                <GlowLine args={[0.115, 0.018, 0.018]} position={[0.02, 0.11, 0.105]} intensity={1.45} />
+              </group>
+
+              <group name="Neck" position={[0, 0.3, 0]}>
+                <group ref={neckAim} name="NeckAim">
+                  <mesh castShadow>
+                    <cylinderGeometry args={[0.055, 0.07, 0.105, 20]} />
+                    <meshPhysicalMaterial color={JOINT} metalness={0.88} roughness={0.18} clearcoat={0.78} />
                   </mesh>
-                  <Plate args={[0.02, 0.05, 0.02]} position={[-0.03, -0.05, 0.03]} color={DETAIL} />
-                  <Plate args={[0.02, 0.055, 0.02]} position={[0, -0.055, 0.03]} color={DETAIL} />
-                  <Plate args={[0.02, 0.05, 0.02]} position={[0.03, -0.05, 0.03]} color={DETAIL} />
-                  <group name="RightThumb" position={[0.05, 0.02, 0.01]} rotation={[0, 0, -0.85]}>
-                    <Plate args={[0.018, 0.065, 0.018]} color={DETAIL} />
+                  <mesh position={[0, 0.012, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[0.064, 0.011, 8, 24]} />
+                    <meshPhysicalMaterial color={DARK_JOINT} metalness={0.82} roughness={0.25} clearcoat={0.55} />
+                  </mesh>
+                  <GlowLine args={[0.018, 0.075, 0.018]} position={[0, 0.005, 0.057]} intensity={1.7} />
+
+                  <group name="Head" position={[0, 0.18, 0]}>
+                    <group ref={headAim} name="HeadAim">
+                      <ArmorPart name="Head" args={[0.215, 0.225, 0.205]} color={DETAIL} metalness={0.62} roughness={0.2} onClick={hit("head")} />
+                      <ArmorPart args={[0.24, 0.09, 0.225]} position={[0, 0.11, -0.005]} color={PRIMARY} roughness={0.19} />
+                      <ArmorPart args={[0.19, 0.035, 0.045]} position={[0, 0.065, 0.109]} color={DARK_JOINT} roughness={0.16} />
+                      <GlowLine args={[0.175, 0.015, 0.014]} position={[0, 0.081, 0.134]} color={ACCENT_HOT} intensity={2.1} />
+                      <ArmorPart args={[0.08, 0.12, 0.09]} position={[-0.125, 0.055, -0.004]} color={PRIMARY} roughness={0.21} />
+                      <ArmorPart args={[0.08, 0.12, 0.09]} position={[0.125, 0.055, -0.004]} color={PRIMARY} roughness={0.21} />
+                      <mesh position={[-0.13, 0.05, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+                        <cylinderGeometry args={[0.032, 0.032, 0.025, 18]} />
+                        <meshPhysicalMaterial color={JOINT} metalness={0.9} roughness={0.18} clearcoat={0.75} />
+                      </mesh>
+                      <mesh position={[0.13, 0.05, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+                        <cylinderGeometry args={[0.032, 0.032, 0.025, 18]} />
+                        <meshPhysicalMaterial color={JOINT} metalness={0.9} roughness={0.18} clearcoat={0.75} />
+                      </mesh>
+                      <ArmorPart args={[0.13, 0.055, 0.065]} position={[0, -0.105, 0.055]} color={SECONDARY} roughness={0.23} />
+                      <GlowLine args={[0.085, 0.012, 0.014]} position={[0, -0.115, 0.092]} intensity={1.25} />
+
+                      <group ref={leftEye} name="LeftEye" position={[-0.052, 0.025, 0.111]}>
+                        <ArmorPart args={[0.052, 0.036, 0.025]} color={DARK_JOINT} roughness={0.16} />
+                        <ArmorPart
+                          args={[0.024, 0.021, 0.013]}
+                          position={[0, 0, 0.016]}
+                          color={ACCENT_HOT}
+                          metalness={0.25}
+                          roughness={0.12}
+                          emissive={ACCENT}
+                          emissiveIntensity={2.4}
+                          clearcoat={1}
+                        />
+                      </group>
+                      <group ref={rightEye} name="RightEye" position={[0.052, 0.025, 0.111]}>
+                        <ArmorPart args={[0.052, 0.036, 0.025]} color={DARK_JOINT} roughness={0.16} />
+                        <ArmorPart
+                          args={[0.024, 0.021, 0.013]}
+                          position={[0, 0, 0.016]}
+                          color={ACCENT_HOT}
+                          metalness={0.25}
+                          roughness={0.12}
+                          emissive={ACCENT}
+                          emissiveIntensity={2.4}
+                          clearcoat={1}
+                        />
+                      </group>
+                      <group ref={mouth} name="Mouth" position={[0, -0.057, 0.111]}>
+                        <ArmorPart
+                          args={[0.075, 0.021, 0.017]}
+                          color={ACCENT_HOT}
+                          metalness={0.35}
+                          roughness={0.16}
+                          emissive={ACCENT}
+                          emissiveIntensity={1.15}
+                          clearcoat={1}
+                        />
+                      </group>
+                      <mesh position={[0.075, 0.155, -0.02]} rotation={[0.08, 0, -0.18]} castShadow>
+                        <cylinderGeometry args={[0.008, 0.012, 0.1, 12]} />
+                        <meshPhysicalMaterial color={JOINT} metalness={0.88} roughness={0.18} clearcoat={0.7} />
+                      </mesh>
+                      <mesh position={[0.083, 0.21, -0.01]}>
+                        <sphereGeometry args={[0.017, 14, 10]} />
+                        <meshPhysicalMaterial color={ACCENT_HOT} emissive={ACCENT} emissiveIntensity={2} toneMapped={false} />
+                      </mesh>
+                      <SleepZs active={clip === "Sleep"} />
+                    </group>
+                  </group>
+                </group>
+              </group>
+
+              <group name="LeftArm" position={[-0.32, 0.02, 0]} rotation={[0, 0, 0.12]}>
+                <ArmorPart args={[0.105, 0.205, 0.125]} color={PRIMARY} roughness={0.22} />
+                <ArmorPart args={[0.125, 0.075, 0.14]} position={[0, 0.045, 0.005]} color={SECONDARY} roughness={0.22} />
+                <ArmorPart args={[0.075, 0.145, 0.035]} position={[0, 0, 0.073]} color={DETAIL} roughness={0.2} />
+                <GlowLine args={[0.018, 0.12, 0.014]} position={[0, 0, 0.095]} intensity={1.35} />
+                <Piston position={[0.048, -0.02, -0.045]} rotation={[0, 0, -0.08]} />
+                <group name="LeftForeArm" position={[0, -0.18, 0]}>
+                  <Joint name="LeftElbowJoint" radius={0.053} width={0.09} />
+                  <ArmorPart args={[0.11, 0.145, 0.12]} position={[0, -0.07, 0]} color={SECONDARY} roughness={0.24} />
+                  <ArmorPart args={[0.075, 0.12, 0.045]} position={[0, -0.065, 0.073]} color={PRIMARY} roughness={0.2} />
+                  <GlowLine args={[0.014, 0.09, 0.012]} position={[0, -0.07, 0.101]} intensity={1.25} />
+                  <group name="LeftHand" position={[0, -0.16, 0]}>
+                    <Joint name="LeftWristJoint" radius={0.036} width={0.065} />
+                    <ArmorPart args={[0.1, 0.082, 0.098]} position={[0, -0.025, 0]} color={DETAIL} roughness={0.23} />
+                    <ArmorPart args={[0.075, 0.046, 0.035]} position={[0, -0.012, 0.06]} color={PRIMARY} roughness={0.2} />
+                    <GlowLine args={[0.055, 0.011, 0.011]} position={[0, -0.012, 0.081]} intensity={1.2} />
+                    <Finger x={-0.031} />
+                    <Finger x={0} length={0.064} />
+                    <Finger x={0.031} />
+                    <group name="LeftThumb" position={[-0.056, -0.005, 0.015]} rotation={[0, 0, 0.72]}>
+                      <ArmorPart args={[0.02, 0.062, 0.025]} color={DETAIL} roughness={0.23} radius={0.006} />
+                    </group>
+                  </group>
+                </group>
+              </group>
+
+              <group name="RightArm" position={[0.32, 0.02, 0]} rotation={[0, 0, -0.12]} onClick={hit("hand")}>
+                <ArmorPart args={[0.105, 0.205, 0.125]} color={PRIMARY} roughness={0.22} />
+                <ArmorPart args={[0.125, 0.075, 0.14]} position={[0, 0.045, 0.005]} color={SECONDARY} roughness={0.22} />
+                <ArmorPart args={[0.075, 0.145, 0.035]} position={[0, 0, 0.073]} color={DETAIL} roughness={0.2} />
+                <GlowLine args={[0.018, 0.12, 0.014]} position={[0, 0, 0.095]} intensity={1.35} />
+                <Piston position={[-0.048, -0.02, -0.045]} rotation={[0, 0, 0.08]} />
+                <group name="RightForeArm" position={[0, -0.18, 0]}>
+                  <Joint name="RightElbowJoint" radius={0.053} width={0.09} />
+                  <ArmorPart args={[0.11, 0.145, 0.12]} position={[0, -0.07, 0]} color={SECONDARY} roughness={0.24} />
+                  <ArmorPart args={[0.075, 0.12, 0.045]} position={[0, -0.065, 0.073]} color={PRIMARY} roughness={0.2} />
+                  <GlowLine args={[0.014, 0.09, 0.012]} position={[0, -0.07, 0.101]} intensity={1.25} />
+                  <group name="RightHand" position={[0, -0.16, 0]}>
+                    <Joint name="RightWristJoint" radius={0.036} width={0.065} />
+                    <ArmorPart name="RightHand" args={[0.1, 0.082, 0.098]} position={[0, -0.025, 0]} color={DETAIL} roughness={0.23} onClick={hit("hand")} />
+                    <ArmorPart args={[0.075, 0.046, 0.035]} position={[0, -0.012, 0.06]} color={PRIMARY} roughness={0.2} />
+                    <GlowLine args={[0.055, 0.011, 0.011]} position={[0, -0.012, 0.081]} intensity={1.2} />
+                    <Finger x={-0.031} />
+                    <Finger x={0} length={0.064} />
+                    <Finger x={0.031} />
+                    <group name="RightThumb" position={[0.056, -0.005, 0.015]} rotation={[0, 0, -0.72]}>
+                      <ArmorPart args={[0.02, 0.062, 0.025]} color={DETAIL} roughness={0.23} radius={0.006} />
+                      <GlowLine args={[0.007, 0.035, 0.007]} position={[0, -0.005, 0.016]} intensity={1} />
+                    </group>
                   </group>
                 </group>
               </group>
             </group>
           </group>
         </group>
+
         <group name="LeftUpLeg" position={[-0.09, 0.74, 0]}>
-          <Plate args={[0.13, 0.26, 0.14]} color={PRIMARY} />
-          <Plate args={[0.15, 0.05, 0.15]} position={[0, -0.1, 0]} color={SECONDARY} />
+          <Joint name="LeftHipJoint" position={[0, 0.105, 0]} radius={0.058} width={0.09} />
+          <ArmorPart args={[0.145, 0.255, 0.155]} color={PRIMARY} roughness={0.23} />
+          <ArmorPart args={[0.16, 0.075, 0.17]} position={[0, 0.075, 0]} color={SECONDARY} roughness={0.21} />
+          <ArmorPart args={[0.085, 0.18, 0.04]} position={[0, 0.005, 0.093]} color={DETAIL} roughness={0.2} />
+          <GlowLine args={[0.017, 0.145, 0.013]} position={[0, 0.005, 0.119]} intensity={1.35} />
+          <Piston position={[-0.052, -0.01, -0.045]} rotation={[0, 0, -0.05]} />
           <group name="LeftLeg" position={[0, -0.22, 0]}>
-            <Plate args={[0.15, 0.05, 0.16]} position={[0, 0.02, 0]} color={PRIMARY} />
-            <Plate args={[0.14, 0.16, 0.15]} color={SECONDARY} />
-            <group name="LeftFoot" position={[0, -0.12, 0.03]}>
-              <Plate args={[0.15, 0.07, 0.2]} color={SECONDARY} />
-              <Plate args={[0.15, 0.03, 0.22]} position={[0, -0.04, 0.02]} color={DETAIL} roughness={0.8} />
-              <Plate args={[0.12, 0.025, 0.06]} position={[0, -0.03, 0.1]} color={PRIMARY} />
+            <Joint name="LeftKneeJoint" radius={0.061} width={0.105} />
+            <ArmorPart args={[0.15, 0.18, 0.155]} position={[0, -0.085, 0]} color={SECONDARY} roughness={0.24} />
+            <ArmorPart args={[0.09, 0.13, 0.05]} position={[0, -0.075, 0.1]} color={PRIMARY} roughness={0.2} />
+            <GlowLine args={[0.02, 0.095, 0.015]} position={[0, -0.075, 0.132]} intensity={1.4} />
+            <Piston position={[0.052, -0.075, -0.045]} rotation={[0, 0, 0.04]} />
+            <group name="LeftFoot" position={[0, -0.15, 0.025]}>
+              <FootAssembly side="Left" />
             </group>
           </group>
         </group>
+
         <group name="RightUpLeg" position={[0.09, 0.74, 0]}>
-          <Plate args={[0.13, 0.26, 0.14]} color={PRIMARY} />
-          <Plate args={[0.15, 0.05, 0.15]} position={[0, -0.1, 0]} color={SECONDARY} />
+          <Joint name="RightHipJoint" position={[0, 0.105, 0]} radius={0.058} width={0.09} />
+          <ArmorPart args={[0.145, 0.255, 0.155]} color={PRIMARY} roughness={0.23} />
+          <ArmorPart args={[0.16, 0.075, 0.17]} position={[0, 0.075, 0]} color={SECONDARY} roughness={0.21} />
+          <ArmorPart args={[0.085, 0.18, 0.04]} position={[0, 0.005, 0.093]} color={DETAIL} roughness={0.2} />
+          <GlowLine args={[0.017, 0.145, 0.013]} position={[0, 0.005, 0.119]} intensity={1.35} />
+          <Piston position={[0.052, -0.01, -0.045]} rotation={[0, 0, 0.05]} />
           <group name="RightLeg" position={[0, -0.22, 0]}>
-            <Plate args={[0.15, 0.05, 0.16]} position={[0, 0.02, 0]} color={PRIMARY} />
-            <Plate args={[0.14, 0.16, 0.15]} color={SECONDARY} />
-            <group name="RightFoot" position={[0, -0.12, 0.03]}>
-              <Plate args={[0.15, 0.07, 0.2]} color={SECONDARY} />
-              <Plate args={[0.15, 0.03, 0.22]} position={[0, -0.04, 0.02]} color={DETAIL} roughness={0.8} />
-              <Plate args={[0.12, 0.025, 0.06]} position={[0, -0.03, 0.1]} color={PRIMARY} />
+            <Joint name="RightKneeJoint" radius={0.061} width={0.105} />
+            <ArmorPart args={[0.15, 0.18, 0.155]} position={[0, -0.085, 0]} color={SECONDARY} roughness={0.24} />
+            <ArmorPart args={[0.09, 0.13, 0.05]} position={[0, -0.075, 0.1]} color={PRIMARY} roughness={0.2} />
+            <GlowLine args={[0.02, 0.095, 0.015]} position={[0, -0.075, 0.132]} intensity={1.4} />
+            <Piston position={[-0.052, -0.075, -0.045]} rotation={[0, 0, -0.04]} />
+            <group name="RightFoot" position={[0, -0.15, 0.025]}>
+              <FootAssembly side="Right" />
             </group>
           </group>
         </group>

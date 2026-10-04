@@ -202,6 +202,7 @@ function makeZTexture() {
 function SleepZs({ active }: { active: boolean }) {
   const group = useRef<ThreeGroup>(null);
   const sprites = useRef<Sprite[]>([]);
+  const wasActive = useRef(true);
   const texture = useMemo(() => (typeof document === "undefined" ? null : makeZTexture()), []);
   const seeds = useRef([
     { phase: 0, drift: 0.035, size: 0.085, span: 1.35 },
@@ -241,17 +242,29 @@ function SleepZs({ active }: { active: boolean }) {
   useFrame((_, delta) => {
     const list = sprites.current;
     if (!list.length) return;
-    for (let i = 0; i < list.length; i += 1) {
-      const seed = seeds.current[i];
+    for (const seed of seeds.current) {
       seed.phase += delta / seed.span;
       if (seed.phase > 1) seed.phase -= 1;
-      const u = active ? seed.phase : 1;
+    }
+    if (!active) {
+      if (wasActive.current) {
+        for (const sprite of list) {
+          sprite.visible = false;
+          sprite.material.opacity = 0;
+        }
+        wasActive.current = false;
+      }
+      return;
+    }
+    wasActive.current = true;
+    for (let i = 0; i < list.length; i += 1) {
+      const seed = seeds.current[i];
+      const u = seed.phase;
       const rise = u * u * (3 - 2 * u);
       const sprite = list[i];
-      sprite.visible = active && u < 0.98;
+      sprite.visible = u < 0.98;
       sprite.position.set(0.06 + seed.drift * Math.sin(u * 4.2 + i), 0.08 + rise * 0.28, 0.1);
-      const fade = active ? Math.sin(u * Math.PI) : 0;
-      sprite.material.opacity = fade * 0.85;
+      sprite.material.opacity = Math.sin(u * Math.PI) * 0.85;
       const s = seed.size * (0.75 + u * 0.55);
       sprite.scale.set(s, s, 1);
     }

@@ -59,7 +59,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const [index, setIndex] = useState(0);
   const [muted, setMutedState] = useState(false);
   const [voiceBlocked, setVoiceBlocked] = useState(false);
-  const [look, setLookState] = useState({ x: 0, y: 0 });
+  const look = useRef({ x: 0, y: 0 });
   const [reaction, setReaction] = useState<string | null>(null);
   const [reactionClip, setReactionClip] = useState<CharacterClip | null>(null);
   const [voiceSupported] = useState(() =>
@@ -152,7 +152,8 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   }, [speakCurrent]);
 
   const setLook = useCallback((x: number, y: number) => {
-    setLookState({ x, y });
+    look.current.x = x;
+    look.current.y = y;
   }, []);
 
   const react = useCallback((region: "head" | "hand" | "body") => {
@@ -329,7 +330,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       index,
       pose: section?.pose ?? "idle",
       clip,
-      look,
+      look: look.current,
       message: guided ? section?.message ?? "" : "",
       reaction,
       muted,
@@ -347,7 +348,6 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       guided,
       home,
       index,
-      look,
       muted,
       phase,
       react,

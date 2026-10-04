@@ -4,7 +4,7 @@ export type VisemeSample = { open: number; wide: number };
 
 type Event = { t: number; open: number; wide: number };
 
-let schedule: { start: number; end: number; events: Event[] } | null = null;
+let schedule: { start: number; end: number; events: Event[]; cursor: number } | null = null;
 
 function shapeFor(ch: string): VisemeSample {
   const c = ch.toLowerCase();
@@ -33,7 +33,7 @@ export function beginSpeechVisemes(text: string, rate = 1.02) {
     events.push({ t, ...shapeFor(ch) });
   }
   events.push({ t: t + 0.12, open: 0.2, wide: 1 });
-  schedule = { start: performance.now(), end: performance.now() + (t + 0.18) * 1000, events };
+  schedule = { start: performance.now(), end: performance.now() + (t + 0.18) * 1000, events, cursor: 0 };
 }
 
 export function endSpeechVisemes() {
@@ -48,8 +48,10 @@ export function sampleViseme(now = performance.now()): VisemeSample | null {
   }
   const t = (now - schedule.start) / 1000;
   const list = schedule.events;
-  let i = 0;
+  let i = schedule.cursor;
+  while (i > 0 && list[i].t >= t) i -= 1;
   while (i < list.length - 1 && list[i + 1].t < t) i += 1;
+  schedule.cursor = i;
   const a = list[i];
   const b = list[Math.min(i + 1, list.length - 1)];
   const span = Math.max(0.001, b.t - a.t);

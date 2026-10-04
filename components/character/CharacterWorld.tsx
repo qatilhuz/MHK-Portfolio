@@ -13,6 +13,11 @@ const CharacterScene = dynamic(
   { ssr: false },
 );
 
+const CANVAS_DPR: [number, number] = [1, 1.35];
+const CANVAS_CAMERA = { position: [0, 1.52, 5.6] as [number, number, number], fov: 30 };
+const CANVAS_GL = { antialias: true, alpha: true, powerPreference: "high-performance" as const };
+const CANVAS_STYLE = { pointerEvents: "none" as const, background: "transparent" };
+
 export function CharacterWorld() {
   const guide = useGuide();
   const webgl = useWebGLSupport();
@@ -30,11 +35,11 @@ export function CharacterWorld() {
       {webgl === false ? null : (
         <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[45] h-[38vh]">
           <Canvas
-            dpr={[1, 1.35]}
-            camera={{ position: [0, 1.52, 5.6], fov: 30 }}
-            gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+            dpr={CANVAS_DPR}
+            camera={CANVAS_CAMERA}
+            gl={CANVAS_GL}
             className="h-full w-full !bg-transparent"
-            style={{ pointerEvents: "none", background: "transparent" }}
+            style={CANVAS_STYLE}
             aria-hidden
           >
             <CharacterScene onScreen={onScreen} onLine={setLine} />

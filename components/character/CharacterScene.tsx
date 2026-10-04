@@ -429,8 +429,6 @@ export function CharacterScene({
       halfChar.current = Math.max(0.25, (box.current.max.x - box.current.min.x) / 2);
     }
     node.position.set(loco.current.position.x, -soleY.current, 0);
-    camera.position.set(0, 1.52, 5.6);
-    camera.lookAt(0, 1.52, 0);
     if (!inspecting.current && inspectResetAt.current > 0 && now >= inspectResetAt.current) {
       inspectTarget.current = 0;
       inspectResetAt.current = 0;

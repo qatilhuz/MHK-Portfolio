@@ -30,7 +30,7 @@ const JOINT = "#1a222a";
 const DARK_JOINT = "#070c12";
 const SCREEN_GLASS = "#02080d";
 
-export type CharacterExpression = "default" | "angry" | "happy" | "sad";
+export type CharacterExpression = "default" | "angry" | "happy" | "sad" | "surprised";
 
 type Vec3 = [number, number, number];
 type SurfaceFinish = "carbon" | "brushed" | "polished" | "satin";
@@ -49,9 +49,37 @@ const EXPRESSION_STYLES: Record<CharacterExpression, ExpressionStyle> = {
   angry: { color: new Color("#ff0000"), leftTilt: -0.4, rightTilt: 0.4, scaleX: 0.9, scaleY: 0.62, offsetY: 0 },
   happy: { color: new Color("#ffe34d"), leftTilt: 0.1, rightTilt: -0.1, scaleX: 1.06, scaleY: 0.42, offsetY: 0.008 },
   sad: { color: new Color("#7ddcff"), leftTilt: 0.28, rightTilt: -0.28, scaleX: 0.94, scaleY: 0.74, offsetY: -0.006 },
+  surprised: { color: new Color("#bafaff"), leftTilt: 0, rightTilt: 0, scaleX: 1.08, scaleY: 1.24, offsetY: 0.002 },
+};
+
+const CLIP_EXPRESSIONS: Partial<Record<CharacterClip, CharacterExpression>> = {
+  Dance: "happy",
+  Wave: "happy",
+  Victory: "happy",
+  Celebrate: "happy",
+  Clap: "happy",
+  Laugh: "happy",
+  ThumbsUp: "happy",
+  Playful: "happy",
+  Facepalm: "angry",
+  Annoyed: "angry",
+  Sad: "sad",
+  Fall: "sad",
+  Stagger: "sad",
+  Surprise: "surprised",
+  Curious: "surprised",
+  Backflip: "surprised",
 };
 
 const CarbonFiberContext = createContext<Texture | null>(null);
+
+type FlowLightRegistration = {
+  material: MeshPhysicalMaterial;
+  offset: number;
+  baseIntensity: number;
+};
+
+const FlowLightContext = createContext<{ current: FlowLightRegistration[] } | null>(null);
 
 type ArmorPartProps = {
   args: Vec3;
@@ -255,15 +283,33 @@ function GlowLine({
   rotation,
   color = ACCENT,
   intensity = 1.4,
+  flowOffset,
 }: {
   args: Vec3;
   position?: Vec3;
   rotation?: Vec3;
   color?: string;
   intensity?: number;
+  flowOffset?: number;
 }) {
+  const materialRef = useRef<MeshPhysicalMaterial>(null);
+  const flowLights = useContext(FlowLightContext);
+
+  useEffect(() => {
+    const material = materialRef.current;
+    if (!flowLights || !material || flowOffset === undefined) return;
+    const registration = { material, offset: flowOffset, baseIntensity: intensity };
+    const registrations = flowLights.current;
+    registrations.push(registration);
+    return () => {
+      const index = registrations.indexOf(registration);
+      if (index >= 0) registrations.splice(index, 1);
+    };
+  }, [flowLights, flowOffset, intensity]);
+
   return (
     <ArmorPart
+      materialRef={materialRef}
       args={args}
       position={position}
       rotation={rotation}
@@ -275,6 +321,50 @@ function GlowLine({
       emissiveIntensity={intensity}
       radius={Math.min(...args) * 0.26}
     />
+  );
+}
+
+function FlowingStrip({
+  length,
+  position,
+  rotation,
+  axis = "y",
+  segments = 4,
+  thickness = 0.011,
+  depth = 0.009,
+  gap = 0.008,
+  phase = 0,
+  intensity = 1.5,
+}: {
+  length: number;
+  position: Vec3;
+  rotation?: Vec3;
+  axis?: "x" | "y";
+  segments?: number;
+  thickness?: number;
+  depth?: number;
+  gap?: number;
+  phase?: number;
+  intensity?: number;
+}) {
+  const segmentLength = (length - gap * (segments - 1)) / segments;
+  return (
+    <group position={position} rotation={rotation}>
+      {Array.from({ length: segments }, (_, index) => {
+        const offset = -length / 2 + segmentLength / 2 + index * (segmentLength + gap);
+        const args: Vec3 = axis === "y" ? [thickness, segmentLength, depth] : [segmentLength, thickness, depth];
+        const segmentPosition: Vec3 = axis === "y" ? [0, offset, 0] : [offset, 0, 0];
+        return (
+          <GlowLine
+            key={index}
+            args={args}
+            position={segmentPosition}
+            intensity={intensity}
+            flowOffset={phase + (segments - 1 - index) * 0.82}
+          />
+        );
+      })}
+    </group>
   );
 }
 
@@ -441,7 +531,12 @@ function FootAssembly({ side }: { side: "Left" | "Right" }) {
       <ArmorPart args={[0.155, 0.075, 0.21]} position={[0, -0.025, 0.035]} color={PRIMARY} finish="satin" />
       <ArmorPart args={[0.135, 0.045, 0.105]} position={[0, -0.012, 0.125]} rotation={[-0.09, 0, 0]} color={SECONDARY} finish="brushed" />
       <ArmorPart args={[0.165, 0.025, 0.245]} position={[0, -0.072, 0.035]} color={DARK_JOINT} roughness={0.72} clearcoat={0.15} radius={0.008} />
-      <GlowLine args={[0.088, 0.008, 0.009]} position={[0, -0.008, 0.181]} intensity={1.15} />
+      <GlowLine
+        args={[0.088, 0.008, 0.009]}
+        position={[0, -0.008, 0.181]}
+        intensity={1.15}
+        flowOffset={side === "Left" ? 13.2 : 13.9}
+      />
     </>
   );
 }
@@ -655,6 +750,7 @@ export function ArmoredRig({
   const rightEyeGlow = useRef<MeshPhysicalMaterial>(null);
   const rightEyeCore = useRef<MeshPhysicalMaterial>(null);
   const mouth = useRef<ThreeGroup>(null);
+  const flowLights = useRef<FlowLightRegistration[]>([]);
   const mixer = useRef<AnimationMixer | null>(null);
   const actions = useRef<Record<string, AnimationAction>>({});
   const current = useRef("Idle");
@@ -720,8 +816,23 @@ export function ArmoredRig({
     current.current = clip;
   }, [clip, reducedMotion]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     mixer.current?.update(delta);
+    const energyTime = state.clock.elapsedTime;
+    for (const light of flowLights.current) {
+      const wave = (Math.sin(energyTime * 2.65 - light.offset) + 1) * 0.5;
+      const highlight = wave * wave * wave;
+      const targetIntensity = reducedMotion
+        ? light.baseIntensity * 0.92
+        : light.baseIntensity * (0.5 + wave * 0.38 + highlight * 0.92);
+      light.material.emissiveIntensity = MathUtils.damp(
+        light.material.emissiveIntensity,
+        targetIntensity,
+        reducedMotion ? 14 : 8,
+        delta,
+      );
+    }
+
     const greeting = clip === "Wave";
     const walking = clip === "Walk" || clip === "Run" || clip === "Turn";
     const fullBody =
@@ -760,18 +871,19 @@ export function ArmoredRig({
     const eyeY = MathUtils.clamp(aim.x * 0.2 * w, -0.18, 0.18);
     const eyeX = MathUtils.clamp(aim.y * 0.14 * w, -0.12, 0.12);
     blink.current += delta;
+    const resolvedExpression = expression === "default" ? (CLIP_EXPRESSIONS[clip] ?? "default") : expression;
     const wakeT = actions.current.Wake?.time ?? 0;
     const lid =
       clip === "Sleep"
         ? 0.08
         : clip === "Wake"
           ? Math.min(1, 0.12 + wakeT / 1.2)
-          : clip === "Surprise"
+          : resolvedExpression === "surprised"
             ? 1.22
             : blink.current % 4.2 > 4.05
               ? 0.35
               : 1;
-    const expressionStyle = EXPRESSION_STYLES[expression];
+    const expressionStyle = EXPRESSION_STYLES[resolvedExpression];
     const eyeBlend = reducedMotion ? 20 : 14;
     const colorBlend = 1 - Math.exp(-12 * delta);
     const eyes = [
@@ -806,23 +918,30 @@ export function ArmoredRig({
         ? 0.28 + viseme.open * 0.85
         : clip === "Talk"
           ? 0.7 + Math.sin(blink.current * 10) * 0.25
-          : clip === "Wave" || clip === "Laugh"
-            ? 0.55
-            : clip === "Surprise"
-              ? 0.85
-              : clip === "Facepalm"
-                ? 0.18
-                : clip === "Think"
-                  ? 0.28
-                  : clip === "Sleep"
-                    ? 0.22
-                    : 0.35;
-      const wide =
-        viseme
-          ? viseme.wide
-          : clip === "Wave" || clip === "Laugh" || clip === "Surprise" || clip === "Celebrate"
-            ? 1.18
-            : 1;
+          : clip === "Sleep"
+            ? 0.22
+            : clip === "Think"
+              ? 0.28
+              : resolvedExpression === "happy"
+                ? 0.55
+                : resolvedExpression === "surprised"
+                  ? 0.85
+                  : resolvedExpression === "angry"
+                    ? 0.18
+                    : resolvedExpression === "sad"
+                      ? 0.24
+                      : 0.35;
+      const wide = viseme
+        ? viseme.wide
+        : resolvedExpression === "happy"
+          ? 1.18
+          : resolvedExpression === "surprised"
+            ? 0.82
+            : resolvedExpression === "angry"
+              ? 0.88
+              : resolvedExpression === "sad"
+                ? 0.92
+                : 1;
       mouth.current.scale.y = MathUtils.damp(mouth.current.scale.y, talk, 14, delta);
       mouth.current.scale.x = MathUtils.damp(mouth.current.scale.x, wide, 12, delta);
     }
@@ -835,6 +954,7 @@ export function ArmoredRig({
 
   return (
     <CarbonFiberContext.Provider value={carbonFiber}>
+      <FlowLightContext.Provider value={flowLights}>
       <Environment resolution={128} frames={1} background={false}>
         <Lightformer form="rect" intensity={3.8} color="#ffffff" position={[0, 2.5, 4]} scale={[4, 1.4, 1]} />
         <Lightformer form="rect" intensity={2.6} color="#c8efff" position={[-3, 1, 1]} rotation={[0, Math.PI / 2, 0]} scale={[2, 4, 1]} />
@@ -846,7 +966,7 @@ export function ArmoredRig({
           <ArmorPart args={[0.3, 0.115, 0.14]} position={[0, 0.875, 0]} color={PRIMARY} finish="satin" />
           <ArmorPart args={[0.19, 0.045, 0.012]} position={[0, 0.895, 0.076]} color={SECONDARY} finish="brushed" />
           <Joint name="HipCore" position={[0, 0.88, 0]} rotation={[Math.PI / 2, 0, 0]} radius={0.052} width={0.12} />
-          <GlowLine args={[0.215, 0.01, 0.009]} position={[0, 0.93, 0.076]} intensity={1.45} />
+          <FlowingStrip length={0.215} position={[0, 0.93, 0.076]} axis="x" segments={5} phase={7.1} intensity={1.45} />
 
         <group name="Spine" position={[0, 0.98, 0]}>
           <mesh position={[0, 0.08, 0]} castShadow>
@@ -864,7 +984,24 @@ export function ArmoredRig({
                 radius={0.045}
                 onClick={hit("body")}
               />
-              <mesh position={[0, 0.09, 0.077]} rotation={[0, 0, Math.PI / 4]}>
+              <ArmorPart
+                args={[0.135, 0.255, 0.008]}
+                position={[-0.098, 0.005, 0.074]}
+                rotation={[0, 0, -0.055]}
+                color="#10171c"
+                finish="carbon"
+                radius={0.006}
+              />
+              <ArmorPart
+                args={[0.135, 0.255, 0.008]}
+                position={[0.098, 0.005, 0.074]}
+                rotation={[0, 0, 0.055]}
+                color="#10171c"
+                finish="carbon"
+                radius={0.006}
+              />
+              <ArmorPart args={[0.085, 0.105, 0.008]} position={[0, -0.12, 0.074]} color={SECONDARY} finish="brushed" radius={0.006} />
+              <mesh position={[0, 0.09, 0.082]} rotation={[0, 0, Math.PI / 4]}>
                 <octahedronGeometry args={[0.027, 0]} />
                 <meshPhysicalMaterial
                   color={ACCENT_HOT}
@@ -876,19 +1013,41 @@ export function ArmoredRig({
                   clearcoat={1}
                 />
               </mesh>
-              <GlowLine args={[0.012, 0.25, 0.009]} position={[-0.175, 0.015, 0.076]} intensity={1.55} />
-              <GlowLine args={[0.012, 0.25, 0.009]} position={[0.175, 0.015, 0.076]} intensity={1.55} />
-              <GlowLine args={[0.22, 0.009, 0.009]} position={[0, 0.172, 0.076]} intensity={1.25} />
+              <FlowingStrip length={0.25} position={[-0.176, 0.015, 0.082]} phase={0} intensity={1.55} />
+              <FlowingStrip length={0.25} position={[0.176, 0.015, 0.082]} phase={1.1} intensity={1.55} />
+              <FlowingStrip length={0.22} position={[0, 0.172, 0.082]} axis="x" segments={5} phase={2.2} intensity={1.25} />
+              <FlowingStrip length={0.105} position={[0, -0.12, 0.082]} segments={3} phase={3.2} intensity={1.25} />
+
+              <ArmorPart
+                args={[0.135, 0.265, 0.008]}
+                position={[-0.09, 0.005, -0.074]}
+                rotation={[0, 0, 0.055]}
+                color="#0b1116"
+                finish="carbon"
+                radius={0.006}
+              />
+              <ArmorPart
+                args={[0.135, 0.265, 0.008]}
+                position={[0.09, 0.005, -0.074]}
+                rotation={[0, 0, -0.055]}
+                color="#0b1116"
+                finish="carbon"
+                radius={0.006}
+              />
+              <ArmorPart args={[0.07, 0.11, 0.008]} position={[0, 0.1, -0.074]} color={SECONDARY} finish="brushed" radius={0.006} />
+              <FlowingStrip length={0.17} position={[0, -0.06, -0.082]} segments={4} phase={4.1} intensity={1.4} />
+              <FlowingStrip length={0.155} position={[-0.075, 0.045, -0.082]} rotation={[0, 0, -0.48]} phase={5.1} intensity={1.35} />
+              <FlowingStrip length={0.155} position={[0.075, 0.045, -0.082]} rotation={[0, 0, 0.48]} phase={6.1} intensity={1.35} />
 
               <group name="LeftShoulder" position={[-0.26, 0.17, 0]} onClick={hit("shoulder")}>
                 <Joint name="LeftShoulderJoint" radius={0.065} width={0.145} />
                 <ArmorPart args={[0.16, 0.12, 0.14]} position={[-0.028, 0.026, 0]} rotation={[0, 0, 0.06]} color={PRIMARY} finish="satin" />
-                <GlowLine args={[0.085, 0.009, 0.009]} position={[-0.038, 0.079, 0.075]} intensity={1.4} />
+                <FlowingStrip length={0.085} position={[-0.038, 0.079, 0.075]} axis="x" segments={3} phase={6.4} intensity={1.4} />
               </group>
               <group name="RightShoulder" position={[0.26, 0.17, 0]} onClick={hit("shoulder")}>
                 <Joint name="RightShoulderJoint" radius={0.065} width={0.145} />
                 <ArmorPart args={[0.16, 0.12, 0.14]} position={[0.028, 0.026, 0]} rotation={[0, 0, -0.06]} color={PRIMARY} finish="satin" />
-                <GlowLine args={[0.085, 0.009, 0.009]} position={[0.038, 0.079, 0.075]} intensity={1.4} />
+                <FlowingStrip length={0.085} position={[0.038, 0.079, 0.075]} axis="x" segments={3} phase={7} intensity={1.4} />
               </group>
 
               <group name="Neck" position={[0, 0.3, 0]}>
@@ -917,7 +1076,7 @@ export function ArmoredRig({
                   <Piston position={[0.056, 0.085, 0.012]} rotation={[0, 0, 0.08]} length={0.14} radius={0.008} />
                   <MechanicalCable position={[-0.043, 0.085, -0.045]} rotation={[0.08, 0, -0.12]} length={0.16} />
                   <MechanicalCable position={[0.043, 0.085, -0.045]} rotation={[0.08, 0, 0.12]} length={0.16} />
-                  <GlowLine args={[0.014, 0.105, 0.014]} position={[0, 0.07, 0.062]} intensity={1.7} />
+                  <FlowingStrip length={0.105} position={[0, 0.07, 0.062]} segments={3} thickness={0.014} depth={0.014} phase={5.7} intensity={1.7} />
 
                   <group name="Head" position={[0, 0.18, 0]}>
                     <group ref={headAim} name="HeadAim">
@@ -963,18 +1122,18 @@ export function ArmoredRig({
                 <ArmorPart args={[0.115, 0.205, 0.12]} color={PRIMARY} finish="satin" />
                 <ArmorPart args={[0.125, 0.066, 0.124]} position={[0, 0.05, 0]} color={SECONDARY} finish="brushed" />
                 <ArmorPart args={[0.064, 0.13, 0.018]} position={[0, 0, 0.066]} color={DARK_JOINT} finish="carbon" />
-                <GlowLine args={[0.011, 0.112, 0.009]} position={[-0.044, 0, 0.079]} intensity={1.55} />
+                <FlowingStrip length={0.112} position={[-0.044, 0, 0.079]} segments={3} phase={7.2} intensity={1.55} />
                 <Piston position={[0.048, -0.02, -0.045]} rotation={[0, 0, -0.08]} length={0.16} radius={0.009} />
                 <group name="LeftForeArm" position={[0, -0.18, 0]}>
                   <Joint name="LeftElbowJoint" radius={0.05} width={0.1} />
                   <ArmorPart args={[0.13, 0.165, 0.13]} position={[0, -0.078, 0]} color={PRIMARY} finish="satin" />
                   <ArmorPart args={[0.09, 0.12, 0.018]} position={[0, -0.074, 0.072]} color={SECONDARY} finish="brushed" />
-                  <GlowLine args={[0.011, 0.1, 0.009]} position={[-0.049, -0.074, 0.084]} intensity={1.35} />
+                  <FlowingStrip length={0.1} position={[-0.049, -0.074, 0.084]} segments={3} phase={9.5} intensity={1.35} />
                   <group name="LeftHand" position={[0, -0.18, 0]}>
                     <Joint name="LeftWristJoint" radius={0.035} width={0.068} />
                     <ArmorPart args={[0.1, 0.085, 0.09]} position={[0, -0.025, 0]} color={PRIMARY} finish="satin" />
                     <ArmorPart args={[0.07, 0.044, 0.018]} position={[0, -0.012, 0.05]} color={SECONDARY} finish="brushed" />
-                    <GlowLine args={[0.052, 0.009, 0.008]} position={[0, -0.012, 0.061]} intensity={1.1} />
+                    <GlowLine args={[0.052, 0.009, 0.008]} position={[0, -0.012, 0.061]} intensity={1.1} flowOffset={11.8} />
                     <Finger x={-0.031} />
                     <Finger x={0} length={0.064} />
                     <Finger x={0.031} />
@@ -989,18 +1148,18 @@ export function ArmoredRig({
                 <ArmorPart args={[0.115, 0.205, 0.12]} color={PRIMARY} finish="satin" />
                 <ArmorPart args={[0.125, 0.066, 0.124]} position={[0, 0.05, 0]} color={SECONDARY} finish="brushed" />
                 <ArmorPart args={[0.064, 0.13, 0.018]} position={[0, 0, 0.066]} color={DARK_JOINT} finish="carbon" />
-                <GlowLine args={[0.011, 0.112, 0.009]} position={[0.044, 0, 0.079]} intensity={1.55} />
+                <FlowingStrip length={0.112} position={[0.044, 0, 0.079]} segments={3} phase={7.8} intensity={1.55} />
                 <Piston position={[-0.048, -0.02, -0.045]} rotation={[0, 0, 0.08]} length={0.16} radius={0.009} />
                 <group name="RightForeArm" position={[0, -0.18, 0]}>
                   <Joint name="RightElbowJoint" radius={0.05} width={0.1} />
                   <ArmorPart args={[0.13, 0.165, 0.13]} position={[0, -0.078, 0]} color={PRIMARY} finish="satin" />
                   <ArmorPart args={[0.09, 0.12, 0.018]} position={[0, -0.074, 0.072]} color={SECONDARY} finish="brushed" />
-                  <GlowLine args={[0.011, 0.1, 0.009]} position={[0.049, -0.074, 0.084]} intensity={1.35} />
+                  <FlowingStrip length={0.1} position={[0.049, -0.074, 0.084]} segments={3} phase={10.1} intensity={1.35} />
                   <group name="RightHand" position={[0, -0.18, 0]}>
                     <Joint name="RightWristJoint" radius={0.035} width={0.068} />
                     <ArmorPart name="RightHand" args={[0.1, 0.085, 0.09]} position={[0, -0.025, 0]} color={PRIMARY} finish="satin" onClick={hit("hand")} />
                     <ArmorPart args={[0.07, 0.044, 0.018]} position={[0, -0.012, 0.05]} color={SECONDARY} finish="brushed" />
-                    <GlowLine args={[0.052, 0.009, 0.008]} position={[0, -0.012, 0.061]} intensity={1.1} />
+                    <GlowLine args={[0.052, 0.009, 0.008]} position={[0, -0.012, 0.061]} intensity={1.1} flowOffset={12.4} />
                     <Finger x={-0.031} />
                     <Finger x={0} length={0.064} />
                     <Finger x={0.031} />
@@ -1020,13 +1179,13 @@ export function ArmoredRig({
           <ArmorPart args={[0.155, 0.265, 0.145]} color={PRIMARY} finish="satin" />
           <ArmorPart args={[0.165, 0.07, 0.15]} position={[0, 0.08, 0]} color={SECONDARY} finish="brushed" />
           <ArmorPart args={[0.075, 0.175, 0.018]} position={[0, 0.005, 0.08]} color={DARK_JOINT} finish="carbon" />
-          <GlowLine args={[0.011, 0.148, 0.009]} position={[-0.06, 0.005, 0.092]} intensity={1.55} />
+          <FlowingStrip length={0.148} position={[-0.06, 0.005, 0.092]} segments={4} phase={8.2} intensity={1.55} />
           <Piston position={[-0.055, -0.01, -0.045]} rotation={[0, 0, -0.05]} length={0.18} radius={0.009} />
           <group name="LeftLeg" position={[0, -0.22, 0]}>
             <Joint name="LeftKneeJoint" radius={0.058} width={0.1} />
             <ArmorPart args={[0.15, 0.2, 0.145]} position={[0, -0.09, 0]} color={PRIMARY} finish="satin" />
             <ArmorPart args={[0.085, 0.14, 0.018]} position={[0, -0.086, 0.081]} color={SECONDARY} finish="brushed" />
-            <GlowLine args={[0.011, 0.115, 0.009]} position={[-0.057, -0.086, 0.093]} intensity={1.4} />
+            <FlowingStrip length={0.115} position={[-0.057, -0.086, 0.093]} segments={3} phase={10.9} intensity={1.4} />
             <Piston position={[0.055, -0.078, -0.045]} rotation={[0, 0, 0.04]} length={0.17} radius={0.009} />
             <group name="LeftFoot" position={[0, -0.15, 0.025]}>
               <FootAssembly side="Left" />
@@ -1039,13 +1198,13 @@ export function ArmoredRig({
           <ArmorPart args={[0.155, 0.265, 0.145]} color={PRIMARY} finish="satin" />
           <ArmorPart args={[0.165, 0.07, 0.15]} position={[0, 0.08, 0]} color={SECONDARY} finish="brushed" />
           <ArmorPart args={[0.075, 0.175, 0.018]} position={[0, 0.005, 0.08]} color={DARK_JOINT} finish="carbon" />
-          <GlowLine args={[0.011, 0.148, 0.009]} position={[0.06, 0.005, 0.092]} intensity={1.55} />
+          <FlowingStrip length={0.148} position={[0.06, 0.005, 0.092]} segments={4} phase={8.8} intensity={1.55} />
           <Piston position={[0.055, -0.01, -0.045]} rotation={[0, 0, 0.05]} length={0.18} radius={0.009} />
           <group name="RightLeg" position={[0, -0.22, 0]}>
             <Joint name="RightKneeJoint" radius={0.058} width={0.1} />
             <ArmorPart args={[0.15, 0.2, 0.145]} position={[0, -0.09, 0]} color={PRIMARY} finish="satin" />
             <ArmorPart args={[0.085, 0.14, 0.018]} position={[0, -0.086, 0.081]} color={SECONDARY} finish="brushed" />
-            <GlowLine args={[0.011, 0.115, 0.009]} position={[0.057, -0.086, 0.093]} intensity={1.4} />
+            <FlowingStrip length={0.115} position={[0.057, -0.086, 0.093]} segments={3} phase={11.5} intensity={1.4} />
             <Piston position={[-0.055, -0.078, -0.045]} rotation={[0, 0, -0.04]} length={0.17} radius={0.009} />
             <group name="RightFoot" position={[0, -0.15, 0.025]}>
               <FootAssembly side="Right" />
@@ -1054,6 +1213,7 @@ export function ArmoredRig({
         </group>
       </group>
     </group>
+      </FlowLightContext.Provider>
     </CarbonFiberContext.Provider>
   );
 }

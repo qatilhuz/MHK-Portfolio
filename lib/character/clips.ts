@@ -1,19 +1,58 @@
-import { AnimationClip, NumberKeyframeTrack } from "three";
+import { AnimationClip, InterpolateSmooth, NumberKeyframeTrack } from "three";
+
+const SMOOTH_TRANSLATION_CLIPS = new Set(["Idle", "Talk", "Think", "Walk", "Run", "Turn", "Sleep", "Relax"]);
 
 function loop(name: string, duration: number, tracks: NumberKeyframeTrack[]) {
+  if (name !== "Backflip") {
+    for (const track of tracks) {
+      const isTransformRotation = track.name.includes(".rotation[");
+      const isSubtleTranslation =
+        SMOOTH_TRANSLATION_CLIPS.has(name) &&
+        (track.name.includes(".position[") || track.name.includes(".scale["));
+      if (isTransformRotation || isSubtleTranslation) {
+        track.setInterpolation(InterpolateSmooth);
+      }
+    }
+  }
   return new AnimationClip(name, duration, tracks);
 }
 
 export function createHostClips(): AnimationClip[] {
   return [
     loop("Idle", 5.2, [
-      new NumberKeyframeTrack("Hips.position[y]", [0, 2.6, 5.2], [0, 0.022, 0]),
-      new NumberKeyframeTrack("Spine.rotation[y]", [0, 2.6, 5.2], [0, 0.04, 0]),
-      new NumberKeyframeTrack("Chest.rotation[x]", [0, 2.6, 5.2], [0.015, -0.025, 0.015]),
-      new NumberKeyframeTrack("Head.rotation[x]", [0, 1.3, 2.6, 3.9, 5.2], [0.02, -0.03, 0.01, -0.02, 0.02]),
-      new NumberKeyframeTrack("LeftShoulder.rotation[z]", [0, 2.6, 5.2], [0.06, 0.12, 0.06]),
-      new NumberKeyframeTrack("RightShoulder.rotation[z]", [0, 2.6, 5.2], [-0.06, -0.12, -0.06]),
-      new NumberKeyframeTrack("RightHand.rotation[z]", [0, 2.6, 5.2], [0, 0.08, 0]),
+      new NumberKeyframeTrack(
+        "Hips.position[y]",
+        [0, 0.65, 1.3, 1.95, 2.6, 3.25, 3.9, 4.55, 5.2],
+        [0, 0.005, 0.013, 0.019, 0.014, 0.006, 0.011, 0.004, 0],
+      ),
+      new NumberKeyframeTrack("Hips.position[x]", [0, 1.3, 2.6, 3.9, 5.2], [-0.006, 0.005, 0.012, 0.003, -0.006]),
+      new NumberKeyframeTrack("Hips.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [0.012, 0.004, -0.014, -0.004, 0.012]),
+      new NumberKeyframeTrack("Spine.rotation[x]", [0, 1.3, 2.6, 3.9, 5.2], [0.006, -0.009, -0.018, -0.006, 0.006]),
+      new NumberKeyframeTrack("Spine.rotation[y]", [0, 1.3, 2.6, 3.9, 5.2], [-0.018, 0.008, 0.036, 0.012, -0.018]),
+      new NumberKeyframeTrack("Spine.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [-0.008, -0.002, 0.01, 0.003, -0.008]),
+      new NumberKeyframeTrack(
+        "Chest.rotation[x]",
+        [0, 0.65, 1.3, 1.95, 2.6, 3.25, 3.9, 4.55, 5.2],
+        [0.012, -0.003, -0.022, -0.031, -0.017, 0, -0.018, -0.001, 0.012],
+      ),
+      new NumberKeyframeTrack("Chest.rotation[y]", [0, 1.3, 2.6, 3.9, 5.2], [-0.016, 0.01, 0.03, 0.009, -0.016]),
+      new NumberKeyframeTrack("Chest.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [-0.006, -0.002, 0.008, 0.002, -0.006]),
+      new NumberKeyframeTrack("Chest.scale[y]", [0, 1.3, 2.6, 3.9, 5.2], [1, 1.006, 1.012, 1.006, 1]),
+      new NumberKeyframeTrack("Chest.scale[z]", [0, 1.3, 2.6, 3.9, 5.2], [1, 1.004, 1.009, 1.004, 1]),
+      new NumberKeyframeTrack("Neck.rotation[y]", [0, 1.3, 2.6, 3.9, 5.2], [-0.01, 0.008, 0.018, 0.006, -0.01]),
+      new NumberKeyframeTrack("Head.rotation[x]", [0, 0.9, 1.8, 2.6, 3.5, 4.3, 5.2], [0.018, -0.008, -0.024, 0.008, -0.014, 0.026, 0.018]),
+      new NumberKeyframeTrack("Head.rotation[y]", [0, 1.3, 2.6, 3.9, 5.2], [-0.012, 0.015, 0.025, 0.008, -0.012]),
+      new NumberKeyframeTrack("Head.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [-0.008, -0.002, 0.009, 0.002, -0.008]),
+      new NumberKeyframeTrack("LeftShoulder.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [0.065, 0.078, 0.096, 0.08, 0.065]),
+      new NumberKeyframeTrack("RightShoulder.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [-0.065, -0.078, -0.096, -0.08, -0.065]),
+      new NumberKeyframeTrack("LeftArm.rotation[x]", [0, 1.3, 2.6, 3.9, 5.2], [0.016, -0.01, -0.028, -0.006, 0.016]),
+      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 1.3, 2.6, 3.9, 5.2], [-0.012, 0.014, 0.03, 0.008, -0.012]),
+      new NumberKeyframeTrack("LeftForeArm.rotation[x]", [0, 1.3, 2.6, 3.9, 5.2], [0.012, 0.026, 0.04, 0.024, 0.012]),
+      new NumberKeyframeTrack("RightForeArm.rotation[x]", [0, 1.3, 2.6, 3.9, 5.2], [0.016, 0.03, 0.044, 0.028, 0.016]),
+      new NumberKeyframeTrack("LeftHand.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [0.01, -0.025, -0.04, -0.016, 0.01]),
+      new NumberKeyframeTrack("RightHand.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [-0.01, 0.026, 0.044, 0.018, -0.01]),
+      new NumberKeyframeTrack("LeftUpLeg.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [-0.006, -0.002, 0.008, 0.002, -0.006]),
+      new NumberKeyframeTrack("RightUpLeg.rotation[z]", [0, 1.3, 2.6, 3.9, 5.2], [-0.006, -0.002, 0.008, 0.002, -0.006]),
     ]),
     loop("Greet", 2.4, [
       new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.35, 1.1, 2.4], [0, -1.85, -1.35, 0]),
@@ -85,60 +124,76 @@ export function createHostClips(): AnimationClip[] {
     loop("Walk", 1, [
       new NumberKeyframeTrack(
         "LeftUpLeg.rotation[x]",
-        [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.75, 0.88, 1],
-        [0.42, 0.22, -0.05, -0.42, -0.55, -0.18, 0.18, 0.38, 0.42],
+        [0, 0.1, 0.22, 0.34, 0.46, 0.58, 0.7, 0.82, 0.92, 1],
+        [0.43, 0.3, 0.04, -0.31, -0.52, -0.39, -0.08, 0.23, 0.4, 0.43],
       ),
       new NumberKeyframeTrack(
         "RightUpLeg.rotation[x]",
-        [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.75, 0.88, 1],
-        [-0.55, -0.18, 0.18, 0.38, 0.42, 0.22, -0.05, -0.42, -0.55],
+        [0, 0.1, 0.22, 0.34, 0.46, 0.58, 0.7, 0.82, 0.92, 1],
+        [-0.52, -0.34, -0.07, 0.25, 0.42, 0.32, 0.05, -0.3, -0.49, -0.52],
       ),
       new NumberKeyframeTrack(
         "LeftLeg.rotation[x]",
-        [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.75, 0.88, 1],
-        [0.18, 0.28, 0.95, 0.55, 0.16, 0.12, 0.22, 0.2, 0.18],
+        [0, 0.1, 0.22, 0.34, 0.46, 0.58, 0.7, 0.82, 0.92, 1],
+        [0.16, 0.22, 0.52, 0.92, 0.62, 0.24, 0.1, 0.12, 0.15, 0.16],
       ),
       new NumberKeyframeTrack(
         "RightLeg.rotation[x]",
-        [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.75, 0.88, 1],
-        [0.16, 0.12, 0.22, 0.2, 0.18, 0.28, 0.95, 0.55, 0.16],
+        [0, 0.1, 0.22, 0.34, 0.46, 0.58, 0.7, 0.82, 0.92, 1],
+        [0.62, 0.28, 0.11, 0.12, 0.15, 0.2, 0.48, 0.9, 0.7, 0.62],
       ),
       new NumberKeyframeTrack(
         "LeftFoot.rotation[x]",
-        [0, 0.12, 0.28, 0.42, 0.55, 0.78, 1],
-        [0.08, 0.02, -0.22, 0.28, 0.06, 0.04, 0.08],
+        [0, 0.1, 0.22, 0.34, 0.46, 0.58, 0.72, 0.86, 1],
+        [0.09, 0.02, -0.16, -0.24, 0.24, 0.14, 0.01, 0.04, 0.09],
       ),
       new NumberKeyframeTrack(
         "RightFoot.rotation[x]",
-        [0, 0.12, 0.28, 0.5, 0.62, 0.78, 0.92, 1],
-        [0.06, 0.04, 0.04, 0.08, 0.02, -0.22, 0.28, 0.06],
+        [0, 0.1, 0.22, 0.34, 0.46, 0.58, 0.72, 0.86, 1],
+        [0.22, 0.12, 0.01, 0.04, 0.08, 0.01, -0.17, -0.23, 0.22],
       ),
-      new NumberKeyframeTrack("Hips.position[y]", [0, 0.12, 0.25, 0.5, 0.62, 0.75, 1], [0, 0.016, 0.004, 0, 0.016, 0.004, 0]),
-      new NumberKeyframeTrack("Hips.position[x]", [0, 0.25, 0.5, 0.75, 1], [0.018, 0.01, -0.018, -0.01, 0.018]),
-      new NumberKeyframeTrack("Hips.rotation[y]", [0, 0.25, 0.5, 0.75, 1], [-0.07, -0.03, 0.07, 0.03, -0.07]),
-      new NumberKeyframeTrack("Hips.rotation[z]", [0, 0.25, 0.5, 0.75, 1], [0.035, 0.01, -0.035, -0.01, 0.035]),
-      new NumberKeyframeTrack("Spine.rotation[y]", [0, 0.25, 0.5, 0.75, 1], [0.05, 0.02, -0.05, -0.02, 0.05]),
-      new NumberKeyframeTrack("Chest.rotation[y]", [0, 0.25, 0.5, 0.75, 1], [0.06, 0.02, -0.06, -0.02, 0.06]),
-      new NumberKeyframeTrack("LeftShoulder.rotation[z]", [0, 0.5, 1], [0.08, 0.04, 0.08]),
-      new NumberKeyframeTrack("RightShoulder.rotation[z]", [0, 0.5, 1], [-0.04, -0.08, -0.04]),
-      new NumberKeyframeTrack("LeftArm.rotation[x]", [0, 0.25, 0.5, 0.75, 1], [0.32, 0.1, -0.32, -0.08, 0.32]),
-      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.25, 0.5, 0.75, 1], [-0.32, -0.08, 0.32, 0.1, -0.32]),
-      new NumberKeyframeTrack("Head.rotation[x]", [0, 0.25, 0.5, 0.75, 1], [0.02, 0, 0.02, 0, 0.02]),
+      new NumberKeyframeTrack("Hips.position[y]", [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.75, 0.88, 1], [0.007, 0.019, 0.006, 0.014, 0.007, 0.019, 0.006, 0.014, 0.007]),
+      new NumberKeyframeTrack("Hips.position[x]", [0, 0.25, 0.5, 0.75, 1], [0.017, 0.008, -0.017, -0.008, 0.017]),
+      new NumberKeyframeTrack("Hips.rotation[y]", [0, 0.25, 0.5, 0.75, 1], [-0.065, -0.025, 0.065, 0.025, -0.065]),
+      new NumberKeyframeTrack("Hips.rotation[z]", [0, 0.25, 0.5, 0.75, 1], [0.032, 0.008, -0.032, -0.008, 0.032]),
+      new NumberKeyframeTrack("Spine.rotation[x]", [0, 0.25, 0.5, 0.75, 1], [0.025, 0.012, 0.025, 0.012, 0.025]),
+      new NumberKeyframeTrack("Spine.rotation[y]", [0, 0.25, 0.5, 0.75, 1], [0.052, 0.018, -0.052, -0.018, 0.052]),
+      new NumberKeyframeTrack("Chest.rotation[x]", [0, 0.25, 0.5, 0.75, 1], [0.018, 0.006, 0.018, 0.006, 0.018]),
+      new NumberKeyframeTrack("Chest.rotation[y]", [0, 0.25, 0.5, 0.75, 1], [0.066, 0.022, -0.066, -0.022, 0.066]),
+      new NumberKeyframeTrack("LeftShoulder.rotation[z]", [0, 0.25, 0.5, 0.75, 1], [0.08, 0.062, 0.045, 0.064, 0.08]),
+      new NumberKeyframeTrack("RightShoulder.rotation[z]", [0, 0.25, 0.5, 0.75, 1], [-0.045, -0.063, -0.08, -0.062, -0.045]),
+      new NumberKeyframeTrack("LeftArm.rotation[x]", [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.75, 0.88, 1], [0.34, 0.25, 0.08, -0.16, -0.34, -0.24, -0.06, 0.18, 0.34]),
+      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.75, 0.88, 1], [-0.34, -0.24, -0.06, 0.18, 0.34, 0.25, 0.08, -0.16, -0.34]),
+      new NumberKeyframeTrack("LeftForeArm.rotation[x]", [0, 0.25, 0.5, 0.75, 1], [-0.08, -0.16, -0.24, -0.14, -0.08]),
+      new NumberKeyframeTrack("RightForeArm.rotation[x]", [0, 0.25, 0.5, 0.75, 1], [-0.24, -0.14, -0.08, -0.16, -0.24]),
+      new NumberKeyframeTrack("LeftHand.rotation[z]", [0, 0.25, 0.5, 0.75, 1], [0.025, 0.012, -0.025, -0.012, 0.025]),
+      new NumberKeyframeTrack("RightHand.rotation[z]", [0, 0.25, 0.5, 0.75, 1], [-0.025, -0.012, 0.025, 0.012, -0.025]),
+      new NumberKeyframeTrack("Head.rotation[x]", [0, 0.25, 0.5, 0.75, 1], [0.018, 0.006, 0.018, 0.006, 0.018]),
+      new NumberKeyframeTrack("Head.rotation[y]", [0, 0.25, 0.5, 0.75, 1], [-0.015, -0.006, 0.015, 0.006, -0.015]),
     ]),
     loop("Run", 0.55, [
-      new NumberKeyframeTrack("LeftUpLeg.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.72, -0.15, -0.85, 0.2, 0.72]),
-      new NumberKeyframeTrack("RightUpLeg.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [-0.85, 0.2, 0.72, -0.15, -0.85]),
-      new NumberKeyframeTrack("LeftLeg.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.25, 1.15, 0.35, 0.2, 0.25]),
-      new NumberKeyframeTrack("RightLeg.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.35, 0.2, 0.25, 1.15, 0.35]),
-      new NumberKeyframeTrack("LeftFoot.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.1, -0.28, 0.22, 0.06, 0.1]),
-      new NumberKeyframeTrack("RightFoot.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.22, 0.06, 0.1, -0.28, 0.22]),
-      new NumberKeyframeTrack("Hips.position[y]", [0, 0.14, 0.28, 0.42, 0.55], [0.02, 0.05, 0.02, 0.05, 0.02]),
-      new NumberKeyframeTrack("Hips.position[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.03, 0, -0.03, 0, 0.03]),
-      new NumberKeyframeTrack("Spine.rotation[x]", [0, 0.28, 0.55], [0.12, 0.08, 0.12]),
-      new NumberKeyframeTrack("Chest.rotation[x]", [0, 0.28, 0.55], [0.1, 0.06, 0.1]),
-      new NumberKeyframeTrack("LeftArm.rotation[x]", [0, 0.28, 0.55], [0.55, -0.7, 0.55]),
-      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.28, 0.55], [-0.7, 0.55, -0.7]),
-      new NumberKeyframeTrack("Head.rotation[x]", [0, 0.28, 0.55], [0.06, 0.02, 0.06]),
+      new NumberKeyframeTrack("LeftUpLeg.rotation[x]", [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.55], [0.76, 0.45, -0.18, -0.72, -0.88, -0.48, 0.2, 0.68, 0.76]),
+      new NumberKeyframeTrack("RightUpLeg.rotation[x]", [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.55], [-0.88, -0.5, 0.18, 0.66, 0.76, 0.42, -0.2, -0.75, -0.88]),
+      new NumberKeyframeTrack("LeftLeg.rotation[x]", [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.55], [0.22, 0.42, 1.12, 0.82, 0.32, 0.18, 0.16, 0.19, 0.22]),
+      new NumberKeyframeTrack("RightLeg.rotation[x]", [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.55], [0.34, 0.18, 0.15, 0.18, 0.22, 0.44, 1.14, 0.86, 0.34]),
+      new NumberKeyframeTrack("LeftFoot.rotation[x]", [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.55], [0.12, -0.08, -0.3, 0.02, 0.25, 0.13, 0.04, 0.07, 0.12]),
+      new NumberKeyframeTrack("RightFoot.rotation[x]", [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.55], [0.24, 0.12, 0.04, 0.07, 0.12, -0.1, -0.3, 0.04, 0.24]),
+      new NumberKeyframeTrack("Hips.position[y]", [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.55], [0.022, 0.048, 0.026, 0.042, 0.022, 0.048, 0.026, 0.042, 0.022]),
+      new NumberKeyframeTrack("Hips.position[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.028, 0, -0.028, 0, 0.028]),
+      new NumberKeyframeTrack("Hips.rotation[y]", [0, 0.14, 0.28, 0.42, 0.55], [-0.09, 0, 0.09, 0, -0.09]),
+      new NumberKeyframeTrack("Hips.rotation[z]", [0, 0.14, 0.28, 0.42, 0.55], [0.045, 0, -0.045, 0, 0.045]),
+      new NumberKeyframeTrack("Spine.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.13, 0.095, 0.13, 0.095, 0.13]),
+      new NumberKeyframeTrack("Spine.rotation[y]", [0, 0.14, 0.28, 0.42, 0.55], [0.075, 0, -0.075, 0, 0.075]),
+      new NumberKeyframeTrack("Chest.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.1, 0.065, 0.1, 0.065, 0.1]),
+      new NumberKeyframeTrack("Chest.rotation[y]", [0, 0.14, 0.28, 0.42, 0.55], [0.09, 0, -0.09, 0, 0.09]),
+      new NumberKeyframeTrack("LeftArm.rotation[x]", [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.55], [0.62, 0.42, 0.06, -0.42, -0.74, -0.5, -0.08, 0.4, 0.62]),
+      new NumberKeyframeTrack("RightArm.rotation[x]", [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.55], [-0.74, -0.5, -0.08, 0.4, 0.62, 0.42, 0.06, -0.42, -0.74]),
+      new NumberKeyframeTrack("LeftForeArm.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [-0.2, -0.34, -0.5, -0.32, -0.2]),
+      new NumberKeyframeTrack("RightForeArm.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [-0.5, -0.32, -0.2, -0.34, -0.5]),
+      new NumberKeyframeTrack("LeftShoulder.rotation[z]", [0, 0.14, 0.28, 0.42, 0.55], [0.09, 0.07, 0.05, 0.07, 0.09]),
+      new NumberKeyframeTrack("RightShoulder.rotation[z]", [0, 0.14, 0.28, 0.42, 0.55], [-0.05, -0.07, -0.09, -0.07, -0.05]),
+      new NumberKeyframeTrack("Head.rotation[x]", [0, 0.14, 0.28, 0.42, 0.55], [0.055, 0.025, 0.055, 0.025, 0.055]),
+      new NumberKeyframeTrack("Head.rotation[y]", [0, 0.14, 0.28, 0.42, 0.55], [-0.02, 0, 0.02, 0, -0.02]),
     ]),
     loop("Turn", 0.9, [
       new NumberKeyframeTrack("Hips.rotation[y]", [0, 0.45, 0.9], [0, 0.35, 0]),

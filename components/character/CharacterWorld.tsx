@@ -14,7 +14,13 @@ const CharacterScene = dynamic(
 );
 
 const CANVAS_DPR: [number, number] = [1, 1.35];
-const CANVAS_CAMERA = { position: [0, 1.52, 5.6] as [number, number, number], fov: 30 };
+// R3F otherwise aims a newly configured camera at world origin. Keeping the
+// camera level makes world Y = 0 coincide with the bottom of the 38vh stage.
+const CANVAS_CAMERA = {
+  position: [0, 1.52, 5.6] as [number, number, number],
+  rotation: [0, 0, 0] as [number, number, number],
+  fov: 30,
+};
 const CANVAS_GL = { antialias: true, alpha: true, powerPreference: "high-performance" as const };
 const CANVAS_STYLE = { pointerEvents: "none" as const, background: "transparent" };
 

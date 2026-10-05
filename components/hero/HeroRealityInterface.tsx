@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { ArrowUpRight, Atom, Braces, CircuitBoard, Crosshair, MousePointer2, Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { isPageRevealed, onPageRevealed } from "@/lib/boot/reveal";
 import { requestEmote } from "@/lib/character/emoteBus";
 import { prefersReducedMotion } from "@/lib/motion/engine";
@@ -27,9 +27,12 @@ type RealityStyle = CSSProperties & {
   "--my"?: string;
 };
 
-const telemetry = ["Neural UI", "R3F Core", "GSAP Sync", "Binary Storm", "Bot Link", "API Guard"] as const;
-const orbitLabels = ["identity", "systems", "motion", "shipping"] as const;
-const fragments = ["01", "UX", "API", "3D", "QA", "∞", "NEXT", ".NET"] as const;
+const stackLabels = ["Next.js", "React", ".NET", "WebGL"] as const;
+const sectionLinks = [
+  { href: "/#skills", label: "Tech Stack" },
+  { href: "/experience", label: "Experience" },
+  { href: "/projects", label: "Projects" },
+] as const;
 
 function toLetters(value: string) {
   return Array.from(value.toUpperCase()).filter((char) => char !== " ");
@@ -42,6 +45,63 @@ function clampMotion(value: number) {
 function setMotionVars(node: HTMLElement, x: number, y: number) {
   node.style.setProperty("--mx", x.toFixed(3));
   node.style.setProperty("--my", y.toFixed(3));
+}
+
+function FragmentedLine({ letters, small = false }: { letters: string[]; small?: boolean }) {
+  return (
+    <div className={small ? "mt-3 flex flex-wrap justify-center gap-x-[0.055em] gap-y-3 pl-[0.08em] text-[0.62em] tracking-[-0.08em]" : "flex flex-wrap justify-center gap-x-[0.035em] gap-y-3"}>
+      {letters.map((letter, index) => (
+        <span
+          key={`${letter}-${index}`}
+          className={
+            small
+              ? "relative inline-grid min-w-[0.58em] place-items-center overflow-hidden border border-blue-300/[0.08] bg-cyan-300/[0.035] px-[0.045em]"
+              : "relative inline-grid min-w-[0.64em] place-items-center overflow-hidden border border-white/[0.07] bg-white/[0.025] px-[0.035em] shadow-[inset_0_0_22px_rgba(34,211,238,0.08)]"
+          }
+          style={{
+            clipPath: small
+              ? index % 2 === 0
+                ? "polygon(12% 0, 100% 10%, 86% 100%, 0 88%)"
+                : "polygon(0 16%, 88% 0, 100% 84%, 10% 100%)"
+              : index % 2 === 0
+                ? "polygon(0 8%, 92% 0, 100% 78%, 12% 100%)"
+                : "polygon(8% 0, 100% 14%, 90% 100%, 0 82%)",
+            transform: small
+              ? `translate3d(calc(var(--mx) * ${(index + 1) * -3}px), calc(var(--my) * ${(index + 1) * 2}px), ${index * 3}px)`
+              : `translate3d(calc(var(--mx) * ${(index - 2) * 4}px), calc(var(--my) * ${(index % 3) * 3 - 3}px), ${index * 4}px)`,
+          }}
+        >
+          {!small ? (
+            <>
+              <span
+                className="absolute text-cyan-300/50 mix-blend-screen blur-[0.3px]"
+                style={{ transform: `translate3d(calc(var(--mx) * ${10 + index}px), calc(var(--my) * -7px), 0)` }}
+              >
+                {letter}
+              </span>
+              <span
+                className="absolute text-fuchsia-400/35 mix-blend-screen blur-[0.2px]"
+                style={{ transform: `translate3d(calc(var(--mx) * -${8 + index}px), calc(var(--my) * 6px), 0)` }}
+              >
+                {letter}
+              </span>
+            </>
+          ) : (
+            <span className="absolute text-blue-400/35 blur-[0.4px]">{letter}</span>
+          )}
+          <span
+            className={
+              small
+                ? "relative bg-gradient-to-r from-blue-200 via-white to-cyan-300 bg-clip-text text-transparent"
+                : "relative bg-gradient-to-b from-white via-cyan-100 to-cyan-500 bg-clip-text text-transparent drop-shadow-[0_0_26px_rgba(34,211,238,0.34)]"
+            }
+          >
+            {letter}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export function HeroRealityInterface({
@@ -94,200 +154,90 @@ export function HeroRealityInterface({
   return (
     <div
       ref={root}
-      className="group/reality relative w-full overflow-hidden rounded-[2.4rem] border border-cyan-200/12 bg-[radial-gradient(circle_at_calc(50%+var(--mx,0)*18%)_calc(35%+var(--my,0)*18%),rgba(34,211,238,0.2),transparent_30%),linear-gradient(135deg,rgba(2,6,23,0.72),rgba(8,47,73,0.34)_42%,rgba(2,6,23,0.82))] p-4 shadow-[0_38px_160px_-80px_rgba(34,211,238,0.72),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6 lg:p-8"
+      className="group/reality relative min-h-[calc(100svh-8rem)] w-full overflow-hidden px-1 py-2 font-sans text-white sm:px-3 lg:px-0"
       style={{ "--mx": "0", "--my": "0" } as RealityStyle}
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
       data-hero-reality-interface
     >
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(103,232,249,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(103,232,249,0.05)_1px,transparent_1px)] bg-[size:42px_42px] [mask-image:radial-gradient(circle_at_center,black,transparent_78%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-45 [background:repeating-linear-gradient(0deg,transparent_0px,transparent_6px,rgba(125,211,252,0.08)_7px)]" />
-      <div className="pointer-events-none absolute -left-24 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full border border-cyan-200/10" />
-      <div className="pointer-events-none absolute -right-28 top-10 h-96 w-96 rounded-full border border-violet-300/10" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-white/0 via-white/16 to-white/0" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-white/0 via-white/12 to-white/0" />
+      <div className="pointer-events-none absolute bottom-0 left-0 top-0 w-px bg-gradient-to-b from-white/0 via-white/12 to-white/0" />
+      <div className="pointer-events-none absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-white/0 via-white/12 to-white/0" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:7.5rem_7.5rem] [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_86%,transparent)]" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[32rem] w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/[0.045]" />
 
-      {fragments.map((fragment, index) => (
-        <span
-          key={fragment}
-          className="pointer-events-none absolute hidden rounded-full border border-white/[0.08] bg-black/28 px-3 py-1 font-mono text-[9px] uppercase tracking-[0.2em] text-cyan-100/48 shadow-[0_0_24px_rgba(34,211,238,0.08)] backdrop-blur-md transition-transform duration-300 md:block"
-          style={{
-            left: `${8 + ((index * 17) % 78)}%`,
-            top: `${10 + ((index * 23) % 70)}%`,
-            transform: `translate3d(calc(var(--mx) * ${(index % 2 === 0 ? 1 : -1) * (10 + index * 2)}px), calc(var(--my) * ${(index % 3 === 0 ? -1 : 1) * (8 + index)}px), 0)`,
-          }}
-        >
-          {fragment}
-        </span>
-      ))}
+      <div className="relative z-10 flex min-h-[calc(100svh-8rem)] flex-col justify-between px-4 py-6 sm:px-6 lg:px-8">
+        <div className="flex items-start justify-between gap-6 font-sans text-[10px] uppercase tracking-[0.24em] text-white/42">
+          <span>100 %</span>
+          <span className="hidden sm:inline">{location}</span>
+          <span className="text-cyan-100/55">Available / 2026</span>
+        </div>
 
-      <div className="relative z-10 grid min-h-[calc(100svh-11rem)] gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-center">
-        <div className="relative flex min-h-[32rem] flex-col justify-center py-8">
-          <div className="mb-8 flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/[0.075] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-100/80 shadow-[0_0_32px_rgba(34,211,238,0.16)] backdrop-blur-md">
-              <Sparkles size={13} aria-hidden="true" />
-              Premium 3D portfolio system
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-white/45 backdrop-blur-md">
-              <MousePointer2 size={12} aria-hidden="true" />
-              Move cursor to distort field
-            </div>
-          </div>
+        <div className="grid flex-1 items-center gap-8 py-12 lg:grid-cols-[8.5rem_minmax(0,1fr)_8.5rem] lg:py-8">
+          <nav className="hidden h-full flex-col justify-center gap-5 border-l border-white/[0.08] pl-5 font-sans text-[10px] uppercase tracking-[0.22em] text-white/42 lg:flex">
+            {sectionLinks.map((link) => (
+              <Link key={link.href} href={link.href} className="transition-colors duration-300 hover:text-cyan-100">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
-          <h1 className="sr-only">{name}</h1>
-          <div
-            aria-hidden="true"
-            className="relative max-w-[68rem] select-none font-mono text-[clamp(4.5rem,12.5vw,12.4rem)] font-black uppercase leading-[0.74] tracking-[-0.12em] text-white"
-            style={{
-              transform:
-                "perspective(1100px) rotateX(calc(var(--my) * -5.5deg)) rotateY(calc(var(--mx) * 7deg)) translate3d(calc(var(--mx) * 8px), calc(var(--my) * 6px), 0)",
-              transformStyle: "preserve-3d",
-            }}
-          >
-            <div className="flex flex-wrap gap-x-[0.035em] gap-y-3">
-              {firstLetters.map((letter, index) => (
-                <span
-                  key={`${letter}-${index}`}
-                  className="relative inline-grid min-w-[0.64em] place-items-center overflow-hidden border border-white/[0.07] bg-white/[0.025] px-[0.035em] shadow-[inset_0_0_22px_rgba(34,211,238,0.08)]"
-                  style={{
-                    clipPath:
-                      index % 2 === 0
-                        ? "polygon(0 8%, 92% 0, 100% 78%, 12% 100%)"
-                        : "polygon(8% 0, 100% 14%, 90% 100%, 0 82%)",
-                    transform: `translate3d(calc(var(--mx) * ${(index - 2) * 4}px), calc(var(--my) * ${(index % 3) * 3 - 3}px), ${index * 4}px)`,
-                  }}
-                >
-                  <span
-                    className="absolute text-cyan-300/50 mix-blend-screen blur-[0.3px]"
-                    style={{ transform: `translate3d(calc(var(--mx) * ${10 + index}px), calc(var(--my) * -7px), 0)` }}
-                  >
-                    {letter}
-                  </span>
-                  <span
-                    className="absolute text-fuchsia-400/35 mix-blend-screen blur-[0.2px]"
-                    style={{ transform: `translate3d(calc(var(--mx) * -${8 + index}px), calc(var(--my) * 6px), 0)` }}
-                  >
-                    {letter}
-                  </span>
-                  <span className="relative bg-gradient-to-b from-white via-cyan-100 to-cyan-500 bg-clip-text text-transparent drop-shadow-[0_0_26px_rgba(34,211,238,0.34)]">
-                    {letter}
-                  </span>
-                </span>
-              ))}
+          <main className="mx-auto flex w-full max-w-6xl flex-col items-center text-center">
+            <p className="mb-7 font-sans text-[11px] uppercase tracking-[0.38em] text-white/48">Hi, I am</p>
+            <h1 className="sr-only">{name}</h1>
+            <div
+              aria-hidden="true"
+              className="relative select-none font-mono text-[clamp(4.2rem,13vw,13rem)] font-black uppercase leading-[0.74] tracking-[-0.12em] text-white"
+              style={{
+                transform:
+                  "perspective(1100px) rotateX(calc(var(--my) * -4.5deg)) rotateY(calc(var(--mx) * 6deg)) translate3d(calc(var(--mx) * 6px), calc(var(--my) * 5px), 0)",
+                transformStyle: "preserve-3d",
+              }}
+            >
+              <FragmentedLine letters={firstLetters} />
+              <FragmentedLine letters={lastLetters} small />
+              <div className="pointer-events-none absolute -bottom-6 left-[12%] h-px w-[76%] bg-gradient-to-r from-transparent via-cyan-100/55 to-transparent shadow-[0_0_18px_rgba(34,211,238,0.55)]" />
             </div>
-            <div className="mt-3 flex flex-wrap gap-x-[0.055em] gap-y-3 pl-[0.08em] text-[0.62em] tracking-[-0.08em]">
-              {lastLetters.map((letter, index) => (
-                <span
-                  key={`${letter}-${index}`}
-                  className="relative inline-grid min-w-[0.58em] place-items-center overflow-hidden border border-blue-300/[0.08] bg-cyan-300/[0.035] px-[0.045em]"
-                  style={{
-                    clipPath:
-                      index % 2 === 0
-                        ? "polygon(12% 0, 100% 10%, 86% 100%, 0 88%)"
-                        : "polygon(0 16%, 88% 0, 100% 84%, 10% 100%)",
-                    transform: `translate3d(calc(var(--mx) * ${(index + 1) * -3}px), calc(var(--my) * ${(index + 1) * 2}px), ${index * 3}px)`,
-                  }}
-                >
-                  <span className="absolute text-blue-400/35 blur-[0.4px]">{letter}</span>
-                  <span className="relative bg-gradient-to-r from-blue-200 via-white to-cyan-300 bg-clip-text text-transparent">
-                    {letter}
-                  </span>
-                </span>
-              ))}
-            </div>
-            <div className="pointer-events-none absolute -bottom-5 left-[7%] h-px w-[62%] bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent shadow-[0_0_22px_rgba(34,211,238,0.8)]" />
-          </div>
 
-          <div className="mt-12 grid gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(18rem,0.58fr)]">
-            <div className="relative overflow-hidden rounded-[1.65rem] border border-white/[0.09] bg-black/35 p-5 backdrop-blur-xl">
-              <div className="absolute inset-y-5 left-0 w-px bg-gradient-to-b from-transparent via-cyan-300/55 to-transparent" />
-              <p className="max-w-2xl text-lg leading-relaxed text-white/66">
-                {role} from {location}, engineering {specialization} into cinematic interfaces, resilient products, and
-                scroll-driven 3D stories that feel alive before the first click.
+            <div className="mt-12 flex max-w-3xl flex-col items-center gap-4">
+              <p className="font-sans text-[clamp(1rem,1.6vw,1.35rem)] font-light leading-relaxed text-white/62">
+                {role} crafting quiet, futuristic systems with {specialization}.
               </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link
-                  href="/projects"
-                  className="group/launch relative inline-flex items-center gap-2 overflow-hidden rounded-full border border-cyan-200/30 bg-cyan-300/12 px-5 py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-cyan-50 shadow-[0_0_35px_rgba(34,211,238,0.2)] transition-transform duration-300 hover:-translate-y-0.5"
-                >
-                  <span className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/22 to-transparent transition-transform duration-700 group-hover/launch:translate-x-[120%]" />
-                  Launch projects
-                  <ArrowUpRight size={15} aria-hidden="true" />
-                </Link>
-                <Link
-                  href={resumeHref}
-                  className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.055] px-5 py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-white/62 backdrop-blur-xl transition-colors duration-300 hover:border-cyan-200/25 hover:text-cyan-100"
-                >
-                  Open dossier
-                </Link>
-              </div>
-            </div>
-
-            <div className="relative min-h-48 overflow-hidden rounded-[1.65rem] border border-cyan-200/12 bg-cyan-300/[0.045] p-5 backdrop-blur-xl">
-              <div className="absolute right-5 top-5 h-24 w-24 rounded-full border border-dashed border-cyan-200/25 opacity-70 [animation:spin_18s_linear_infinite]" />
-              <div className="absolute right-9 top-9 h-16 w-16 rounded-full border border-blue-300/20 opacity-70 [animation:spin_12s_linear_infinite_reverse]" />
-              <div className="relative flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-cyan-100/68">
-                <Crosshair size={14} aria-hidden="true" />
-                Live capabilities
-              </div>
-              <div className="relative mt-8 grid grid-cols-2 gap-2 text-[11px] text-white/58">
-                {telemetry.map((item) => (
-                  <span key={item} className="rounded-xl border border-white/[0.07] bg-black/28 px-3 py-2">
-                    {item}
+              <div className="flex flex-wrap justify-center gap-x-3 gap-y-2 font-sans text-[10px] uppercase tracking-[0.24em] text-white/38">
+                {stackLabels.map((label, index) => (
+                  <span key={label} className="inline-flex items-center gap-3">
+                    {index > 0 ? <span className="h-px w-5 bg-white/14" aria-hidden="true" /> : null}
+                    {label}
                   </span>
                 ))}
               </div>
+              <div className="mt-3 flex flex-wrap justify-center gap-x-7 gap-y-3 font-sans text-[11px] uppercase tracking-[0.22em]">
+                <Link href={resumeHref} className="text-white/58 transition-colors duration-300 hover:text-cyan-100">
+                  Resume
+                </Link>
+                <Link href="/#contact" className="inline-flex items-center gap-1 text-cyan-100/72 transition-colors duration-300 hover:text-white">
+                  Hire Me
+                  <ArrowUpRight size={12} aria-hidden="true" />
+                </Link>
+              </div>
             </div>
-          </div>
+          </main>
+
+          <aside className="hidden h-full flex-col items-end justify-center gap-5 border-r border-white/[0.08] pr-5 text-right font-sans text-[10px] uppercase tracking-[0.22em] text-white/42 lg:flex">
+            {socials.map((link) => (
+              <a key={link.platform} href={link.url} className="transition-colors duration-300 hover:text-cyan-100" target="_blank" rel="noopener noreferrer">
+                {link.label}
+              </a>
+            ))}
+            <span className="pt-5 text-white/26">hint: move cursor</span>
+          </aside>
         </div>
 
-        <aside className="relative hidden min-h-[36rem] lg:block">
-          <div
-            className="absolute left-1/2 top-1/2 h-[29rem] w-[29rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/12"
-            style={{ transform: "translate(-50%, -50%) rotate(calc(var(--mx) * 16deg))" }}
-          />
-          <div className="absolute left-1/2 top-1/2 h-[22rem] w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-blue-300/16 [animation:spin_28s_linear_infinite]" />
-          <div className="absolute left-1/2 top-1/2 grid h-44 w-44 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/10 bg-black/30 text-center backdrop-blur-xl">
-            <Atom className="mb-2 text-cyan-200" size={28} aria-hidden="true" />
-            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-100/70">Identity core</div>
-            <div className="mt-2 text-xs leading-relaxed text-white/42">Hover field active</div>
-          </div>
-
-          {orbitLabels.map((label, index) => (
-            <div
-              key={label}
-              className="absolute left-1/2 top-1/2 rounded-full border border-white/[0.08] bg-black/42 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.22em] text-white/50 backdrop-blur-xl"
-              style={{
-                transform: `translate(-50%, -50%) rotate(${index * 90}deg) translateY(-13.5rem) rotate(-${index * 90}deg) translate3d(calc(var(--mx) * ${(index - 1.5) * 8}px), calc(var(--my) * ${(1.5 - index) * 8}px), 0)`,
-              }}
-            >
-              {label}
-            </div>
-          ))}
-
-          <div className="absolute bottom-0 left-0 right-0 rounded-[1.5rem] border border-white/[0.08] bg-black/34 p-4 backdrop-blur-xl">
-            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-cyan-100/60">
-              <CircuitBoard size={14} aria-hidden="true" />
-              Social transmission
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {socials.map((link) => (
-                <a
-                  key={link.platform}
-                  href={link.url}
-                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-white/48 transition-colors duration-300 hover:border-cyan-200/25 hover:text-cyan-100"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      <div className="pointer-events-none absolute bottom-5 left-5 hidden items-center gap-2 font-mono text-[9px] uppercase tracking-[0.22em] text-white/32 md:flex">
-        <Braces size={13} aria-hidden="true" />
-        Artifact locked to viewport center
+        <div className="flex flex-wrap items-end justify-between gap-4 border-t border-white/[0.07] pt-5 font-sans text-[10px] uppercase tracking-[0.24em] text-white/38">
+          <span>Scroll</span>
+          <span className="max-w-sm text-right leading-relaxed text-white/34">Background artifact stays centered behind the minimalist hero field.</span>
+        </div>
       </div>
     </div>
   );

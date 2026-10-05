@@ -248,7 +248,7 @@ function DigitalRain({ running, reducedMotion }: { running: boolean; reducedMoti
       uTime: { value: 0 },
       uAspect: { value: 1 },
       uMotion: { value: reducedMotion ? 0 : 1 },
-      uOpacity: { value: 0.98 },
+      uOpacity: { value: 0.59 },
       uGlyphAtlas: { value: glyphAtlas },
       uDeepColor: { value: new Color("#2563eb") },
       uNearColor: { value: new Color("#22d3ee") },
@@ -306,7 +306,7 @@ const fallbackStreams = [
 
 function RainFallback() {
   return (
-    <div className="absolute inset-0 overflow-hidden opacity-55" aria-hidden="true">
+    <div className="absolute inset-0 overflow-hidden opacity-[0.33]" aria-hidden="true">
       {fallbackStreams.map((stream, index) => (
         <span
           key={stream}

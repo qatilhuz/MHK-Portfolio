@@ -13,6 +13,8 @@ import {
 } from "three";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
+import { motionEngine } from "@/lib/motion/engine";
+import { ScrollJourneyObject } from "./ScrollJourneyObject";
 
 const TARGET_FRAME_MS = 1000 / 60;
 const VERTICAL_SPAN = 2.7;
@@ -328,10 +330,37 @@ function RainFallback() {
 
 export function CyberpunkRainCanvas() {
   const root = useRef<HTMLDivElement>(null);
+  const journeyProgress = useRef(0);
   const webgl = useWebGLSupport();
   const reducedMotion = useReducedMotion();
   const [intersecting, setIntersecting] = useState(true);
   const [pageVisible, setPageVisible] = useState(true);
+
+  useEffect(() => {
+    const element = root.current;
+    if (!element) return;
+
+    const gsap = motionEngine();
+    const playhead = { progress: 0 };
+    const context = gsap.context(() => {
+      gsap.to(playhead, {
+        progress: 1,
+        ease: "none",
+        scrollTrigger: {
+          trigger: element,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: true,
+          invalidateOnRefresh: true,
+          onUpdate: () => {
+            journeyProgress.current = playhead.progress;
+          },
+        },
+      });
+    }, element);
+
+    return () => context.revert();
+  }, []);
 
   useEffect(() => {
     const element = root.current;
@@ -358,6 +387,7 @@ export function CyberpunkRainCanvas() {
     <div
       ref={root}
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden [contain:layout_paint_style]"
+      data-scroll-journey-canvas
       aria-hidden="true"
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_38%,rgba(8,145,178,0.16),transparent_62%),linear-gradient(180deg,rgba(2,6,23,0.14),rgba(2,6,23,0.02)_45%,rgba(2,6,23,0.38))]" />
@@ -369,14 +399,16 @@ export function CyberpunkRainCanvas() {
           gl={{
             alpha: true,
             antialias: false,
-            depth: false,
+            depth: true,
             stencil: false,
             powerPreference: "high-performance",
           }}
           className="h-full w-full !bg-transparent opacity-95"
           style={{ pointerEvents: "none", background: "transparent" }}
         >
+          <ambientLight intensity={0.42} />
           <DigitalRain running={running} reducedMotion={reducedMotion} />
+          <ScrollJourneyObject progress={journeyProgress} reducedMotion={reducedMotion} />
           <RenderCadence running={running} />
         </Canvas>
       ) : (

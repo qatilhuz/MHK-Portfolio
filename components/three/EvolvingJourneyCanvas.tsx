@@ -525,30 +525,32 @@ export function EvolvingJourneyCanvas() {
   const running = webgl === true && intersecting && pageVisible && !reducedMotion;
 
   return (
-    <div ref={root} className="pointer-events-none absolute inset-0 -z-10" data-evolving-journey-canvas aria-hidden="true">
-      <div className="sticky top-0 h-screen w-full overflow-hidden [contain:layout_paint_style]">
-        {webgl === true ? (
-          <Canvas
-            dpr={1}
-            frameloop="demand"
-            camera={{ position: [0, 0, 10], fov: 58, near: 0.1, far: 40 }}
-            gl={{
-              alpha: true,
-              antialias: true,
-              depth: true,
-              stencil: false,
-              powerPreference: "high-performance",
-            }}
-            className="h-full w-full !bg-transparent"
-            style={{ pointerEvents: "none", background: "transparent" }}
-          >
-            <ambientLight intensity={0.38} />
-            <EvolvingArtifact progress={progress} reducedMotion={reducedMotion} />
-            <RenderCadence running={running} />
-          </Canvas>
-        ) : (
-          <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(165,243,252,0.16),rgba(34,211,238,0.04)_42%,transparent_72%)]" />
-        )}
+    <div ref={root} className="pointer-events-none absolute inset-0 z-[1]" data-evolving-journey-canvas aria-hidden="true">
+      <div className="pointer-events-none absolute inset-0 -z-10" data-evolving-journey-background-layer>
+        <div className="sticky top-0 h-screen w-full overflow-hidden [contain:layout_paint_style]">
+          {webgl === true ? (
+            <Canvas
+              dpr={1}
+              frameloop="demand"
+              camera={{ position: [0, 0, 10], fov: 58, near: 0.1, far: 40 }}
+              gl={{
+                alpha: true,
+                antialias: true,
+                depth: true,
+                stencil: false,
+                powerPreference: "high-performance",
+              }}
+              className="h-full w-full !bg-transparent"
+              style={{ pointerEvents: "none", background: "transparent" }}
+            >
+              <ambientLight intensity={0.38} />
+              <EvolvingArtifact progress={progress} reducedMotion={reducedMotion} />
+              <RenderCadence running={running} />
+            </Canvas>
+          ) : (
+            <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(165,243,252,0.16),rgba(34,211,238,0.04)_42%,transparent_72%)]" />
+          )}
+        </div>
       </div>
     </div>
   );

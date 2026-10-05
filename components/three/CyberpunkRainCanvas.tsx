@@ -248,7 +248,7 @@ function DigitalRain({ running, reducedMotion }: { running: boolean; reducedMoti
       uTime: { value: 0 },
       uAspect: { value: 1 },
       uMotion: { value: reducedMotion ? 0 : 1 },
-      uOpacity: { value: 0.59 },
+      uOpacity: { value: 1.2 },
       uGlyphAtlas: { value: glyphAtlas },
       uDeepColor: { value: new Color("#2563eb") },
       uNearColor: { value: new Color("#22d3ee") },

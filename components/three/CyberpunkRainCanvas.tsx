@@ -6,7 +6,9 @@ import {
   AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
+  CanvasTexture,
   Color,
+  LinearFilter,
   type ShaderMaterial,
 } from "three";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -14,6 +16,45 @@ import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 
 const TARGET_FRAME_MS = 1000 / 60;
 const VERTICAL_SPAN = 2.7;
+
+function createBinaryGlyphAtlas() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 256;
+
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Unable to create the binary glyph atlas.");
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.font = '800 176px ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace';
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillStyle = "#ffffff";
+  context.strokeStyle = "#ffffff";
+  context.lineWidth = 3;
+
+  (["0", "1"] as const).forEach((digit, index) => {
+    const x = 128 + index * 256;
+
+    context.globalAlpha = 0.86;
+    context.shadowColor = "rgba(207, 250, 254, 0.98)";
+    context.shadowBlur = 30;
+    context.fillText(digit, x, 133);
+
+    context.globalAlpha = 1;
+    context.shadowColor = "rgba(103, 232, 249, 0.9)";
+    context.shadowBlur = 9;
+    context.strokeText(digit, x, 133);
+    context.fillText(digit, x, 133);
+  });
+
+  const texture = new CanvasTexture(canvas);
+  texture.minFilter = LinearFilter;
+  texture.magFilter = LinearFilter;
+  texture.generateMipmaps = false;
+  texture.needsUpdate = true;
+  return texture;
+}
 
 const vertexShader = /* glsl */ `
   uniform float uTime;
@@ -64,6 +105,7 @@ const vertexShader = /* glsl */ `
 `;
 
 const fragmentShader = /* glsl */ `
+  uniform sampler2D uGlyphAtlas;
   uniform vec3 uDeepColor;
   uniform vec3 uNearColor;
   uniform vec3 uHeadColor;
@@ -75,40 +117,23 @@ const fragmentShader = /* glsl */ `
   varying float vGlyph;
   varying float vHead;
 
-  float box(vec2 point, vec2 halfSize) {
-    vec2 edge = step(abs(point), halfSize);
-    return edge.x * edge.y;
-  }
-
   void main() {
-    vec2 point = gl_PointCoord - 0.5;
+    float binaryIndex = step(0.5, vGlyph);
+    vec2 glyphUv = vec2(
+      gl_PointCoord.x * 0.5 + binaryIndex * 0.5,
+      1.0 - gl_PointCoord.y
+    );
+    float glyphAlpha = texture2D(uGlyphAtlas, glyphUv).a;
+    float crispCore = smoothstep(0.58, 0.96, glyphAlpha);
+    float neonHalo = smoothstep(0.008, 0.58, glyphAlpha) * (1.0 - crispCore * 0.45);
+    float signal = crispCore * 1.18 + glyphAlpha * 0.72 + neonHalo * 0.62;
+    float alpha = signal * vAlpha * uOpacity;
 
-    float topBar = box(point - vec2(0.0, 0.27), vec2(0.3, 0.055));
-    float midBar = box(point, vec2(0.27, 0.05));
-    float lowBar = box(point + vec2(0.0, 0.27), vec2(0.3, 0.055));
-    float leftStem = box(point + vec2(0.22, 0.0), vec2(0.05, 0.31));
-    float rightStem = box(point - vec2(0.22, 0.0), vec2(0.05, 0.31));
-    float centerStem = box(point, vec2(0.045, 0.32));
+    if (alpha < 0.008) discard;
 
-    float glyphA = max(max(topBar, midBar), max(leftStem, rightStem));
-    float glyphB = max(max(topBar, lowBar), centerStem);
-    float glyphC = max(max(midBar, lowBar), max(leftStem, centerStem));
-
-    float chooseA = 1.0 - step(0.333, vGlyph);
-    float chooseB = step(0.333, vGlyph) * (1.0 - step(0.666, vGlyph));
-    float chooseC = step(0.666, vGlyph);
-    float glyph = glyphA * chooseA + glyphB * chooseB + glyphC * chooseC;
-
-    float radialGlow = exp(-dot(point, point) * mix(8.0, 18.0, vFocus));
-    float verticalTrail = exp(-abs(point.x) * 18.0) * (1.0 - smoothstep(-0.1, 0.5, point.y));
-    float core = glyph * mix(0.38, 1.0, vFocus);
-    float alpha = (core + radialGlow * 0.22 + verticalTrail * 0.08) * vAlpha * uOpacity;
-
-    if (alpha < 0.012) discard;
-
-    vec3 color = mix(uDeepColor, uNearColor, smoothstep(0.08, 0.9, vDepth));
-    color = mix(color, uHeadColor, vHead * 0.62);
-    color *= 0.72 + vFocus * 0.45;
+    vec3 color = mix(uDeepColor, uNearColor, smoothstep(0.04, 0.86, vDepth));
+    color = mix(color, uHeadColor, vHead * 0.84);
+    color *= 1.05 + vFocus * 0.72 + vHead * 1.55;
 
     gl_FragColor = vec4(color, alpha);
   }
@@ -126,8 +151,8 @@ interface RainData {
 }
 
 function createRainData(reducedMotion: boolean): RainData {
-  const columns = reducedMotion ? 54 : 78;
-  const glyphsPerColumn = reducedMotion ? 10 : 14;
+  const columns = reducedMotion ? 84 : 144;
+  const glyphsPerColumn = reducedMotion ? 16 : 22;
   const count = columns * glyphsPerColumn;
   const positions = new Float32Array(count * 3);
   const speed = new Float32Array(count);
@@ -151,7 +176,7 @@ function createRainData(reducedMotion: boolean): RainData {
     const columnSpeed = 0.11 + random() * 0.22;
     const columnPhase = random() * VERTICAL_SPAN;
     const columnDrift = 0.005 + random() * 0.018;
-    const spacing = 0.043 + random() * 0.022;
+    const spacing = 0.03 + random() * 0.021;
 
     for (let row = 0; row < glyphsPerColumn; row += 1) {
       const index = column * glyphsPerColumn + row;
@@ -164,8 +189,8 @@ function createRainData(reducedMotion: boolean): RainData {
       speed[index] = columnSpeed;
       phase[index] = columnPhase;
       trail[index] = 0.12 + trailStrength * 0.88;
-      glyph[index] = random();
-      size[index] = 7 + random() * 4.5;
+      glyph[index] = random() < 0.5 ? 0 : 1;
+      size[index] = 13 + random() * 7;
       depth[index] = columnDepth;
       drift[index] = columnDrift;
     }
@@ -217,20 +242,23 @@ function DigitalRain({ running, reducedMotion }: { running: boolean; reducedMoti
   const material = useRef<ShaderMaterial>(null);
   const data = useMemo(() => createRainData(reducedMotion), [reducedMotion]);
   const geometry = useMemo(() => createGeometry(data), [data]);
+  const glyphAtlas = useMemo(() => createBinaryGlyphAtlas(), []);
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
       uAspect: { value: 1 },
       uMotion: { value: reducedMotion ? 0 : 1 },
-      uOpacity: { value: 0.78 },
+      uOpacity: { value: 0.98 },
+      uGlyphAtlas: { value: glyphAtlas },
       uDeepColor: { value: new Color("#2563eb") },
-      uNearColor: { value: new Color("#5eead4") },
-      uHeadColor: { value: new Color("#ecfeff") },
+      uNearColor: { value: new Color("#22d3ee") },
+      uHeadColor: { value: new Color("#f0fdff") },
     }),
-    [reducedMotion],
+    [glyphAtlas, reducedMotion],
   );
 
   useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => glyphAtlas.dispose(), [glyphAtlas]);
 
   useFrame((state, delta) => {
     if (!material.current) return;
@@ -258,33 +286,40 @@ function DigitalRain({ running, reducedMotion }: { running: boolean; reducedMoti
 }
 
 const fallbackStreams = [
-  "01A7F10D3E01",
-  "10110B9C0101",
-  "7F001011D2A0",
-  "0110C8E10110",
-  "A1D01001F70B",
-  "001101E4A110",
-  "C90110F010D1",
-  "10E7A001101F",
-  "F0101D8B1100",
-  "01B1100E7A10",
+  "0101101001011010",
+  "1011010010110101",
+  "0010110100101101",
+  "1101001011010010",
+  "0110101101101001",
+  "1001011010010110",
+  "0100110101001101",
+  "1011001010110010",
+  "0011010110011010",
+  "1100101001100101",
+  "0110010110100110",
+  "1001101001011001",
+  "0101011011010101",
+  "1010100100101010",
+  "0011001011001101",
+  "1100110100110010",
 ];
 
 function RainFallback() {
   return (
-    <div className="absolute inset-0 overflow-hidden opacity-35" aria-hidden="true">
+    <div className="absolute inset-0 overflow-hidden opacity-55" aria-hidden="true">
       {fallbackStreams.map((stream, index) => (
         <span
           key={stream}
-          className="absolute top-[-4rem] font-mono text-[10px] leading-[1.6] tracking-[0.3em] text-cyan-300/55 [text-orientation:upright] [writing-mode:vertical-rl]"
+          className="absolute top-[-4rem] font-mono text-[11px] leading-[1.45] tracking-[0.22em] text-cyan-200/80 [text-orientation:upright] [writing-mode:vertical-rl]"
           style={{
-            left: `${5 + index * 10}%`,
-            filter: `blur(${index % 3 === 0 ? 1 : 0}px)`,
-            opacity: 0.35 + (index % 4) * 0.12,
+            left: `${3 + index * 6.25}%`,
+            filter: `blur(${index % 5 === 0 ? 1 : 0}px)`,
+            opacity: 0.48 + (index % 4) * 0.13,
+            textShadow: "0 0 6px #67e8f9, 0 0 18px rgba(34,211,238,0.85)",
             transform: `translateY(${(index % 5) * 15}vh)`,
           }}
         >
-          {stream.repeat(8)}
+          {stream.repeat(10)}
         </span>
       ))}
     </div>
@@ -325,7 +360,7 @@ export function CyberpunkRainCanvas() {
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden [contain:layout_paint_style]"
       aria-hidden="true"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_38%,rgba(8,145,178,0.09),transparent_58%),linear-gradient(180deg,rgba(2,6,23,0.22),rgba(2,6,23,0.05)_45%,rgba(2,6,23,0.52))]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_38%,rgba(8,145,178,0.16),transparent_62%),linear-gradient(180deg,rgba(2,6,23,0.14),rgba(2,6,23,0.02)_45%,rgba(2,6,23,0.38))]" />
       {webgl === true ? (
         <Canvas
           dpr={1}
@@ -338,7 +373,7 @@ export function CyberpunkRainCanvas() {
             stencil: false,
             powerPreference: "high-performance",
           }}
-          className="h-full w-full !bg-transparent opacity-80"
+          className="h-full w-full !bg-transparent opacity-95"
           style={{ pointerEvents: "none", background: "transparent" }}
         >
           <DigitalRain running={running} reducedMotion={reducedMotion} />
@@ -347,8 +382,8 @@ export function CyberpunkRainCanvas() {
       ) : (
         <RainFallback />
       )}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(9,9,11,0.38)_78%,rgba(9,9,11,0.72))]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/45 via-transparent to-background/80" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_24%,rgba(9,9,11,0.26)_80%,rgba(9,9,11,0.58))]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/25 via-transparent to-background/65" />
     </div>
   );
 }

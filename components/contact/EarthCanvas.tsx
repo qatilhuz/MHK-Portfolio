@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Preload, useGLTF } from "@react-three/drei";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 
 const PLANET_MODEL = "/models/planet/scene.gltf";
@@ -14,14 +13,14 @@ function Earth() {
   return (
     <primitive
       object={earth.scene}
-      scale={2.5}
+      scale={2.3}
       position={[0, 0, 0]}
       rotation={[0, 0, 0]}
     />
   );
 }
 
-function EarthScene({ reducedMotion }: { reducedMotion: boolean }) {
+function EarthScene() {
   return (
     <>
       <ambientLight intensity={0.8} />
@@ -33,8 +32,8 @@ function EarthScene({ reducedMotion }: { reducedMotion: boolean }) {
         <Preload all />
       </Suspense>
       <OrbitControls
-        autoRotate={!reducedMotion}
-        autoRotateSpeed={0.55}
+        autoRotate
+        autoRotateSpeed={1}
         enablePan={false}
         enableZoom={false}
         minPolarAngle={Math.PI / 2}
@@ -46,7 +45,6 @@ function EarthScene({ reducedMotion }: { reducedMotion: boolean }) {
 
 export function EarthCanvas() {
   const webgl = useWebGLSupport();
-  const reducedMotion = useReducedMotion();
 
   if (webgl === false) {
     return (
@@ -61,8 +59,8 @@ export function EarthCanvas() {
   return (
     <Canvas
       dpr={[1, 1.5]}
-      frameloop={reducedMotion ? "demand" : "always"}
-      camera={{ position: [0, 0, 6], fov: 45, near: 0.1, far: 200 }}
+      frameloop="always"
+      camera={{ position: [0, 0, 7.2], fov: 45, near: 0.1, far: 200 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         gl.toneMappingExposure = 1.1;
@@ -72,7 +70,7 @@ export function EarthCanvas() {
       style={{ background: "transparent" }}
       aria-label="Rotating 3D Earth"
     >
-      <EarthScene reducedMotion={reducedMotion} />
+      <EarthScene />
     </Canvas>
   );
 }

@@ -36,7 +36,7 @@ export function ContactPreview() {
     >
       <StarsCanvas />
       <InView
-        className="relative z-10 flex flex-col-reverse gap-10 overflow-hidden xl:mt-12 xl:flex-row"
+        className="relative z-10 flex min-w-0 flex-col-reverse gap-10 xl:mt-12 xl:flex-row"
         stagger="[data-contact-panel]"
         y={22}
       >
@@ -76,7 +76,7 @@ export function ContactPreview() {
 
         <div
           data-contact-panel
-          className="h-[350px] md:h-[550px] xl:h-auto xl:min-h-[560px] xl:flex-1"
+          className="relative h-[350px] w-full min-w-0 md:h-[550px] xl:h-auto xl:min-h-[560px] xl:flex-1"
         >
           <EarthCanvas />
         </div>

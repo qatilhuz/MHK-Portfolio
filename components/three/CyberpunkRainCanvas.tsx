@@ -13,6 +13,7 @@ import {
 } from "three";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
+import { visualConfig } from "@/data/visualConfig";
 import { motionEngine } from "@/lib/motion/engine";
 import { ScrollJourneyObject } from "./ScrollJourneyObject";
 
@@ -337,6 +338,8 @@ export function CyberpunkRainCanvas() {
   const [pageVisible, setPageVisible] = useState(true);
 
   useEffect(() => {
+    if (!visualConfig.enableLegacyScrollObject) return;
+
     const element = root.current;
     if (!element) return;
 
@@ -408,7 +411,9 @@ export function CyberpunkRainCanvas() {
         >
           <ambientLight intensity={0.42} />
           <DigitalRain running={running} reducedMotion={reducedMotion} />
-          <ScrollJourneyObject progress={journeyProgress} reducedMotion={reducedMotion} />
+          {visualConfig.enableLegacyScrollObject ? (
+            <ScrollJourneyObject progress={journeyProgress} reducedMotion={reducedMotion} />
+          ) : null}
           <RenderCadence running={running} />
         </Canvas>
       ) : (

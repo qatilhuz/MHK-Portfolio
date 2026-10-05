@@ -26,6 +26,7 @@ export function ScrollJourneyObject({ progress, reducedMotion }: ScrollJourneyOb
   const innerRing = useRef<Mesh>(null);
   const echoes = useRef<Array<Group | null>>([]);
   const smoothedProgress = useRef(0);
+  const initialized = useRef(false);
   const pathPoint = useMemo(() => new Vector3(), []);
   const pathTangent = useMemo(() => new Vector3(), []);
   const echoPoint = useMemo(() => new Vector3(), []);
@@ -55,12 +56,14 @@ export function ScrollJourneyObject({ progress, reducedMotion }: ScrollJourneyOb
     if (!object) return;
 
     const targetProgress = reducedMotion ? 0.82 : MathUtils.clamp(progress.current, 0, 1);
-    smoothedProgress.current = MathUtils.damp(
-      smoothedProgress.current,
-      targetProgress,
-      reducedMotion ? 20 : 6.5,
-      Math.min(delta, 1 / 30),
-    );
+    smoothedProgress.current = initialized.current
+      ? MathUtils.damp(
+          smoothedProgress.current,
+          targetProgress,
+          reducedMotion ? 20 : 6.5,
+          Math.min(delta, 1 / 30),
+        )
+      : targetProgress;
 
     const journey = smoothedProgress.current;
     flightPath.getPointAt(journey, pathPoint);
@@ -70,32 +73,41 @@ export function ScrollJourneyObject({ progress, reducedMotion }: ScrollJourneyOb
     const targetX = pathPoint.x * viewport.width;
     const targetY = pathPoint.y * viewport.height;
 
-    object.position.x = MathUtils.damp(object.position.x, targetX, 9, delta);
-    object.position.y = MathUtils.damp(object.position.y, targetY, 9, delta);
-    object.position.z = MathUtils.damp(object.position.z, pathPoint.z, 8, delta);
-
     const bank = -pathTangent.x * 0.95;
-    object.rotation.x = MathUtils.damp(object.rotation.x, pathTangent.y * 0.34, 7, delta);
-    object.rotation.y = MathUtils.damp(object.rotation.y, journey * Math.PI * 3.5, 5, delta);
-    object.rotation.z = MathUtils.damp(object.rotation.z, bank, 7, delta);
+    const targetRotationX = pathTangent.y * 0.34;
+    const targetRotationY = journey * Math.PI * 3.5;
+
+    if (initialized.current) {
+      object.position.x = MathUtils.damp(object.position.x, targetX, 9, delta);
+      object.position.y = MathUtils.damp(object.position.y, targetY, 9, delta);
+      object.position.z = MathUtils.damp(object.position.z, pathPoint.z, 8, delta);
+      object.rotation.x = MathUtils.damp(object.rotation.x, targetRotationX, 7, delta);
+      object.rotation.y = MathUtils.damp(object.rotation.y, targetRotationY, 5, delta);
+      object.rotation.z = MathUtils.damp(object.rotation.z, bank, 7, delta);
+    } else {
+      object.position.set(targetX, targetY, pathPoint.z);
+      object.rotation.set(targetRotationX, targetRotationY, bank);
+    }
 
     const responsiveScale = MathUtils.clamp(viewport.width / 7.2, 0.58, 1.12);
     const landingPulse = MathUtils.smoothstep(journey, 0.8, 1) * 0.18;
     const targetScale = responsiveScale * (0.88 + Math.sin(journey * Math.PI) * 0.13 + landingPulse);
-    const nextScale = MathUtils.damp(object.scale.x, targetScale, 7, delta);
+    const nextScale = initialized.current
+      ? MathUtils.damp(object.scale.x, targetScale, 7, delta)
+      : targetScale;
     object.scale.setScalar(nextScale);
 
     if (core.current) {
-      core.current.rotation.x = journey * Math.PI * 4.5 + state.clock.elapsedTime * 0.16;
-      core.current.rotation.y = journey * Math.PI * 7 - state.clock.elapsedTime * 0.11;
+      core.current.rotation.x = journey * Math.PI * 4.5;
+      core.current.rotation.y = journey * Math.PI * 7;
     }
     if (outerRing.current) {
-      outerRing.current.rotation.x = state.clock.elapsedTime * 0.42 + journey * Math.PI * 2;
-      outerRing.current.rotation.z = state.clock.elapsedTime * -0.3 + journey * Math.PI * 3;
+      outerRing.current.rotation.x = journey * Math.PI * 2;
+      outerRing.current.rotation.z = journey * Math.PI * 3;
     }
     if (innerRing.current) {
-      innerRing.current.rotation.y = state.clock.elapsedTime * -0.5 - journey * Math.PI * 2.5;
-      innerRing.current.rotation.z = state.clock.elapsedTime * 0.24;
+      innerRing.current.rotation.y = -journey * Math.PI * 2.5;
+      innerRing.current.rotation.z = journey * Math.PI * 1.5;
     }
 
     echoes.current.forEach((echo, index) => {
@@ -111,6 +123,8 @@ export function ScrollJourneyObject({ progress, reducedMotion }: ScrollJourneyOb
       echo.scale.setScalar(Math.max(0.1, echoScale));
       echo.rotation.set(journey * 3 + index, journey * 5 - index * 0.4, journey * 2);
     });
+
+    initialized.current = true;
   });
 
   return (

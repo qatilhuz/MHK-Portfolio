@@ -8,7 +8,7 @@ const EvolvingJourneyCanvas = dynamic(
     ssr: false,
     loading: () => (
       <div
-        className="pointer-events-none absolute right-[12%] top-[8%] z-20 h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(103,232,249,0.18),rgba(34,211,238,0.05)_38%,transparent_70%)] blur-sm"
+        className="pointer-events-none absolute right-[12%] top-[8%] -z-10 h-36 w-36 rounded-full bg-[radial-gradient(circle,rgba(103,232,249,0.14),rgba(34,211,238,0.04)_38%,transparent_70%)] blur-sm"
         aria-hidden="true"
       />
     ),

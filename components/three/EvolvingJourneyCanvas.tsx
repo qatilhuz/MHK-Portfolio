@@ -23,6 +23,8 @@ import { motionEngine } from "@/lib/motion/engine";
 const TARGET_FRAME_MS = 1000 / 60;
 const PETAL_COUNT = 8;
 const NODE_COUNT = 12;
+const DETAIL_RING_COUNT = 5;
+const CORE_FRAGMENT_COUNT = 16;
 
 interface EvolvingArtifactProps {
   progress: MutableRefObject<number>;
@@ -65,11 +67,14 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
   const artifact = useRef<Group>(null);
   const core = useRef<Mesh>(null);
   const coreMaterial = useRef<MeshStandardMaterial>(null);
-  const auraMaterial = useRef<MeshBasicMaterial>(null);
   const petals = useRef<Array<Mesh | null>>([]);
   const petalMaterials = useRef<Array<MeshStandardMaterial | null>>([]);
   const rings = useRef<Array<Mesh | null>>([]);
   const ringMaterials = useRef<Array<MeshBasicMaterial | null>>([]);
+  const detailRings = useRef<Array<Mesh | null>>([]);
+  const detailRingMaterials = useRef<Array<MeshBasicMaterial | null>>([]);
+  const coreFragments = useRef<Array<Mesh | null>>([]);
+  const fragmentMaterials = useRef<Array<MeshStandardMaterial | null>>([]);
   const nodes = useRef<Array<Group | null>>([]);
   const nodeMaterials = useRef<Array<MeshBasicMaterial | null>>([]);
   const networkMaterial = useRef<LineBasicMaterial>(null);
@@ -107,6 +112,17 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
         const y = 1 - (index / (NODE_COUNT - 1)) * 2;
         const radius = Math.sqrt(Math.max(0, 1 - y * y));
         const angle = index * Math.PI * (3 - Math.sqrt(5));
+        return new Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius).normalize();
+      }),
+    [],
+  );
+
+  const fragmentDirections = useMemo(
+    () =>
+      Array.from({ length: CORE_FRAGMENT_COUNT }, (_, index) => {
+        const y = 1 - (((index * 7) % CORE_FRAGMENT_COUNT) / (CORE_FRAGMENT_COUNT - 1)) * 2;
+        const radius = Math.sqrt(Math.max(0, 1 - y * y));
+        const angle = index * Math.PI * (3 - Math.sqrt(5)) + (index % 4) * 0.28;
         return new Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius).normalize();
       }),
     [],
@@ -152,8 +168,8 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
       carrierNode.rotation.z = bank;
     }
 
-    const responsiveScale = MathUtils.clamp(viewport.width / 8.2, 0.42, 0.82);
-    const sectionScale = 1 + aboutReveal * 0.1 + skillsReveal * 0.12;
+    const responsiveScale = MathUtils.clamp(viewport.width / 9.4, 0.36, 0.7);
+    const sectionScale = 0.94 + aboutReveal * 0.08 + skillsReveal * 0.1;
     const nextScale = responsiveScale * sectionScale;
     const scale = initialized.current
       ? MathUtils.damp(carrierNode.scale.x, nextScale, 7, delta)
@@ -173,10 +189,6 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
       coreMaterial.current.emissiveIntensity = 3.8 + aboutReveal * 1.8 + skillsReveal * 2.6;
       coreMaterial.current.roughness = 0.24 - aboutReveal * 0.08;
     }
-    if (auraMaterial.current) {
-      auraMaterial.current.opacity = 0.075 + aboutReveal * 0.055 + skillsReveal * 0.085;
-    }
-
     petals.current.forEach((petal, index) => {
       if (!petal) return;
       const angle = (index / PETAL_COUNT) * Math.PI * 2;
@@ -199,8 +211,8 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
       );
       const material = petalMaterials.current[index];
       if (material) {
-        material.opacity = 0.82 - skillsReveal * 0.24;
-        material.emissiveIntensity = 1.5 + aboutReveal * 1.2 + skillsReveal * 1.8;
+        material.opacity = 0.5 - skillsReveal * 0.12;
+        material.emissiveIntensity = 1.9 + aboutReveal * 1.35 + skillsReveal * 2;
       }
     });
 
@@ -213,7 +225,38 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
       const ringScale = 0.76 + index * 0.14 + aboutReveal * 0.24 + skillsReveal * (0.42 + index * 0.08);
       ring.scale.setScalar(ringScale);
       const material = ringMaterials.current[index];
-      if (material) material.opacity = 0.32 + aboutReveal * 0.3 + skillsReveal * 0.3;
+      if (material) material.opacity = 0.24 + aboutReveal * 0.24 + skillsReveal * 0.28;
+    });
+
+    detailRings.current.forEach((ring, index) => {
+      if (!ring) return;
+      const spin = index % 2 === 0 ? 1 : -1;
+      ring.rotation.x = index * 0.58 + spin * (idleTime * (0.34 + index * 0.035) + journey * Math.PI * 0.7);
+      ring.rotation.y = index * 0.36 - spin * (idleTime * 0.18 + journey * Math.PI * (0.85 + index * 0.08));
+      ring.rotation.z = idleTime * 0.12 + index * 0.72 + journey * Math.PI * 0.42;
+      ring.scale.setScalar(0.92 + aboutReveal * 0.18 + skillsReveal * (0.22 + index * 0.035));
+      const material = detailRingMaterials.current[index];
+      if (material) material.opacity = 0.26 + aboutReveal * 0.22 + skillsReveal * 0.2;
+    });
+
+    coreFragments.current.forEach((fragment, index) => {
+      if (!fragment) return;
+      const direction = fragmentDirections[index];
+      const orbit = idleTime * (0.28 + (index % 5) * 0.024) + journey * Math.PI * (0.45 + index * 0.018);
+      const cos = Math.cos(orbit);
+      const sin = Math.sin(orbit);
+      const radius = 0.22 + (index % 4) * 0.028 + aboutReveal * 0.095 + skillsReveal * (0.17 + (index % 3) * 0.025);
+      const x = (direction.x * cos - direction.z * sin) * radius;
+      const z = (direction.x * sin + direction.z * cos) * radius;
+      const y = direction.y * radius * (0.82 + aboutReveal * 0.16);
+      fragment.position.set(x, y, z);
+      fragment.rotation.set(idleTime * 0.38 + index * 0.31, journey * 5 + index, -orbit * 0.72);
+      fragment.scale.setScalar(0.72 + aboutReveal * 0.18 + skillsReveal * 0.22);
+      const material = fragmentMaterials.current[index];
+      if (material) {
+        material.opacity = 0.44 + aboutReveal * 0.2 + skillsReveal * 0.2;
+        material.emissiveIntensity = 1.8 + aboutReveal * 1.4 + skillsReveal * 2.2;
+      }
     });
 
     const networkPositions = networkGeometry.getAttribute("position") as BufferAttribute;
@@ -274,30 +317,76 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
             toneMapped={false}
           />
         </mesh>
-        <mesh scale={1.34}>
-          <icosahedronGeometry args={[0.39, 1]} />
+        <mesh scale={1.06}>
+          <icosahedronGeometry args={[0.39, 2]} />
           <meshBasicMaterial
             color="#67e8f9"
             transparent
-            opacity={0.46}
+            opacity={0.28}
             wireframe
             depthWrite={false}
             blending={AdditiveBlending}
             toneMapped={false}
           />
         </mesh>
-        <mesh scale={2.65}>
+        <mesh scale={2.65} visible={false}>
           <sphereGeometry args={[0.39, 24, 24]} />
           <meshBasicMaterial
-            ref={auraMaterial}
             color="#22d3ee"
             transparent
-            opacity={0.075}
+            opacity={0}
             depthWrite={false}
             blending={AdditiveBlending}
             toneMapped={false}
           />
         </mesh>
+
+        {Array.from({ length: DETAIL_RING_COUNT }, (_, index) => (
+          <mesh
+            key={`detail-ring-${index}`}
+            ref={(node) => {
+              detailRings.current[index] = node;
+            }}
+            rotation={[index * 0.42, index * 0.66, index * 0.24]}
+          >
+            <torusGeometry args={[0.3 + index * 0.075, 0.004 + (index % 2) * 0.002, 6, 96]} />
+            <meshBasicMaterial
+              ref={(material) => {
+                detailRingMaterials.current[index] = material;
+              }}
+              color={index % 3 === 0 ? "#a5f3fc" : index % 2 === 0 ? "#38bdf8" : "#818cf8"}
+              transparent
+              opacity={0.26}
+              depthWrite={false}
+              blending={AdditiveBlending}
+              toneMapped={false}
+            />
+          </mesh>
+        ))}
+
+        {fragmentDirections.map((_, index) => (
+          <mesh
+            key={`core-fragment-${index}`}
+            ref={(node) => {
+              coreFragments.current[index] = node;
+            }}
+          >
+            <octahedronGeometry args={[0.048 + (index % 4) * 0.006, 0]} />
+            <meshStandardMaterial
+              ref={(material) => {
+                fragmentMaterials.current[index] = material;
+              }}
+              color={index % 3 === 0 ? "#cffafe" : index % 2 === 0 ? "#0f172a" : "#172554"}
+              emissive={index % 3 === 0 ? "#22d3ee" : index % 2 === 0 ? "#38bdf8" : "#8b5cf6"}
+              emissiveIntensity={1.8}
+              metalness={0.86}
+              roughness={0.18}
+              transparent
+              opacity={0.44}
+              toneMapped={false}
+            />
+          </mesh>
+        ))}
 
         {Array.from({ length: PETAL_COUNT }, (_, index) => (
           <mesh
@@ -313,11 +402,11 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
               }}
               color={index % 2 === 0 ? "#061d2b" : "#09172e"}
               emissive={index % 2 === 0 ? "#0e7490" : "#2563eb"}
-              emissiveIntensity={1.5}
-              metalness={0.88}
-              roughness={0.2}
+              emissiveIntensity={1.9}
+              metalness={0.9}
+              roughness={0.16}
               transparent
-              opacity={0.82}
+              opacity={0.5}
               toneMapped={false}
             />
           </mesh>
@@ -443,7 +532,7 @@ export function EvolvingJourneyCanvas() {
   return (
     <div
       ref={root}
-      className="pointer-events-none absolute inset-0 z-20 overflow-hidden [contain:layout_paint_style]"
+      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden [contain:layout_paint_style]"
       data-evolving-journey-canvas
       aria-hidden="true"
     >

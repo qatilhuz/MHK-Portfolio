@@ -7,6 +7,7 @@ import { ProjectsPreview } from "@/components/projects/ProjectsPreview";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { SkillsPreview } from "@/components/skills/SkillsPreview";
 import { CyberpunkRain } from "@/components/three/CyberpunkRain";
+import { EvolvingJourney } from "@/components/three/EvolvingJourney";
 
 const QaSection = dynamic(() => import("@/components/qa/QaSection").then((mod) => mod.QaSection));
 const ArcadeSection = dynamic(() =>
@@ -24,6 +25,7 @@ export default function Home() {
     <>
       <div className="relative isolate overflow-hidden">
         <CyberpunkRain />
+        <EvolvingJourney />
         <div className="relative z-10">
           <Hero />
           <AboutPreview />

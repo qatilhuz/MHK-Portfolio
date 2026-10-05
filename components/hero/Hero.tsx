@@ -4,7 +4,6 @@ import { getActiveSocialLinks } from "@/data/social";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
-import { HeroWorkspace } from "@/components/three/HeroWorkspace";
 import { HeroDescription } from "@/components/hero/HeroDescription";
 import { HeroMotion } from "@/components/motion/HeroMotion";
 import { InView } from "@/components/motion/InView";
@@ -16,7 +15,7 @@ export function Hero() {
     <section
       id="hero"
       className="relative min-h-[calc(100svh-4rem)] overflow-hidden border-b border-white/10"
-      data-scene="workspace"
+      data-scene="evolving-artifact"
       data-journey-section="origin"
     >
       <AmbientBackground variant="hero" />
@@ -82,20 +81,36 @@ export function Hero() {
         </div>
 
         <InView className="relative" y={18}>
-          <div data-in className="relative">
+          <div
+            data-in
+            className="relative min-h-[340px] overflow-hidden rounded-[2rem] border border-cyan-200/10 bg-cyan-300/[0.018] shadow-[0_30px_110px_-52px_rgba(34,211,238,0.58),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-[2px] lg:min-h-[470px]"
+            data-scene-slot="evolving-core"
+          >
             <div
-              className="pointer-events-none absolute -inset-8 rounded-[2rem] bg-[radial-gradient(circle,rgba(34,211,238,0.11),transparent_68%)] blur-2xl"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.08),transparent_48%)]"
               aria-hidden="true"
             />
-            <div className="pointer-events-none absolute -top-3 left-6 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-3 py-1 font-mono text-[9px] uppercase tracking-[0.22em] text-cyan-100/70 backdrop-blur-xl">
+            <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 font-mono text-[8px] uppercase tracking-[0.22em] text-cyan-100/65 backdrop-blur-xl">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
-              Live workspace
+              Artifact online
             </div>
-            <div
-              className="scene-slot relative overflow-hidden rounded-[1.75rem] border border-white/12 bg-black/35 shadow-[0_30px_100px_-48px_rgba(34,211,238,0.72),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl"
-              data-scene-slot="hero-workspace"
-            >
-              <HeroWorkspace />
+            <div className="pointer-events-none absolute right-5 top-5 font-mono text-[8px] uppercase tracking-[0.22em] text-white/25">
+              State 01 / Sealed
+            </div>
+
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/8 lg:h-64 lg:w-64">
+              <div className="absolute inset-5 rounded-full border border-dashed border-cyan-200/10" />
+              <div className="absolute inset-12 rounded-full border border-blue-300/8" />
+            </div>
+
+            <span className="pointer-events-none absolute left-4 top-4 h-8 w-8 border-l border-t border-cyan-200/20" />
+            <span className="pointer-events-none absolute right-4 top-4 h-8 w-8 border-r border-t border-cyan-200/20" />
+            <span className="pointer-events-none absolute bottom-4 left-4 h-8 w-8 border-b border-l border-cyan-200/20" />
+            <span className="pointer-events-none absolute bottom-4 right-4 h-8 w-8 border-b border-r border-cyan-200/20" />
+
+            <div className="pointer-events-none absolute inset-x-5 bottom-5 flex items-end justify-between gap-4 border-t border-white/7 pt-4 font-mono text-[8px] uppercase tracking-[0.18em] text-white/28">
+              <span>Intro state · latent energy</span>
+              <span>Scroll to evolve</span>
             </div>
           </div>
         </InView>

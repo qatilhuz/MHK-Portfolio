@@ -42,16 +42,24 @@ export function ContactPreview() {
       >
         <div
           data-contact-panel
-          className="flex-[0.75] rounded-2xl border border-border/80 bg-black/45 p-6 shadow-[0_24px_80px_-36px_rgba(37,99,235,0.55)] backdrop-blur-sm md:p-8"
+          className="relative flex-[0.75] overflow-hidden rounded-[2rem] border border-white/15 bg-white/[0.065] p-6 shadow-[0_30px_100px_-38px_rgba(2,6,23,0.95),0_0_70px_-36px_rgba(96,165,250,0.7),inset_0_1px_0_rgba(255,255,255,0.16)] backdrop-blur-2xl backdrop-saturate-150 md:p-9"
         >
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(255,255,255,0.13),transparent_36%),radial-gradient(circle_at_96%_88%,rgba(59,130,246,0.13),transparent_44%)]"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent"
+            aria-hidden="true"
+          />
           {socials.length > 0 ? (
-            <p className="mb-6 text-sm text-muted">
+            <p className="relative z-10 mb-7 text-sm text-white/65">
               Also on{" "}
               {socials.map((link, index) => (
                 <span key={link.platform}>
                   <a
                     href={link.url}
-                    className="text-foreground underline-offset-4 hover:underline"
+                    className="text-white underline-offset-4 transition-colors hover:text-blue-200 hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -62,13 +70,21 @@ export function ContactPreview() {
               ))}
             </p>
           ) : null}
-          <ContactForm />
-          <p className="mt-6 text-sm text-muted">
-            <Link href="/about" className="text-foreground underline-offset-4 hover:underline">
+          <div className="relative z-10">
+            <ContactForm />
+          </div>
+          <p className="relative z-10 mt-7 border-t border-white/10 pt-5 text-sm text-white/55">
+            <Link
+              href="/about"
+              className="text-white/85 underline-offset-4 transition-colors hover:text-blue-200 hover:underline"
+            >
               About
             </Link>
             {" · "}
-            <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
+            <Link
+              href="/projects"
+              className="text-white/85 underline-offset-4 transition-colors hover:text-blue-200 hover:underline"
+            >
               Projects
             </Link>
           </p>

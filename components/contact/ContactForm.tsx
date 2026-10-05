@@ -89,12 +89,12 @@ export function ContactForm() {
   };
 
   const fieldClass =
-    "w-full rounded-[var(--radius-md)] border bg-surface px-3 py-2 text-sm";
+    "w-full rounded-xl border bg-white/[0.055] px-4 py-3 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none backdrop-blur-md transition-[border-color,background-color,box-shadow] duration-200 placeholder:text-white/35 hover:bg-white/[0.075] focus:border-blue-300/55 focus:bg-white/[0.09] focus:shadow-[0_0_0_3px_rgba(59,130,246,0.13)]";
 
   return (
-    <form className="relative max-w-lg space-y-4" onSubmit={submit} noValidate>
+    <form className="relative max-w-lg space-y-5" onSubmit={submit} noValidate>
       <div>
-        <label htmlFor={`${formId}-name`} className="mb-1 block text-sm">
+        <label htmlFor={`${formId}-name`} className="mb-2 block text-sm font-medium text-white/85">
           Name
         </label>
         <input
@@ -106,19 +106,19 @@ export function ContactForm() {
           required
           aria-invalid={Boolean(errors.name)}
           aria-describedby={errors.name ? `${formId}-name-error` : undefined}
-          className={`${fieldClass} ${errors.name ? "border-foreground" : "border-border"}`}
+          className={`${fieldClass} ${errors.name ? "border-rose-300/70" : "border-white/10"}`}
           onFocus={onFocus}
           onChange={(event) => setValues((prev) => ({ ...prev, name: event.target.value }))}
         />
         {errors.name ? (
-          <p id={`${formId}-name-error`} className="mt-1 text-sm text-muted">
+          <p id={`${formId}-name-error`} className="mt-1.5 text-sm text-rose-200">
             {errors.name}
           </p>
         ) : null}
       </div>
 
       <div>
-        <label htmlFor={`${formId}-email`} className="mb-1 block text-sm">
+        <label htmlFor={`${formId}-email`} className="mb-2 block text-sm font-medium text-white/85">
           Email
         </label>
         <input
@@ -131,27 +131,27 @@ export function ContactForm() {
           required
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? `${formId}-email-error` : undefined}
-          className={`${fieldClass} ${errors.email ? "border-foreground" : "border-border"}`}
+          className={`${fieldClass} ${errors.email ? "border-rose-300/70" : "border-white/10"}`}
           onFocus={onFocus}
           onChange={(event) => setValues((prev) => ({ ...prev, email: event.target.value }))}
         />
         {errors.email ? (
-          <p id={`${formId}-email-error`} className="mt-1 text-sm text-muted">
+          <p id={`${formId}-email-error`} className="mt-1.5 text-sm text-rose-200">
             {errors.email}
           </p>
         ) : null}
       </div>
 
       <div>
-        <label htmlFor={`${formId}-subject`} className="mb-1 block text-sm">
-          Subject <span className="text-muted">(optional)</span>
+        <label htmlFor={`${formId}-subject`} className="mb-2 block text-sm font-medium text-white/85">
+          Subject <span className="font-normal text-white/45">(optional)</span>
         </label>
         <input
           id={`${formId}-subject`}
           name="subject"
           value={values.subject}
           maxLength={120}
-          className={`${fieldClass} border-border`}
+          className={`${fieldClass} border-white/10`}
           onFocus={onFocus}
           onChange={(event) => setValues((prev) => ({ ...prev, subject: event.target.value }))}
         />
@@ -170,7 +170,7 @@ export function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor={`${formId}-message`} className="mb-1 block text-sm">
+        <label htmlFor={`${formId}-message`} className="mb-2 block text-sm font-medium text-white/85">
           Message
         </label>
         <textarea
@@ -182,22 +182,26 @@ export function ContactForm() {
           required
           aria-invalid={Boolean(errors.message)}
           aria-describedby={errors.message ? `${formId}-message-error` : undefined}
-          className={`${fieldClass} ${errors.message ? "border-foreground" : "border-border"}`}
+          className={`${fieldClass} ${errors.message ? "border-rose-300/70" : "border-white/10"}`}
           onFocus={onFocus}
           onChange={(event) => setValues((prev) => ({ ...prev, message: event.target.value }))}
         />
         {errors.message ? (
-          <p id={`${formId}-message-error`} className="mt-1 text-sm text-muted">
+          <p id={`${formId}-message-error`} className="mt-1.5 text-sm text-rose-200">
             {errors.message}
           </p>
         ) : null}
       </div>
 
-      <Button type="submit" disabled={status === "sending"}>
+      <Button
+        type="submit"
+        disabled={status === "sending"}
+        className="border border-blue-200/20 bg-blue-500/85 px-6 text-white shadow-[0_12px_35px_-14px_rgba(59,130,246,0.95),inset_0_1px_0_rgba(255,255,255,0.2)] hover:bg-blue-400 hover:brightness-105"
+      >
         {status === "sending" ? "Sending…" : "Send message"}
       </Button>
 
-      <p className="text-sm text-muted" role="status" aria-live="polite">
+      <p className="min-h-5 text-sm text-white/60" role="status" aria-live="polite">
         {status === "success"
           ? "Message sent successfully. I’ll get back to you soon."
           : status === "unavailable"

@@ -136,28 +136,33 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
     const artifactNode = artifact.current;
     if (!carrierNode || !artifactNode) return;
 
-    const scrollProgress = MathUtils.clamp(progress.current, 0, 1);
+    const targetProgress = reducedMotion ? MathUtils.clamp(progress.current, 0, 1) : progress.current;
     smoothedProgress.current = initialized.current
-      ? MathUtils.damp(smoothedProgress.current, scrollProgress, reducedMotion ? 22 : 14, Math.min(delta, 1 / 30))
-      : scrollProgress;
+      ? MathUtils.damp(
+          smoothedProgress.current,
+          MathUtils.clamp(targetProgress, 0, 1),
+          reducedMotion ? 18 : 6.8,
+          Math.min(delta, 1 / 30),
+        )
+      : MathUtils.clamp(targetProgress, 0, 1);
 
     const journey = smoothedProgress.current;
     const aboutReveal = MathUtils.smoothstep(journey, 0.24, 0.5);
     const skillsReveal = MathUtils.smoothstep(journey, 0.58, 0.86);
     const idleTime = reducedMotion ? 0 : state.clock.elapsedTime;
 
-    path.getPointAt(scrollProgress, point);
-    path.getTangentAt(scrollProgress, tangent).normalize();
+    path.getPointAt(journey, point);
+    path.getTangentAt(journey, tangent).normalize();
     const viewport = state.viewport.getCurrentViewport(state.camera, [0, 0, 0]);
     const targetX = point.x * viewport.width;
-    const targetY = 0;
+    const targetY = point.y * viewport.height;
     const bank = -tangent.x * 0.42;
 
     if (initialized.current) {
-      carrierNode.position.x = MathUtils.damp(carrierNode.position.x, targetX, 13, delta);
-      carrierNode.position.y = targetY;
-      carrierNode.position.z = MathUtils.damp(carrierNode.position.z, point.z, 12, delta);
-      carrierNode.rotation.z = MathUtils.damp(carrierNode.rotation.z, bank, 10, delta);
+      carrierNode.position.x = MathUtils.damp(carrierNode.position.x, targetX, 9, delta);
+      carrierNode.position.y = MathUtils.damp(carrierNode.position.y, targetY, 9, delta);
+      carrierNode.position.z = MathUtils.damp(carrierNode.position.z, point.z, 8, delta);
+      carrierNode.rotation.z = MathUtils.damp(carrierNode.rotation.z, bank, 7, delta);
     } else {
       carrierNode.position.set(targetX, targetY, point.z);
       carrierNode.rotation.z = bank;
@@ -525,33 +530,34 @@ export function EvolvingJourneyCanvas() {
   const running = webgl === true && intersecting && pageVisible && !reducedMotion;
 
   return (
-    <div ref={root} className="pointer-events-none absolute inset-0 z-[1]" data-evolving-journey-canvas aria-hidden="true">
-      <div className="pointer-events-none absolute inset-0 -z-10" data-evolving-journey-background-layer>
-        <div className="sticky top-0 h-screen w-full overflow-hidden [contain:layout_paint_style]">
-          {webgl === true ? (
-            <Canvas
-              dpr={1}
-              frameloop="demand"
-              camera={{ position: [0, 0, 10], fov: 58, near: 0.1, far: 40 }}
-              gl={{
-                alpha: true,
-                antialias: true,
-                depth: true,
-                stencil: false,
-                powerPreference: "high-performance",
-              }}
-              className="h-full w-full !bg-transparent"
-              style={{ pointerEvents: "none", background: "transparent" }}
-            >
-              <ambientLight intensity={0.38} />
-              <EvolvingArtifact progress={progress} reducedMotion={reducedMotion} />
-              <RenderCadence running={running} />
-            </Canvas>
-          ) : (
-            <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(165,243,252,0.16),rgba(34,211,238,0.04)_42%,transparent_72%)]" />
-          )}
-        </div>
-      </div>
+    <div
+      ref={root}
+      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden [contain:layout_paint_style]"
+      data-evolving-journey-canvas
+      aria-hidden="true"
+    >
+      {webgl === true ? (
+        <Canvas
+          dpr={1}
+          frameloop="demand"
+          camera={{ position: [0, 0, 10], fov: 58, near: 0.1, far: 40 }}
+          gl={{
+            alpha: true,
+            antialias: true,
+            depth: true,
+            stencil: false,
+            powerPreference: "high-performance",
+          }}
+          className="h-full w-full !bg-transparent"
+          style={{ pointerEvents: "none", background: "transparent" }}
+        >
+          <ambientLight intensity={0.38} />
+          <EvolvingArtifact progress={progress} reducedMotion={reducedMotion} />
+          <RenderCadence running={running} />
+        </Canvas>
+      ) : (
+        <div className="absolute right-[12%] top-[8%] h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(165,243,252,0.18),rgba(34,211,238,0.05)_42%,transparent_72%)]" />
+      )}
     </div>
   );
 }

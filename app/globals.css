@@ -251,6 +251,152 @@ h3 {
   }
 }
 
+.braille-reveal {
+  transform-origin: center;
+  animation: braille-glitch-in 0.72s steps(14, end) both;
+  will-change: clip-path, filter, opacity, transform;
+}
+
+@keyframes braille-glitch-in {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    filter: blur(6px) saturate(2.2);
+    transform: translate3d(-8px, 2px, 0) scale(0.985);
+  }
+  18% {
+    opacity: 1;
+    clip-path: inset(0 18% 0 0);
+    filter: blur(0) saturate(1.7);
+    transform: translate3d(-3px, 0, 0) skewX(4deg);
+  }
+  36% {
+    clip-path: inset(0 0 0 0);
+    transform: translate3d(2px, 0, 0) skewX(-3deg);
+  }
+  48% {
+    opacity: 0.76;
+    transform: translate3d(-2px, 0, 0) skewX(1.5deg);
+  }
+  62% {
+    opacity: 1;
+    clip-path: inset(0 14% 0 0);
+    transform: translate3d(1px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0);
+    filter: none;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.terminal-braille-shell {
+  box-shadow:
+    0 24px 90px -48px rgba(34, 211, 238, 0.54),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: terminal-shell-glow 5.4s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+@keyframes terminal-shell-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 24px 90px -48px rgba(34, 211, 238, 0.54),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 32px 120px -42px rgba(34, 211, 238, 0.82),
+      0 0 36px rgba(34, 211, 238, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.11);
+  }
+}
+
+.terminal-braille-shell::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 36%, rgba(165, 243, 252, 0.065) 47%, rgba(255, 255, 255, 0.13) 50%, transparent 62%);
+  transform: translateX(-128%) skewX(-12deg);
+  animation: terminal-shell-sheen 6.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes terminal-shell-sheen {
+  0%,
+  62% {
+    opacity: 0;
+    transform: translateX(-128%) skewX(-12deg);
+  }
+  70% {
+    opacity: 1;
+  }
+  83% {
+    opacity: 0.85;
+    transform: translateX(128%) skewX(-12deg);
+  }
+  84%,
+  100% {
+    opacity: 0;
+    transform: translateX(128%) skewX(-12deg);
+  }
+}
+
+.hero-cta-shine {
+  isolation: isolate;
+}
+
+.hero-cta-shine::after {
+  content: "";
+  position: absolute;
+  top: -45%;
+  bottom: -45%;
+  left: -30%;
+  width: 34%;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.52), transparent);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translateX(-170%) skewX(-18deg);
+  animation: hero-cta-shine 4.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes hero-cta-shine {
+  0%,
+  66% {
+    opacity: 0;
+    transform: translateX(-170%) skewX(-18deg);
+  }
+  72% {
+    opacity: 0.7;
+  }
+  84% {
+    opacity: 0.85;
+    transform: translateX(170%) skewX(-18deg);
+  }
+  85%,
+  100% {
+    opacity: 0;
+    transform: translateX(170%) skewX(-18deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .braille-reveal,
+  .terminal-braille-shell,
+  .hero-cta-shine::after,
+  .terminal-braille-shell::after {
+    animation: none !important;
+  }
+
+  .hero-cta-shine::after,
+  .terminal-braille-shell::after {
+    display: none;
+  }
+}
+
 .grid-fade {
   background-image:
     linear-gradient(to right, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px),

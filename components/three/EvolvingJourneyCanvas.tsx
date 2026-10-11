@@ -25,6 +25,7 @@ const PETAL_COUNT = 8;
 const NODE_COUNT = 12;
 const DETAIL_RING_COUNT = 5;
 const CORE_FRAGMENT_COUNT = 16;
+const ARTIFACT_CENTER_Y_RATIO = 0.05;
 
 interface EvolvingArtifactProps {
   progress: MutableRefObject<number>;
@@ -155,18 +156,21 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
     path.getTangentAt(journey, tangent).normalize();
     const viewport = state.viewport.getCurrentViewport(state.camera, [0, 0, 0]);
     const targetX = point.x * viewport.width;
-    const targetY = point.y * viewport.height;
+    // Keep the artifact pinned just below the viewport's optical center while
+    // the scroll progress controls its horizontal motion and morph states.
+    const targetY = -viewport.height * ARTIFACT_CENTER_Y_RATIO;
     const bank = -tangent.x * 0.42;
 
     if (initialized.current) {
       carrierNode.position.x = MathUtils.damp(carrierNode.position.x, targetX, 9, delta);
-      carrierNode.position.y = MathUtils.damp(carrierNode.position.y, targetY, 9, delta);
       carrierNode.position.z = MathUtils.damp(carrierNode.position.z, point.z, 8, delta);
       carrierNode.rotation.z = MathUtils.damp(carrierNode.rotation.z, bank, 7, delta);
     } else {
       carrierNode.position.set(targetX, targetY, point.z);
       carrierNode.rotation.z = bank;
     }
+    // The vertical lock is applied directly so scrolling cannot yank or delay it.
+    carrierNode.position.y = targetY;
 
     const responsiveScale = MathUtils.clamp(viewport.width / 9.4, 0.36, 0.7);
     const sectionScale = 0.94 + aboutReveal * 0.08 + skillsReveal * 0.1;
@@ -532,32 +536,34 @@ export function EvolvingJourneyCanvas() {
   return (
     <div
       ref={root}
-      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden [contain:layout_paint_style]"
+      className="pointer-events-none absolute inset-0 -z-10"
       data-evolving-journey-canvas
       aria-hidden="true"
     >
-      {webgl === true ? (
-        <Canvas
-          dpr={1}
-          frameloop="demand"
-          camera={{ position: [0, 0, 10], fov: 58, near: 0.1, far: 40 }}
-          gl={{
-            alpha: true,
-            antialias: true,
-            depth: true,
-            stencil: false,
-            powerPreference: "high-performance",
-          }}
-          className="h-full w-full !bg-transparent"
-          style={{ pointerEvents: "none", background: "transparent" }}
-        >
-          <ambientLight intensity={0.38} />
-          <EvolvingArtifact progress={progress} reducedMotion={reducedMotion} />
-          <RenderCadence running={running} />
-        </Canvas>
-      ) : (
-        <div className="absolute right-[12%] top-[8%] h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(165,243,252,0.18),rgba(34,211,238,0.05)_42%,transparent_72%)]" />
-      )}
+      <div className="sticky top-0 h-screen w-full overflow-hidden [contain:layout_paint_style]">
+        {webgl === true ? (
+          <Canvas
+            dpr={1}
+            frameloop="demand"
+            camera={{ position: [0, 0, 10], fov: 58, near: 0.1, far: 40 }}
+            gl={{
+              alpha: true,
+              antialias: true,
+              depth: true,
+              stencil: false,
+              powerPreference: "high-performance",
+            }}
+            className="h-full w-full !bg-transparent"
+            style={{ pointerEvents: "none", background: "transparent" }}
+          >
+            <ambientLight intensity={0.38} />
+            <EvolvingArtifact progress={progress} reducedMotion={reducedMotion} />
+            <RenderCadence running={running} />
+          </Canvas>
+        ) : (
+          <div className="absolute left-1/2 top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(165,243,252,0.18),rgba(34,211,238,0.05)_42%,transparent_72%)]" />
+        )}
+      </div>
     </div>
   );
 }

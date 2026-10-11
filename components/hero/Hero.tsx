@@ -21,7 +21,7 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-[calc(100svh-4rem)] overflow-hidden border-b border-white/10"
+      className="relative min-h-[calc(100svh-4rem)] overflow-hidden border-b border-white/10 lg:h-[calc(100svh-4rem)]"
       data-scene="evolving-artifact"
       data-journey-section="origin"
     >
@@ -40,21 +40,8 @@ export function Hero() {
         aria-hidden="true"
       />
 
-      <Container className="relative z-30 grid min-h-[calc(100svh-4rem)] items-center gap-12 py-20 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-24">
+      <Container className="relative z-30 grid min-h-[calc(100svh-4rem)] items-start gap-10 py-6 sm:py-8 lg:h-[calc(100svh-4rem)] lg:min-h-0 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-10">
         <div className="relative z-20">
-          <div
-            className="pointer-events-none absolute -left-5 top-20 -z-10 font-mono text-[clamp(4rem,14vw,12rem)] font-black uppercase leading-none tracking-[-0.09em] text-white/[0.025]"
-            aria-hidden="true"
-          >
-            DEV
-          </div>
-          <div
-            className="pointer-events-none absolute -left-2 top-36 -z-10 font-mono text-[clamp(2.8rem,8vw,7rem)] font-black uppercase leading-none tracking-[0.18em] text-cyan-200/[0.035]"
-            aria-hidden="true"
-          >
-            SYSTEM
-          </div>
-
           <InView stagger="[data-hero-intro]" y={12}>
             <div
               data-hero-intro
@@ -71,7 +58,7 @@ export function Hero() {
           </div>
 
           <InView className="mt-9 flex flex-wrap gap-3" stagger="a" y={10} delay={0.28}>
-            <Button href="/projects" className="shadow-[0_0_34px_rgba(34,211,238,0.18)]">
+            <Button href="/projects" className="hero-cta-shine relative overflow-hidden shadow-[0_0_34px_rgba(34,211,238,0.18)]">
               Explore My Work
               <ArrowUpRight size={16} aria-hidden="true" />
             </Button>

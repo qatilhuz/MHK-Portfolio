@@ -113,7 +113,7 @@ function convertImageToBraille(image: HTMLImageElement, columns: number, thresho
 
 export function TerminalBrailleImage({
   src = "/images/mhk-braille-avatar.svg",
-  columns = 58,
+  columns = 50,
   threshold = 118,
   className,
 }: TerminalBrailleImageProps) {
@@ -159,7 +159,7 @@ export function TerminalBrailleImage({
       data-terminal-braille
       data-protocol="braille"
       className={cn(
-        "terminal-braille-shell relative min-h-[420px] overflow-hidden rounded-[1.4rem] border border-cyan-200/15 bg-[linear-gradient(145deg,rgba(8,13,24,0.84),rgba(2,6,23,0.92))] backdrop-blur-2xl lg:min-h-[500px]",
+        "terminal-braille-shell relative overflow-hidden rounded-[1.15rem] border border-cyan-200/15 bg-[linear-gradient(145deg,rgba(8,13,24,0.84),rgba(2,6,23,0.92))] backdrop-blur-2xl",
         className,
       )}
     >
@@ -167,7 +167,7 @@ export function TerminalBrailleImage({
       <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-cyan-300/12 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl" aria-hidden="true" />
 
-      <div className="relative flex h-10 items-center justify-between gap-3 border-b border-white/[0.08] bg-white/[0.035] px-4 font-mono sm:px-5">
+      <div className="relative flex h-9 items-center justify-between gap-3 border-b border-white/[0.08] bg-white/[0.035] px-3 font-mono sm:px-4">
         <div className="flex items-center gap-2" aria-hidden="true">
           <span className="h-3 w-3 rounded-full bg-rose-400 shadow-[0_0_14px_rgba(251,113,133,0.7)]" />
           <span className="h-3 w-3 rounded-full bg-amber-300 shadow-[0_0_14px_rgba(252,211,77,0.62)]" />
@@ -179,50 +179,35 @@ export function TerminalBrailleImage({
         <div className="hidden text-[10px] uppercase tracking-[0.2em] text-white/35 sm:block">utf-8</div>
       </div>
 
-      <div className="relative flex min-h-[calc(100%-2.5rem)] flex-col p-3 font-mono sm:p-4 lg:p-5">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] uppercase tracking-[0.18em]">
-          <div className="text-white/40">
-            <span className="text-cyan-200/85">mhk@artifact</span>
-            <span className="text-fuchsia-300/70">:</span>
-            <span className="text-cyan-300/70">~/image$</span>
-          </div>
-          <div className="inline-flex items-center gap-2 text-cyan-100/50">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-300" />
-            </span>
-            canvas-live
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-cyan-200/[0.09] bg-black/32 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.045),inset_0_0_34px_rgba(34,211,238,0.035)] sm:p-4">
-          <div className="mb-3 flex flex-wrap gap-x-2 gap-y-1 text-[11px] leading-relaxed text-white/70">
+      <div className="relative flex flex-col p-2 font-mono sm:p-3">
+        <div className="rounded-2xl border border-cyan-200/[0.09] bg-black/32 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.045),inset_0_0_34px_rgba(34,211,238,0.035)] sm:p-3">
+          <div className="mb-2 flex flex-wrap gap-x-2 gap-y-1 text-[10px] leading-relaxed text-white/70">
             <span className="text-emerald-300">$</span>
             <span className="break-all">
               render-image {src.replace("/images/", "./images/")} --protocol=braille --columns={columns}
             </span>
           </div>
 
-          <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 border-y border-white/[0.06] py-2 text-[9px] uppercase tracking-[0.18em] text-white/36">
+          <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 border-y border-white/[0.06] py-1.5 text-[8px] uppercase tracking-[0.18em] text-white/36">
             <span>cell 2x4</span>
             <span>threshold {threshold}</span>
             <span>{status === "ready" ? `${cellCount} glyph cells` : "decoding pixels"}</span>
           </div>
 
           <div
-            className="overflow-hidden rounded-xl border border-white/[0.055] bg-slate-950/62 px-2 py-3 shadow-[inset_0_0_28px_rgba(2,6,23,0.72)] sm:py-4"
+            className="overflow-hidden rounded-xl border border-white/[0.055] bg-slate-950/62 px-2 py-2 shadow-[inset_0_0_28px_rgba(2,6,23,0.72)]"
             aria-live="polite"
           >
             {shouldShowOutput ? (
               <pre
                 role="img"
                 aria-label="Cyberpunk profile image rendered as Unicode Braille characters"
-                className="braille-reveal mx-auto block max-w-full select-all overflow-hidden whitespace-pre text-center text-[clamp(0.375rem,0.7vw,0.625rem)] leading-[1.14] text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.34)] [text-shadow:0_0_8px_rgba(103,232,249,0.72),0_0_20px_rgba(34,211,238,0.22)]"
+                className="braille-reveal mx-auto block max-w-full select-all overflow-hidden whitespace-pre text-center text-[clamp(0.375rem,0.7vw,0.5rem)] leading-[1.08] text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.34)] [text-shadow:0_0_8px_rgba(103,232,249,0.72),0_0_20px_rgba(34,211,238,0.22)]"
               >
                 {output}
               </pre>
             ) : (
-              <div className="grid min-h-[232px] place-items-center text-center text-[10px] uppercase tracking-[0.24em] text-cyan-100/42">
+              <div className="grid h-[178px] place-items-center text-center text-[10px] uppercase tracking-[0.24em] text-cyan-100/42 sm:h-[216px]">
                 <div>
                   <span className="mb-2 block h-px w-28 bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" aria-hidden="true" />
                   {status === "failed" ? "image buffer unavailable" : revealed ? "sampling image cells…" : "arming unicode buffer…"}
@@ -231,21 +216,6 @@ export function TerminalBrailleImage({
               </div>
             )}
           </div>
-
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[9px] uppercase tracking-[0.18em] text-white/35">
-            <span className="text-cyan-100/55">
-              {shouldShowOutput ? "process exited with code 0" : status === "failed" ? "renderer halted" : "renderer operating"}
-            </span>
-            <span className="hidden sm:inline">node-independent browser pipeline</span>
-          </div>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between gap-3 text-[9px] uppercase tracking-[0.2em] text-white/38">
-          <span className="inline-flex items-center gap-2 text-cyan-100/58">
-            <span className="h-px w-8 bg-cyan-300/50" aria-hidden="true" />
-            unicode U+2800 → U+28FF
-          </span>
-          <span>mhk hero/tty01</span>
         </div>
       </div>
     </div>

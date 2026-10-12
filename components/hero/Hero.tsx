@@ -21,7 +21,7 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-[calc(100svh-4rem)] overflow-hidden border-b border-white/10 lg:h-[calc(100svh-4rem)]"
+      className="relative flex min-h-[calc(100svh-4rem)] flex-col overflow-hidden border-b border-white/10"
       data-scene="evolving-artifact"
       data-journey-section="origin"
     >
@@ -40,7 +40,7 @@ export function Hero() {
         aria-hidden="true"
       />
 
-      <Container className="relative z-30 grid min-h-[calc(100svh-4rem)] items-start gap-10 py-6 sm:py-8 lg:h-[calc(100svh-4rem)] lg:min-h-0 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-10">
+      <Container className="relative z-30 grid min-h-[calc(100svh-4rem)] flex-1 items-start gap-10 py-6 pb-14 sm:py-8 sm:pb-16 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-10 lg:pb-14">
         <div className="relative z-20">
           <InView stagger="[data-hero-intro]" y={12}>
             <div

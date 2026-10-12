@@ -85,8 +85,8 @@ function convertImageToBraille(image: HTMLImageElement, columns: number, thresho
     throw new Error("The image does not report valid pixel dimensions.");
   }
 
-  // Two terminal-spaces-to-one character-row keeps a square source visually square.
-  const rows = Math.max(12, Math.round(columns * (sourceHeight / sourceWidth) * 0.5));
+  // Slightly taller braille rows give the portrait more presence while keeping cells proportional.
+  const rows = Math.max(12, Math.round(columns * (sourceHeight / sourceWidth) * 0.56));
   const dotWidth = columns * CELL_WIDTH;
   const dotHeight = rows * CELL_HEIGHT;
   const canvas = document.createElement("canvas");
@@ -174,7 +174,7 @@ export function TerminalBrailleImage({
           <span className="h-3 w-3 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.65)]" />
         </div>
         <div className="min-w-0 truncate text-[10px] uppercase tracking-[0.2em] text-cyan-100/65">
-          mhk@artifact:~/hero-protocol
+          mhk@artifact — hero protocol
         </div>
         <div className="hidden text-[10px] uppercase tracking-[0.2em] text-white/35 sm:block">utf-8</div>
       </div>
@@ -184,7 +184,7 @@ export function TerminalBrailleImage({
           <div className="mb-2 flex flex-wrap gap-x-2 gap-y-1 text-[10px] leading-relaxed text-white/70">
             <span className="text-emerald-300">$</span>
             <span className="break-all">
-              render-image {src.replace("/images/", "./images/")} --protocol=braille --columns={columns}
+              render-image --protocol=braille --columns={columns}
             </span>
           </div>
 
@@ -207,7 +207,7 @@ export function TerminalBrailleImage({
                 {output}
               </pre>
             ) : (
-              <div className="grid h-[178px] place-items-center text-center text-[10px] uppercase tracking-[0.24em] text-cyan-100/42 sm:h-[216px]">
+              <div className="grid h-[184px] place-items-center text-center text-[10px] uppercase tracking-[0.24em] text-cyan-100/42 sm:h-[244px]">
                 <div>
                   <span className="mb-2 block h-px w-28 bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" aria-hidden="true" />
                   {status === "failed" ? "image buffer unavailable" : revealed ? "sampling image cells…" : "arming unicode buffer…"}

@@ -40,7 +40,7 @@ export function Hero() {
         aria-hidden="true"
       />
 
-      <Container className="relative z-30 grid min-h-[calc(100svh-4rem)] flex-1 items-start gap-10 py-6 pb-14 sm:py-8 sm:pb-16 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-10 lg:pb-14">
+      <Container className="relative z-30 grid min-h-[calc(100svh-4rem)] flex-1 items-center gap-10 py-6 pb-14 sm:py-8 sm:pb-16 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-10 lg:pb-14">
         <div className="relative z-20">
           <InView stagger="[data-hero-intro]" y={12}>
             <div
@@ -106,7 +106,7 @@ export function Hero() {
           ) : null}
         </div>
 
-        <InView className="relative z-20" y={18}>
+        <InView className="relative z-20 lg:mt-24" y={18}>
           <TerminalBrailleImage />
         </InView>
 

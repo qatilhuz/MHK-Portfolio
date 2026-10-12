@@ -8,8 +8,10 @@ import {
   BufferGeometry,
   CatmullRomCurve3,
   Color,
+  DoubleSide,
   Group,
   MathUtils,
+  ShaderMaterial,
   Vector3,
   type LineBasicMaterial,
   type Mesh,
@@ -25,7 +27,8 @@ const PETAL_COUNT = 8;
 const NODE_COUNT = 12;
 const DETAIL_RING_COUNT = 5;
 const CORE_FRAGMENT_COUNT = 16;
-const ARTIFACT_CENTER_Y_RATIO = 0.05;
+const TRAVEL_BEAM_COUNT = 4;
+const ARTIFACT_VERTICAL_OFFSET_RATIO = 0.015;
 
 interface EvolvingArtifactProps {
   progress: MutableRefObject<number>;
@@ -79,6 +82,7 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
   const nodes = useRef<Array<Group | null>>([]);
   const nodeMaterials = useRef<Array<MeshBasicMaterial | null>>([]);
   const networkMaterial = useRef<LineBasicMaterial>(null);
+  const travelBeams = useRef<Array<Mesh | null>>([]);
   const smoothedProgress = useRef(0);
   const initialized = useRef(false);
 
@@ -93,12 +97,12 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
     () =>
       new CatmullRomCurve3(
         [
-          new Vector3(0.27, 0.405, 0.82),
-          new Vector3(0.31, 0.285, 0.35),
-          new Vector3(0.08, 0.16, 0.62),
-          new Vector3(-0.045, 0.025, 0.88),
-          new Vector3(0.1, -0.13, 0.28),
-          new Vector3(0.28, -0.405, 0.7),
+          new Vector3(0.27, 0.32, 0.82),
+          new Vector3(0.31, 0.25, 0.35),
+          new Vector3(0.08, 0.12, 0.62),
+          new Vector3(-0.045, 0.015, 0.88),
+          new Vector3(0.1, -0.18, 0.28),
+          new Vector3(0.28, -0.34, 0.7),
         ],
         false,
         "catmullrom",
@@ -130,7 +134,48 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
   );
 
   const networkGeometry = useMemo(() => createNetworkGeometry(), []);
-  useEffect(() => () => networkGeometry.dispose(), [networkGeometry]);
+  const energyMaterial = useMemo(
+    () =>
+      new ShaderMaterial({
+        uniforms: {
+          uColor: { value: new Color("#67e8f9") },
+          uOpacity: { value: 0.22 },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uColor;
+          uniform float uOpacity;
+          varying vec2 vUv;
+          void main() {
+            float core = smoothstep(0.5, 0.0, abs(vUv.x - 0.5));
+            float tail = smoothstep(0.0, 0.16, vUv.y) * (1.0 - smoothstep(0.72, 1.0, vUv.y));
+            float alpha = core * tail * uOpacity;
+            gl_FragColor = vec4(uColor, alpha);
+          }
+        `,
+        transparent: true,
+        depthWrite: false,
+        side: DoubleSide,
+        blending: AdditiveBlending,
+        toneMapped: false,
+      }),
+    [],
+  );
+
+  const beamColor = useMemo(() => new Color("#67e8f9"), []);
+
+  useEffect(() => {
+    return () => {
+      networkGeometry.dispose();
+      energyMaterial.dispose();
+    };
+  }, [energyMaterial, networkGeometry]);
 
   useFrame((state, delta) => {
     const carrierNode = carrier.current;
@@ -156,21 +201,20 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
     path.getTangentAt(journey, tangent).normalize();
     const viewport = state.viewport.getCurrentViewport(state.camera, [0, 0, 0]);
     const targetX = point.x * viewport.width;
-    // Keep the artifact pinned just below the viewport's optical center while
-    // the scroll progress controls its horizontal motion and morph states.
-    const targetY = -viewport.height * ARTIFACT_CENTER_Y_RATIO;
+    // Map the Catmull-Rom travel path across the full Hero → About → Skills
+    // canvas, with a small optical offset so the center of mass reads correctly.
+    const targetY = point.y * viewport.height - viewport.height * ARTIFACT_VERTICAL_OFFSET_RATIO;
     const bank = -tangent.x * 0.42;
 
     if (initialized.current) {
       carrierNode.position.x = MathUtils.damp(carrierNode.position.x, targetX, 9, delta);
+      carrierNode.position.y = MathUtils.damp(carrierNode.position.y, targetY, 8.5, delta);
       carrierNode.position.z = MathUtils.damp(carrierNode.position.z, point.z, 8, delta);
       carrierNode.rotation.z = MathUtils.damp(carrierNode.rotation.z, bank, 7, delta);
     } else {
       carrierNode.position.set(targetX, targetY, point.z);
       carrierNode.rotation.z = bank;
     }
-    // The vertical lock is applied directly so scrolling cannot yank or delay it.
-    carrierNode.position.y = targetY;
 
     const responsiveScale = MathUtils.clamp(viewport.width / 9.4, 0.36, 0.7);
     const sectionScale = 0.94 + aboutReveal * 0.08 + skillsReveal * 0.1;
@@ -179,6 +223,25 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
       ? MathUtils.damp(carrierNode.scale.x, nextScale, 7, delta)
       : nextScale;
     carrierNode.scale.setScalar(scale);
+
+    beamColor.copy(introColor).lerp(aboutColor, aboutReveal).lerp(skillsColor, skillsReveal);
+    (energyMaterial.uniforms.uColor.value as Color).copy(beamColor);
+    energyMaterial.uniforms.uOpacity.value = reducedMotion ? 0.16 : 0.18 + aboutReveal * 0.12 + skillsReveal * 0.18;
+    travelBeams.current.forEach((beam, index) => {
+      if (!beam) return;
+      const centeredIndex = index - (TRAVEL_BEAM_COUNT - 1) / 2;
+      beam.position.set(
+        centeredIndex * 0.22 + tangent.x * 0.18,
+        -0.08 + centeredIndex * 0.035 + Math.sin(journey * Math.PI + index) * 0.045,
+        -1.16 - index * 0.08,
+      );
+      beam.rotation.z = bank * 0.55 + centeredIndex * 0.16 + journey * 0.34;
+      beam.scale.set(
+        0.92 + skillsReveal * 0.08,
+        0.8 + aboutReveal * 0.18 + skillsReveal * 0.28,
+        1,
+      );
+    });
 
     artifactNode.rotation.x = idleTime * 0.12 + journey * Math.PI * 1.2;
     artifactNode.rotation.y = idleTime * 0.18 + journey * Math.PI * 2.4;
@@ -295,8 +358,22 @@ function EvolvingArtifact({ progress, reducedMotion }: EvolvingArtifactProps) {
 
   return (
     <group ref={carrier}>
-      <pointLight color="#22d3ee" intensity={8} distance={5} decay={2} />
-      <pointLight position={[0, 0, -1]} color="#8b5cf6" intensity={5} distance={4} decay={2} />
+      <pointLight color="#22d3ee" intensity={12} distance={6} decay={2} />
+      <pointLight position={[0, 0, -1]} color="#8b5cf6" intensity={9} distance={5} decay={2} />
+
+      {Array.from({ length: TRAVEL_BEAM_COUNT }, (_, index) => (
+        <mesh
+          key={`travel-beam-${index}`}
+          ref={(node) => {
+            travelBeams.current[index] = node;
+          }}
+          position={[(index - 1.5) * 0.22, -0.08, -1.16 - index * 0.08]}
+          renderOrder={-2}
+        >
+          <planeGeometry args={[1.6, 5.2, 1, 24]} />
+          <primitive object={energyMaterial} attach="material" />
+        </mesh>
+      ))}
 
       <group ref={artifact}>
         <mesh ref={core}>
@@ -535,31 +612,29 @@ export function EvolvingJourneyCanvas() {
 
   return (
     <div ref={root} className="pointer-events-none absolute inset-0 z-[1]" data-evolving-journey-canvas aria-hidden="true">
-      <div className="pointer-events-none absolute inset-0 -z-10" data-evolving-journey-background-layer>
-        <div className="sticky top-0 h-screen w-full overflow-hidden [contain:layout_paint_style]">
-          {webgl === true ? (
-            <Canvas
-              dpr={1}
-              frameloop="demand"
-              camera={{ position: [0, 0, 10], fov: 58, near: 0.1, far: 40 }}
-              gl={{
-                alpha: true,
-                antialias: true,
-                depth: true,
-                stencil: false,
-                powerPreference: "high-performance",
-              }}
-              className="h-full w-full !bg-transparent"
-              style={{ pointerEvents: "none", background: "transparent" }}
-            >
-              <ambientLight intensity={0.38} />
-              <EvolvingArtifact progress={progress} reducedMotion={reducedMotion} />
-              <RenderCadence running={running} />
-            </Canvas>
-          ) : (
-            <div className="absolute left-1/2 top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(165,243,252,0.18),rgba(34,211,238,0.05)_42%,transparent_72%)]" />
-          )}
-        </div>
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden [contain:layout_paint_style]" data-evolving-journey-background-layer>
+        {webgl === true ? (
+          <Canvas
+            dpr={1}
+            frameloop="demand"
+            camera={{ position: [0, 0, 10], fov: 58, near: 0.1, far: 40 }}
+            gl={{
+              alpha: true,
+              antialias: true,
+              depth: true,
+              stencil: false,
+              powerPreference: "high-performance",
+            }}
+            className="h-full w-full !bg-transparent"
+            style={{ pointerEvents: "none", background: "transparent" }}
+          >
+            <ambientLight intensity={0.38} />
+            <EvolvingArtifact progress={progress} reducedMotion={reducedMotion} />
+            <RenderCadence running={running} />
+          </Canvas>
+        ) : (
+          <div className="absolute left-1/2 top-[55svh] h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(165,243,252,0.18),rgba(34,211,238,0.05)_42%,transparent_72%)]" />
+        )}
       </div>
     </div>
   );

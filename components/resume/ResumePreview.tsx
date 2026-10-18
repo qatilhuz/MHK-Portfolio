@@ -1,5 +1,6 @@
 import { Section } from "@/components/ui/Section";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { resumePdfExists } from "@/lib/assets";
 import { ResumeActions } from "./ResumeActions";
 
@@ -25,6 +26,14 @@ export function ResumePreview() {
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
             The download and in-browser view are enabled only when the PDF file is present on the site.
           </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button type="button" disabled>
+              Download Resume ↓
+            </Button>
+            <Button type="button" variant="secondary" disabled>
+              View Resume ↗
+            </Button>
+          </div>
           <p className="mt-4 text-xs text-muted">Available in PDF format.</p>
         </Card>
       )}

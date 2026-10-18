@@ -196,8 +196,8 @@ export function replyFromKnowledge(question: string): AssistantReply {
     return {
       text:
         pending.length === projects.filter((item) => !item.isDemo).length
-          ? "Project screenshots and videos are coming soon. Case-study text is on each project page. No live demo URLs are listed."
-          : "Some project media is available on the project pages. Missing files are labelled coming soon. No live demo URLs are listed.",
+          ? "Project descriptions, stacks, and focus areas are available on each project page. Visual assets are shown when they are published."
+          : "Some project visuals are available on the project pages, and additional published assets appear when they are available.",
       links: [{ href: "/projects", label: "Projects" }],
     };
   }
@@ -208,8 +208,8 @@ export function replyFromKnowledge(question: string): AssistantReply {
       .join(". ");
     return {
       text: github
-        ? `${github}. Email and LinkedIn are not listed on this site yet.`
-        : "Contact details beyond this portfolio are not listed.",
+        ? `${github}. You can also use the contact form on this site.`
+        : "You can use the contact form on this site.",
       links: [{ href: "/contact", label: "Contact" }],
     };
   }

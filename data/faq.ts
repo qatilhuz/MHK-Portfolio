@@ -20,21 +20,21 @@ export const faq: FAQ[] = [
   {
     id: "who",
     question: "Who is Huzaifa?",
-    answer: `${siteConfig.legalName} (portfolio name ${siteConfig.displayName}) is a ${siteConfig.role} in ${siteConfig.location}, specializing in ${siteConfig.specialization}.`,
+    answer: `${siteConfig.legalName}, also known as ${siteConfig.displayName}, is a full-stack developer in ${siteConfig.location} specializing in ${siteConfig.specialization}.`,
     category: "about",
     relatedSection: "/about",
   },
   {
     id: "what",
     question: "What does Huzaifa do?",
-    answer: `He works in full-stack development with emphasis on Next.js, React, and .NET. Core strengths include ${coreStrengths.join(", ")}.`,
+    answer: `He builds full-stack applications and modern web experiences, with practical software testing experience. Core strengths include ${coreStrengths.join(", ")}.`,
     category: "about",
     relatedSection: "/about",
   },
   {
     id: "tech",
     question: "What technologies does Huzaifa work with?",
-    answer: `Verified skills: ${skillNames}.`,
+    answer: `His toolkit includes ${skillNames}.`,
     category: "skills",
     relatedSection: "/#skills",
   },
@@ -68,7 +68,7 @@ export const faq: FAQ[] = [
   {
     id: "projects",
     question: "What projects has Huzaifa built?",
-    answer: `Verified projects: ${projectTitles}.`,
+    answer: `Selected projects include ${projectTitles}.`,
     category: "projects",
     relatedSection: "/projects",
   },
@@ -76,7 +76,7 @@ export const faq: FAQ[] = [
     id: "nextjs",
     question: "Does Huzaifa work with Next.js?",
     answer:
-      "Yes. Next.js is listed in his skills and he was a Next.js & React Developer at Hudasoft (Jun 2025 – May 2026).",
+      "Yes. Next.js is part of his frontend toolkit, and he previously worked as a Next.js & React Developer at Hudasoft (June 2025 – May 2026).",
     category: "skills",
     relatedSection: "/#skills",
   },
@@ -84,7 +84,7 @@ export const faq: FAQ[] = [
     id: "dotnet",
     question: "Does Huzaifa work with .NET?",
     answer:
-      "Yes. .NET and C# are listed in his skills, and his current role is .NET Developer at Techcose Solutions (Jun 2026 – Present).",
+      "Yes. .NET and C# are part of his backend toolkit, and his current role is .NET Developer at Techcose Solutions (June 2026 – Present).",
     category: "skills",
     relatedSection: "/experience",
   },
@@ -92,7 +92,7 @@ export const faq: FAQ[] = [
     id: "flutter",
     question: "Does Huzaifa work with Flutter?",
     answer:
-      "Yes. Flutter and Dart are listed in his skills. He built a Laptop E-Commerce Mobile App with a Flutter frontend, .NET backend, and SQL Server.",
+      "Yes. Flutter and Dart appear in his mobile toolkit, including the Laptop E-Commerce Mobile App.",
     category: "skills",
     relatedSection: "/projects",
     relatedProject: "laptop-ecommerce-mobile-app",
@@ -107,7 +107,7 @@ export const faq: FAQ[] = [
     id: "databases",
     question: "What databases has Huzaifa worked with?",
     answer:
-      "SQL Server and MySQL are listed. The e-commerce web app uses MySQL; the laptop mobile app uses SQL Server.",
+      "SQL Server and MySQL appear in his backend toolkit, including the mobile e-commerce app and PHP e-commerce project.",
     category: "skills",
     relatedSection: "/#skills",
   },
@@ -115,7 +115,7 @@ export const faq: FAQ[] = [
     id: "frontend",
     question: "What frontend technologies does Huzaifa use?",
     answer:
-      "HTML, CSS, JavaScript, TypeScript, React, Next.js, Angular, and GSAP are listed, plus Flutter for mobile UI.",
+      "HTML, CSS, JavaScript, TypeScript, React, Next.js, Angular, and GSAP are included in his frontend development toolkit.",
     category: "skills",
     relatedSection: "/#skills",
   },
@@ -123,14 +123,14 @@ export const faq: FAQ[] = [
     id: "live-demo",
     question: "Does he have a live demo?",
     answer:
-      "No public live demo URLs are listed for these projects on the portfolio.",
+      "No public live project URLs are currently listed. The project pages include descriptions, stacks, and focus areas.",
     category: "projects",
     relatedSection: "/projects",
   },
   {
     id: "view-projects",
     question: "Can I view Huzaifa's projects?",
-    answer: "Yes. Open the projects section of this portfolio.",
+    answer: "Yes. Open the selected work section to browse the project cards and case-study pages.",
     category: "projects",
     relatedSection: "/projects",
   },
@@ -138,7 +138,7 @@ export const faq: FAQ[] = [
     id: "arcade",
     question: "What is the Dev Arcade?",
     answer:
-      "An interactive portfolio section with Rock Paper Scissors, Snake, Memory Game, and a Reaction Speed Test. They are coding demonstrations, not commercial games.",
+      "An interactive portfolio section with quick challenges and browser-based game mechanics.",
     category: "about",
     relatedSection: "/#arcade",
   },
@@ -146,7 +146,7 @@ export const faq: FAQ[] = [
     id: "qa-hunt",
     question: "What is QA Bug Hunt?",
     answer:
-      "An interactive demonstration of QA concepts. Visitors inspect deliberately buggy UI, classify the issue, and see expected vs actual results. It is not a client project.",
+      "An interactive software testing challenge where visitors inspect scenarios, report intentional bugs, and compare expected versus actual behavior.",
     category: "qa",
     relatedSection: "/#qa",
   },
@@ -154,7 +154,7 @@ export const faq: FAQ[] = [
     id: "terminal",
     question: "Do you have a terminal?",
     answer:
-      "Yes. The Developer Terminal is a simulated portfolio CLI. Type help for commands. It is not a real system shell.",
+      "Yes. The Developer Terminal is a simulated HuzaifaOS command-line experience. Type help for the available commands.",
     category: "about",
     relatedSection: "/#terminal",
   },
@@ -163,7 +163,7 @@ export const faq: FAQ[] = [
     question: "Can I download Huzaifa's resume?",
     answer: siteConfig.resumeAvailable
       ? "Yes. View or download the PDF from the resume section."
-      : "The resume section is on the site, but the PDF is not in the repository yet, so download is unavailable.",
+      : "The resume section is ready, and the PDF will become downloadable when the file is published on this site.",
     category: "about",
     relatedSection: "/#resume",
   },
@@ -171,7 +171,7 @@ export const faq: FAQ[] = [
     id: "project-media",
     question: "Are there screenshots or live demos?",
     answer:
-      "No public live demo URLs are listed. Project screenshots and videos appear when files are added under public/projects; until then pages say media is coming soon.",
+      "Project details and focus areas are available now. Project visuals and live links are shown when published assets are available.",
     category: "projects",
     relatedSection: "/projects",
   },
@@ -179,7 +179,7 @@ export const faq: FAQ[] = [
     id: "contact",
     question: "How can I contact Huzaifa?",
     answer:
-      "Use the contact page. GitHub is https://github.com/qatilhuz. Email and LinkedIn are not listed on this site yet.",
+      "Use the contact form on this site. Huzaifa’s public GitHub profile is also linked in the footer and contact section.",
     category: "contact",
     relatedSection: "/contact",
   },

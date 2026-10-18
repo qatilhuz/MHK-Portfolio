@@ -1,4 +1,3 @@
-import { siteConfig } from "@/data/site";
 import type { GuidedSection } from "@/lib/guide/types";
 
 export const GUIDE_MODEL_PATH = "/models/portfolio-guide.glb";
@@ -8,16 +7,20 @@ export const guidedSections: GuidedSection[] = [
   {
     id: "hero",
     target: "hero",
-    message: `Hi, I'm ${siteConfig.legalName}. Welcome to my portfolio. I'm a ${siteConfig.role} focused on ${siteConfig.specialization}.`,
-    voiceText: `Hi, I'm ${siteConfig.legalName}. Welcome to my portfolio. I'm a ${siteConfig.role} focused on ${siteConfig.specialization}.`,
+    message:
+      "Welcome — I’m Huzaifa Khan, a full-stack developer who builds digital systems with Next.js, React, TypeScript, and modern web technologies.",
+    voiceText:
+      "Welcome — I’m Huzaifa Khan, a full-stack developer who builds digital systems with Next.js, React, TypeScript, and modern web technologies.",
     pose: "greet",
     readingMs: 5200,
   },
   {
     id: "about",
     target: "about",
-    message: `I'm based in ${siteConfig.location}. This section is a short introduction — not a biography beyond the CV.`,
-    voiceText: `I'm based in ${siteConfig.location}. This section is a short introduction — not a biography beyond the CV.`,
+    message:
+      "I’m based in Karachi, Pakistan, and I care about both how software looks and how reliably it works.",
+    voiceText:
+      "I’m based in Karachi, Pakistan, and I care about both how software looks and how reliably it works.",
     pose: "talk",
     readingMs: 4200,
   },
@@ -25,9 +28,9 @@ export const guidedSections: GuidedSection[] = [
     id: "skills",
     target: "skills",
     message:
-      "Here are the languages, frameworks, and tools listed on my CV, including React, Next.js, and .NET.",
+      "My toolkit spans frontend development, backend development, mobile apps, software testing, and practical developer tools.",
     voiceText:
-      "Here are the languages, frameworks, and tools listed on my CV, including React, Next.js, and .NET.",
+      "My toolkit spans frontend development, backend development, mobile apps, software testing, and practical developer tools.",
     pose: "present",
     readingMs: 4200,
   },
@@ -35,9 +38,9 @@ export const guidedSections: GuidedSection[] = [
     id: "experience",
     target: "experience",
     message:
-      "These are the verified roles: .NET Developer at Techcose Solutions, and previously Next.js and React Developer at Hudasoft.",
+      "I currently work as a .NET Developer at Techcose Solutions, after building Next.js and React applications at Hudasoft.",
     voiceText:
-      "These are the verified roles: .NET Developer at Techcose Solutions, and previously Next.js and React Developer at Hudasoft.",
+      "I currently work as a .NET Developer at Techcose Solutions, after building Next.js and React applications at Hudasoft.",
     pose: "talk",
     readingMs: 5000,
   },
@@ -45,9 +48,9 @@ export const guidedSections: GuidedSection[] = [
     id: "projects",
     target: "projects",
     message:
-      "Four CV projects live here: a PHP store, a Flutter laptop app, a weather SPA, and a gaming UI showcase. Media is coming soon.",
+      "Explore selected projects across web development, mobile apps, and frontend interfaces.",
     voiceText:
-      "Four CV projects live here: a PHP store, a Flutter laptop app, a weather SPA, and a gaming UI showcase. Media is coming soon.",
+      "Explore selected projects across web development, mobile apps, and frontend interfaces.",
     pose: "present",
     readingMs: 5200,
   },
@@ -55,9 +58,9 @@ export const guidedSections: GuidedSection[] = [
     id: "qa",
     target: "qa",
     message:
-      "QA Bug Hunt is a teaching demo: find deliberate defects, classify them, and report. It is not a client defect log.",
+      "QA Bug Hunt is an interactive testing challenge — inspect the scenarios, report the bugs, and compare expected with actual behavior.",
     voiceText:
-      "QA Bug Hunt is a teaching demo: find deliberate defects, classify them, and report. It is not a client defect log.",
+      "QA Bug Hunt is an interactive testing challenge — inspect the scenarios, report the bugs, and compare expected with actual behavior.",
     pose: "talk",
     readingMs: 4500,
   },
@@ -65,9 +68,9 @@ export const guidedSections: GuidedSection[] = [
     id: "arcade",
     target: "arcade",
     message:
-      "Dev Arcade has four small browser games — coding demos, not commercial products.",
+      "The Dev Arcade offers quick interactive challenges built as part of the portfolio experience.",
     voiceText:
-      "Dev Arcade has four small browser games — coding demos, not commercial products.",
+      "The Dev Arcade offers quick interactive challenges built as part of the portfolio experience.",
     pose: "present",
     readingMs: 3800,
   },
@@ -75,9 +78,9 @@ export const guidedSections: GuidedSection[] = [
     id: "terminal",
     target: "terminal",
     message:
-      "The Developer Terminal is a simulated CLI. Try help. It cannot run real shell commands.",
+      "The Developer Terminal is a simulated HuzaifaOS experience. Type help to explore available commands.",
     voiceText:
-      "The Developer Terminal is a simulated CLI. Try help. It cannot run real shell commands.",
+      "The Developer Terminal is a simulated HuzaifaOS experience. Type help to explore available commands.",
     pose: "talk",
     readingMs: 3800,
   },
@@ -85,9 +88,9 @@ export const guidedSections: GuidedSection[] = [
     id: "assistant",
     target: "avatar",
     message:
-      "The portfolio assistant answers only from verified site data. It is separate from this guided intro.",
+      "The Portfolio Assistant can answer questions about my experience, skills, projects, and tech stack.",
     voiceText:
-      "The portfolio assistant answers only from verified site data. It is separate from this guided intro.",
+      "The Portfolio Assistant can answer questions about my experience, skills, projects, and tech stack.",
     pose: "wave",
     readingMs: 4000,
   },
@@ -95,9 +98,9 @@ export const guidedSections: GuidedSection[] = [
     id: "resume",
     target: "resume",
     message:
-      "The résumé section is ready. The PDF is not in the repository yet, so download stays unavailable.",
+      "Use this section to download my resume or view it in your browser when the PDF is published.",
     voiceText:
-      "The résumé section is ready. The PDF is not in the repository yet, so download stays unavailable.",
+      "Use this section to download my resume or view it in your browser when the PDF is published.",
     pose: "talk",
     readingMs: 4000,
   },
@@ -105,9 +108,9 @@ export const guidedSections: GuidedSection[] = [
     id: "contact",
     target: "contact",
     message:
-      "If you'd like to get in touch, use this form. GitHub is listed; email and LinkedIn are not public here yet.",
+      "Have an opportunity in mind? Send me a message — I’m open to relevant development and software engineering work.",
     voiceText:
-      "If you'd like to get in touch, use this form. GitHub is listed; email and LinkedIn are not public here yet.",
+      "Have an opportunity in mind? Send me a message — I’m open to relevant development and software engineering work.",
     pose: "wave",
     readingMs: 4500,
   },

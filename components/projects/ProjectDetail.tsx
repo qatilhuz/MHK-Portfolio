@@ -19,13 +19,13 @@ export function ProjectDetail({
 
   return (
     <Section
-      eyebrow={project.isDemo ? "Placeholder" : previewLabel(project.projectType)}
+      eyebrow={project.isDemo ? "Selected Work" : previewLabel(project.projectType)}
       headingLevel="h1"
       title={project.title}
     >
       {project.isDemo ? (
         <p className="mb-4 text-sm text-muted">
-          This page is a UI demonstration, not a real portfolio case study.
+          This page shows an interface exercise alongside the selected portfolio work.
         </p>
       ) : null}
       <p className="max-w-2xl text-lg leading-relaxed text-muted">{project.shortDescription}</p>
@@ -48,7 +48,7 @@ export function ProjectDetail({
 
       {project.features.length > 0 ? (
         <div className="mt-10 max-w-2xl">
-          <h2>Features</h2>
+          <h2>Focus Areas</h2>
           <ul className="mt-4 list-disc space-y-1 pl-5 text-muted">
             {project.features.map((feature) => (
               <li key={feature}>{feature}</li>
@@ -59,7 +59,7 @@ export function ProjectDetail({
 
       {project.role ? (
         <div className="mt-10 max-w-2xl">
-          <h2>My role</h2>
+          <h2>Role & Focus</h2>
           <p className="mt-3 leading-relaxed text-muted">{project.role}</p>
         </div>
       ) : null}

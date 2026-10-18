@@ -9,20 +9,23 @@ export function ResumePreview() {
   return (
     <Section
       id="resume"
-      eyebrow="CV"
-      title="Resume"
-      description="Full-stack developer résumé covering Next.js, React, .NET, and the projects on this site."
+      eyebrow="MY RESUME"
+      title="Want the Full Picture?"
+      description="Download Huzaifa Khan’s resume or view it in your browser for a concise overview of his experience, skills, and projects."
     >
       {available ? (
-        <ResumeActions />
+        <>
+          <ResumeActions />
+          <p className="mt-4 text-xs text-muted">Available in PDF format.</p>
+        </>
       ) : (
         <Card className="border-dashed">
-          <p className="label">Coming soon</p>
-          <h3 className="mt-3">Resume PDF coming soon</h3>
+          <p className="label">PDF format</p>
+          <h3 className="mt-3">Resume PDF will appear here when published.</h3>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-            View and download will appear here once the file is added at
-            public/resume/huzaifa-resume.pdf. Nothing is served until then.
+            The download and in-browser view are enabled only when the PDF file is present on the site.
           </p>
+          <p className="mt-4 text-xs text-muted">Available in PDF format.</p>
         </Card>
       )}
     </Section>

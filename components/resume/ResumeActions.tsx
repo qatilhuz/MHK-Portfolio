@@ -10,20 +10,20 @@ export function ResumeActions() {
       <Button
         href={RESUME_PUBLIC_PATH}
         external
-        aria-label="View resume PDF"
-        onClick={() => trackEvent("resume_view")}
+        download="Huzaifa-Khan-Resume.pdf"
+        aria-label="Download resume PDF"
+        onClick={() => trackEvent("resume_download")}
       >
-        View Resume
+        Download Resume ↓
       </Button>
       <Button
         href={RESUME_PUBLIC_PATH}
         variant="secondary"
         external
-        download="Huzaifa-Khan-Resume.pdf"
-        aria-label="Download resume PDF"
-        onClick={() => trackEvent("resume_download")}
+        aria-label="View resume PDF"
+        onClick={() => trackEvent("resume_view")}
       >
-        Download Resume
+        View Resume ↗
       </Button>
     </div>
   );

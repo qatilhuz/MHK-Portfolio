@@ -5,9 +5,9 @@ export function AvatarSection() {
   return (
     <Section
       id="avatar"
-      eyebrow="Assistant"
-      title="Digital Portfolio Assistant"
-      description="Ask about Huzaifa’s verified background, stack, roles, projects, and education. Unverified topics are declined. The figure is a placeholder until a personal model is supplied."
+      eyebrow="ASK ME ANYTHING"
+      title="Portfolio Assistant"
+      description="Ask about Huzaifa’s experience, skills, projects, tech stack, or how he builds software."
     >
       <AvatarAssistant />
     </Section>

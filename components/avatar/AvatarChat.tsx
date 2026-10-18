@@ -45,8 +45,7 @@ export function AvatarChat({
       >
         {messages.length === 0 ? (
           <p className="text-sm text-muted">
-            Ask about Huzaifa’s background, stack, experience, or projects.
-            Answers come only from verified portfolio data.
+            Hi — I’m Huzaifa’s portfolio assistant. Ask me about his experience, skills, projects, or tech stack.
           </p>
         ) : (
           messages.map((message) => (
@@ -104,12 +103,12 @@ export function AvatarChat({
           value={input}
           onChange={(event) => onInput(event.target.value)}
           className="h-11 flex-1 rounded-[var(--radius-md)] border border-border bg-surface px-3 text-sm"
-          placeholder="Ask a question…"
+          placeholder="Ask me about Huzaifa..."
           autoComplete="off"
         />
         <div className="flex gap-2">
           <Button type="submit" disabled={busy}>
-            Send
+            Send ↗
           </Button>
           <Button type="button" variant="ghost" onClick={onReset}>
             Reset

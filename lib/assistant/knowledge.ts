@@ -8,7 +8,7 @@ import { getActiveSocialLinks } from "@/data/social";
 import type { AssistantReply } from "@/types";
 
 export const unknownReply: AssistantReply = {
-  text: "I don't have verified information about that in Huzaifa's portfolio.",
+  text: "I don’t have that information in this portfolio yet.",
 };
 
 export const suggestedQuestions = [
@@ -17,9 +17,6 @@ export const suggestedQuestions = [
   "Tell me about his experience",
   "What projects has he built?",
   "What is his tech stack?",
-  "What is the Dev Arcade?",
-  "What is QA Bug Hunt?",
-  "Do you have a terminal?",
 ];
 
 export function normalize(text: string): string {
@@ -89,7 +86,7 @@ export function replyFromKnowledge(question: string): AssistantReply {
     q.includes("cli")
   ) {
     return {
-      text: "The Developer Terminal is a simulated command UI on this site. Try help, about, skills, projects, experience, education, arcade, qa, assistant, resume, contact, and clear. It cannot run real shell commands.",
+      text: "The Developer Terminal is a simulated HuzaifaOS command UI. Try help, about, skills, projects, experience, contact, and clear. It cannot run real shell commands.",
       links: [{ href: "/#terminal", label: "Developer Terminal" }],
     };
   }

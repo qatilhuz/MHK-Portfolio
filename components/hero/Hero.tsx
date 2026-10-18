@@ -66,7 +66,7 @@ export function Hero() {
               variant="secondary"
               className="border-white/10 bg-white/[0.065] backdrop-blur-md hover:bg-white/[0.1]"
             >
-              Let&apos;s Connect ↗
+              {"Let's Connect ↗"}
             </Button>
           </InView>
 

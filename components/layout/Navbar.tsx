@@ -59,7 +59,7 @@ export function Navbar() {
             className="ml-2 rounded-full border border-border px-3 py-1.5 text-sm text-foreground transition-colors duration-[var(--motion-micro)] hover:border-accent hover:text-accent"
             onClick={onNav}
           >
-            Let&apos;s Talk ↗
+            {"Let's Talk ↗"}
           </Link>
         </nav>
 
@@ -101,7 +101,7 @@ export function Navbar() {
             className="py-3 font-medium text-accent"
             onClick={onNav}
           >
-            Let&apos;s Talk ↗
+            {"Let's Talk ↗"}
           </Link>
         </nav>
       </div>

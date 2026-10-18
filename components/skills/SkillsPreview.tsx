@@ -21,10 +21,10 @@ export function SkillsPreview() {
   return (
     <Section
       id="skills"
-      eyebrow="Stack"
-      title="Skills"
+      eyebrow="MY TOOLKIT"
+      title="Skills & Technologies"
       titleMotion="scan"
-      description="A living toolkit, selected for the problem—not displayed as arbitrary percentages."
+      description="A collection of technologies I use to build, test, and improve modern web applications."
       className="relative min-h-[92svh] overflow-hidden bg-surface/20"
     >
       <div
@@ -50,12 +50,12 @@ export function SkillsPreview() {
                 <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-cyan-200/55">
                   Capability matrix
                 </p>
-                <p className="mt-1 text-sm text-white/45">Select a channel to inspect the stack.</p>
+                <p className="mt-1 text-sm text-white/45">Explore the technologies behind my work.</p>
               </div>
             </div>
             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.055] px-3 py-1.5 font-mono text-[8px] uppercase tracking-[0.18em] text-emerald-200/65">
               <Radio size={11} aria-hidden="true" />
-              Core online
+              Actively used
             </span>
           </div>
 
@@ -134,18 +134,23 @@ export function SkillsPreview() {
             <div className="absolute inset-12 rounded-full border border-cyan-100/10 shadow-[0_0_45px_rgba(34,211,238,0.09)]" />
             <div className="text-center">
               <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-cyan-100/48">
-                Dock 03
+                Toolkit
               </p>
               <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.18em] text-white/25">
-                Awaiting core
+                Build · Test · Ship
               </p>
             </div>
           </div>
           <div className="absolute inset-x-6 bottom-6 flex items-center justify-between font-mono text-[8px] uppercase tracking-[0.18em] text-white/25">
-            <span>Path complete</span>
-            <span>03 / Skills</span>
+            <span>Practical stack</span>
+            <span>Skills</span>
           </div>
         </aside>
+      </InView>
+      <InView className="relative mt-10" y={10}>
+        <p className="text-base text-white/58">
+          Always learning. Always improving. Always building.
+        </p>
       </InView>
     </Section>
   );

@@ -40,12 +40,11 @@ export interface Project {
 }
 
 export type SkillCategory =
-  | "Languages"
-  | "Frontend"
-  | "Backend"
-  | "Mobile"
-  | "QA"
-  | "Tools";
+  | "Frontend Development"
+  | "Backend Development"
+  | "Mobile Development"
+  | "Software Testing"
+  | "Tools & Platforms";
 
 export interface Skill {
   id: string;

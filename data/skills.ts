@@ -1,42 +1,51 @@
 import type { Skill, SkillCategory } from "@/types";
 
 export const skills: Skill[] = [
-  { id: "javascript", name: "JavaScript", category: "Languages" },
-  { id: "typescript", name: "TypeScript", category: "Languages" },
-  { id: "csharp", name: "C#", category: "Languages" },
-  { id: "php", name: "PHP", category: "Languages" },
-  { id: "dart", name: "Dart", category: "Languages" },
-  { id: "html", name: "HTML", category: "Languages" },
-  { id: "css", name: "CSS", category: "Languages" },
-  { id: "sqlserver", name: "SQL Server", category: "Languages" },
-  { id: "mysql", name: "MySQL", category: "Languages" },
-  { id: "react", name: "React", category: "Frontend" },
-  { id: "nextjs", name: "Next.js", category: "Frontend" },
-  { id: "angular", name: "Angular", category: "Frontend" },
-  { id: "gsap", name: "GSAP", category: "Frontend" },
-  { id: "dotnet", name: ".NET", category: "Backend" },
-  { id: "flutter", name: "Flutter", category: "Mobile" },
-  { id: "git", name: "Git", category: "Tools" },
-  { id: "vscode", name: "VS Code", category: "Tools" },
-  { id: "visual-studio", name: "Visual Studio", category: "Tools" },
-  { id: "rest", name: "REST APIs", category: "Tools" },
+  { id: "html", name: "HTML", category: "Frontend Development" },
+  { id: "css", name: "CSS", category: "Frontend Development" },
+  { id: "javascript", name: "JavaScript", category: "Frontend Development" },
+  { id: "typescript", name: "TypeScript", category: "Frontend Development" },
+  { id: "react", name: "React", category: "Frontend Development" },
+  { id: "nextjs", name: "Next.js", category: "Frontend Development" },
+  { id: "angular", name: "Angular", category: "Frontend Development" },
+  { id: "gsap", name: "GSAP", category: "Frontend Development" },
+
+  { id: "csharp", name: "C#", category: "Backend Development" },
+  { id: "dotnet", name: ".NET", category: "Backend Development" },
+  { id: "php", name: "PHP", category: "Backend Development" },
+  { id: "rest", name: "REST APIs", category: "Backend Development" },
+  { id: "mysql", name: "MySQL", category: "Backend Development" },
+  { id: "sqlserver", name: "SQL Server", category: "Backend Development" },
+
+  { id: "flutter", name: "Flutter", category: "Mobile Development" },
+  { id: "dart", name: "Dart", category: "Mobile Development" },
+
+  { id: "manual-testing", name: "Manual Testing", category: "Software Testing" },
+  { id: "functional-testing", name: "Functional Testing", category: "Software Testing" },
+  { id: "bug-reporting", name: "Bug Reporting", category: "Software Testing" },
+  { id: "test-case-execution", name: "Test Case Execution", category: "Software Testing" },
+  { id: "cross-browser-testing", name: "Cross-Browser Testing", category: "Software Testing" },
+
+  { id: "git", name: "Git", category: "Tools & Platforms" },
+  { id: "github", name: "GitHub", category: "Tools & Platforms" },
+  { id: "vscode", name: "VS Code", category: "Tools & Platforms" },
+  { id: "visual-studio", name: "Visual Studio", category: "Tools & Platforms" },
 ];
 
 export const coreStrengths = [
-  "Full-Stack Web Development",
-  "Responsive UI/UX Implementation",
-  "API Integration",
-  "Cross-Browser Optimization",
-  "Team Collaboration",
+  "Next.js & React",
+  "Modern Web Development",
+  "Full-Stack Applications",
+  "Software Testing",
+  "Responsive User Experiences",
 ] as const;
 
 export const skillCategories: SkillCategory[] = [
-  "Languages",
-  "Frontend",
-  "Backend",
-  "Mobile",
-  "QA",
-  "Tools",
+  "Frontend Development",
+  "Backend Development",
+  "Mobile Development",
+  "Software Testing",
+  "Tools & Platforms",
 ];
 
 export function getSkillsByCategory(category: SkillCategory): Skill[] {

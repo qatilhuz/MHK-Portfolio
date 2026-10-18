@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { Badge } from "@/components/ui/Badge";
 import { experience } from "@/data/experience";
@@ -12,11 +11,11 @@ export function ExperiencePreview({
   return (
     <Section
       id="experience"
-      eyebrow="Career"
+      eyebrow="WHERE I’VE WORKED"
       headingLevel={headingLevel}
-      title="Experience"
+      title="Experience in Practice"
       titleMotion="mask"
-      description="Roles from Huzaifa’s CV. No extra employers or invented dates."
+      description="Hands-on experience building responsive products, integrating APIs, solving problems, and supporting reliable software delivery."
     >
       <InView>
       <ol className="relative border-l border-border pl-6">
@@ -34,11 +33,14 @@ export function ExperiencePreview({
             </h3>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{item.description}</p>
             {item.responsibilities.length > 0 ? (
-              <ul className="mt-3 max-w-2xl list-disc space-y-1 pl-5 text-sm text-muted">
-                {item.responsibilities.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
+              <div className="mt-3 max-w-2xl">
+                <p className="label">Focus areas</p>
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
+                  {item.responsibilities.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
             ) : null}
             {item.technologies.length > 0 ? (
               <ul className="mt-3 flex flex-wrap gap-2">
@@ -53,15 +55,8 @@ export function ExperiencePreview({
         ))}
       </ol>
       </InView>
-      <p className="mt-8 text-sm text-muted">
-        <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
-          Projects
-        </Link>{" "}
-        and{" "}
-        <Link href="/contact" className="text-foreground underline-offset-4 hover:underline">
-          contact
-        </Link>
-        .
+      <p className="mt-8 max-w-2xl text-sm leading-relaxed text-muted">
+        Every project and role has strengthened how I think, build, test, and improve software.
       </p>
     </Section>
   );

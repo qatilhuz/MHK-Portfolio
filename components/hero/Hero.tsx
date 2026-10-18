@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUpRight, Orbit } from "lucide-react";
+import { ArrowDown, Orbit } from "lucide-react";
 import { siteConfig } from "@/data/site";
 import { getActiveSocialLinks } from "@/data/social";
 import { Button } from "@/components/ui/Button";
@@ -10,9 +10,9 @@ import { HeroMotion } from "@/components/motion/HeroMotion";
 import { InView } from "@/components/motion/InView";
 
 const heroSignals = [
-  { label: "Interface", value: "Next.js / React", detail: "Cinematic UI systems" },
-  { label: "Backend", value: ".NET APIs", detail: "Secure business logic" },
-  { label: "Motion", value: "WebGL / GSAP", detail: "Scroll-linked experiences" },
+  { label: "Base", value: siteConfig.location, detail: "Building from Pakistan" },
+  { label: "Experience", value: siteConfig.experienceSummary, detail: "Hands-on product delivery" },
+  { label: "Focus", value: siteConfig.focusSummary, detail: "Reliable user experiences" },
 ] as const;
 
 export function Hero() {
@@ -48,7 +48,7 @@ export function Hero() {
               className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/[0.075] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-100/80 shadow-[0_0_32px_rgba(34,211,238,0.16)] backdrop-blur-md"
             >
               <Orbit size={13} aria-hidden="true" />
-              Scroll-linked developer system
+              FULL-STACK DEVELOPER · SOFTWARE ENGINEER
             </div>
           </InView>
 
@@ -59,15 +59,14 @@ export function Hero() {
 
           <InView className="mt-9 flex flex-wrap gap-3" stagger="a" y={10} delay={0.28}>
             <Button href="/projects" className="hero-cta-shine relative overflow-hidden shadow-[0_0_34px_rgba(34,211,238,0.18)]">
-              Explore My Work
-              <ArrowUpRight size={16} aria-hidden="true" />
+              Explore My Work ↘
             </Button>
             <Button
-              href={siteConfig.resumeAvailable ? siteConfig.resumePath : "/#resume"}
+              href="/contact"
               variant="secondary"
               className="border-white/10 bg-white/[0.065] backdrop-blur-md hover:bg-white/[0.1]"
             >
-              View Resume
+              Let&apos;s Connect ↗
             </Button>
           </InView>
 
@@ -86,8 +85,15 @@ export function Hero() {
             ))}
           </InView>
 
+          <InView className="mt-6 max-w-2xl" y={8} delay={0.4}>
+            <p className="inline-flex items-center gap-2.5 rounded-full border border-emerald-300/15 bg-emerald-300/[0.07] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-emerald-100/78">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" aria-hidden="true" />
+              {siteConfig.availabilityLabel}
+            </p>
+          </InView>
+
           {socials.length > 0 ? (
-            <InView className="mt-9" stagger="li" y={8}>
+            <InView className="mt-6" stagger="li" y={8}>
               <ul className="flex flex-wrap gap-x-5 gap-y-2">
                 {socials.map((link) => (
                   <li key={link.platform}>
@@ -107,6 +113,9 @@ export function Hero() {
         </div>
 
         <InView className="relative z-20 lg:mt-21" y={18}>
+          <p className="mb-4 text-right font-mono text-[9px] uppercase tracking-[0.28em] text-cyan-100/52">
+            DESIGNED WITH INTENT. BUILT TO WORK.
+          </p>
           <TerminalBrailleImage />
         </InView>
 
@@ -114,7 +123,7 @@ export function Hero() {
           <span className="grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-white/[0.035]">
             <ArrowDown size={12} aria-hidden="true" />
           </span>
-          Trace the data core
+          SCROLL TO EXPLORE ↓
         </div>
       </Container>
     </section>

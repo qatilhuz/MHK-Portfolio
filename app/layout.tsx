@@ -13,11 +13,11 @@ const metadataBase = getSiteUrl() ? new URL(getSiteUrl()) : undefined;
 export const metadata: Metadata = {
   metadataBase,
   title: {
-    default: `${siteConfig.displayName} — ${siteConfig.role}`,
+    default: siteConfig.seoTitle,
     template: `%s | ${siteConfig.displayName}`,
   },
   description: siteConfig.description,
-  applicationName: siteConfig.shortName,
+  applicationName: siteConfig.displayName,
   authors: [{ name: siteConfig.legalName }],
   openGraph: {
     title: `${siteConfig.displayName} — ${siteConfig.role}`,

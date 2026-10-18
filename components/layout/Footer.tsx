@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { getActiveSocialLinks } from "@/data/social";
-import { navigation, siteConfig } from "@/data/site";
+import { Globe, Mail } from "lucide-react";
+import { footerNavigation, siteConfig } from "@/data/site";
+import { socialLinks } from "@/data/social";
 import { Container } from "@/components/ui/Container";
-import { Divider } from "@/components/ui/Divider";
+import type { SocialPlatform } from "@/types";
 
-function SocialIcon({ platform }: { platform: string }) {
+function SocialIcon({ platform }: { platform: SocialPlatform }) {
   if (platform === "github") {
     return (
       <svg
-        width="16"
-        height="16"
+        width="17"
+        height="17"
         viewBox="0 0 24 24"
         fill="currentColor"
         aria-hidden="true"
@@ -18,73 +19,74 @@ function SocialIcon({ platform }: { platform: string }) {
       </svg>
     );
   }
-  return null;
+
+  return platform === "email" ? (
+    <Mail size={17} aria-hidden="true" />
+  ) : (
+    <Globe size={17} aria-hidden="true" />
+  );
 }
 
 export function Footer() {
-  const socials = getActiveSocialLinks();
-  const year = new Date().getFullYear();
-
   return (
-    <footer className="relative border-t border-border bg-surface">
-      <span
-        className="pointer-events-none absolute inset-x-0 top-0 h-px origin-left bg-accent/40"
-        aria-hidden="true"
-      />
-      <Container className="py-12">
-        <div className="grid gap-10 md:grid-cols-3">
-          <div>
-            <p className="font-medium text-foreground">{siteConfig.displayName}</p>
-            <p className="mt-1 text-sm text-muted">{siteConfig.legalName}</p>
-            <p className="mt-2 text-sm text-muted">{siteConfig.role}</p>
-          </div>
-
-          <nav aria-label="Footer">
-            <p className="label mb-4">Navigate</p>
-            <ul className="space-y-2">
-              {navigation.map((item) => (
-                <li key={item.href + item.label}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-muted hover:text-foreground"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <div>
-            <p className="label mb-4">Connect</p>
-            {socials.length === 0 ? (
-              <p className="text-sm text-muted">
-                Additional profiles will be linked when available.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {socials.map((link) => (
-                  <li key={link.platform}>
-                    <a
-                      href={link.url}
-                      className="inline-flex items-center gap-2 text-sm text-muted hover:text-foreground"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <SocialIcon platform={link.icon} />
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+    <footer className="border-t border-border py-10">
+      <Container className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+        <div className="max-w-sm">
+          <Link href="/" className="font-medium text-foreground">
+            {siteConfig.displayName}
+          </Link>
+          <p className="mt-2 max-w-xs text-sm text-muted">
+            {siteConfig.footerDescription}
+          </p>
         </div>
 
-        <Divider className="my-8" />
-        <p className="text-xs text-muted">
-          © {year} {siteConfig.displayName}. All rights reserved.
-        </p>
+        <nav aria-label="Footer">
+          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            {footerNavigation.map((item) => (
+              <li key={item.href + item.label}>
+                <Link
+                  href={item.href}
+                  className="text-muted transition-colors duration-[var(--motion-micro)] hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <ul className="mt-5 flex flex-wrap gap-4 text-sm">
+            {socialLinks.map((item) => (
+              <li key={item.label}>
+                {item.url ? (
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-muted transition-colors duration-[var(--motion-micro)] hover:text-foreground"
+                  >
+                    <SocialIcon platform={item.icon} />
+                    <span>{item.label}</span>
+                  </a>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-muted">
+                    <SocialIcon platform={item.icon} />
+                    <span>{item.label}</span>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-5 text-sm text-muted">
+            © 2026 Muhammad Huzaifa Khan. All rights reserved.{" "}
+            <Link
+              href="#top"
+              className="text-foreground underline underline-offset-4 hover:text-accent"
+            >
+              Back to Top ↑
+            </Link>
+          </p>
+        </nav>
       </Container>
     </footer>
   );

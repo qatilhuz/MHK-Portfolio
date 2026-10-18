@@ -54,6 +54,13 @@ export function Navbar() {
               {item.label}
             </Link>
           ))}
+          <Link
+            href="/contact"
+            className="ml-2 rounded-full border border-border px-3 py-1.5 text-sm text-foreground transition-colors duration-[var(--motion-micro)] hover:border-accent hover:text-accent"
+            onClick={onNav}
+          >
+            Let&apos;s Talk ↗
+          </Link>
         </nav>
 
         <IconButton
@@ -89,6 +96,13 @@ export function Navbar() {
               {item.label}
             </Link>
           ))}
+          <Link
+            href="/contact"
+            className="py-3 font-medium text-accent"
+            onClick={onNav}
+          >
+            Let&apos;s Talk ↗
+          </Link>
         </nav>
       </div>
     </header>

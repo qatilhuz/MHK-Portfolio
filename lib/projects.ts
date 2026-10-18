@@ -1,13 +1,12 @@
 import type { Project, ProjectType } from "@/types";
 
-export type ProjectFilterId = "all" | "web" | "mobile" | "php" | "featured";
+export type ProjectFilterId = "all" | "web" | "mobile" | "frontend";
 
 export const projectFilters: { id: ProjectFilterId; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "featured", label: "Featured" },
-  { id: "web", label: "Web" },
-  { id: "mobile", label: "Mobile" },
-  { id: "php", label: "PHP" },
+  { id: "web", label: "Web Development" },
+  { id: "mobile", label: "Mobile Apps" },
+  { id: "frontend", label: "UI / Frontend" },
 ];
 
 export function isProjectFilterId(value: string): value is ProjectFilterId {
@@ -19,19 +18,9 @@ export function matchesProjectFilter(
   filter: ProjectFilterId,
 ): boolean {
   if (filter === "all") return true;
-  if (filter === "featured") return Boolean(project.featured);
-  if (filter === "mobile") return project.projectType === "mobile";
-  if (filter === "php") {
-    return (
-      project.category === "PHP" ||
-      project.technologies.some((tech) => tech.toLowerCase() === "php")
-    );
-  }
-  return (
-    project.category === "Web" ||
-    project.category === "JavaScript" ||
-    project.projectType === "interactive-web"
-  );
+  if (filter === "web") return project.category === "Web Development";
+  if (filter === "mobile") return project.category === "Mobile Apps";
+  return project.category === "UI / Frontend";
 }
 
 export function previewLabel(type: ProjectType): string {

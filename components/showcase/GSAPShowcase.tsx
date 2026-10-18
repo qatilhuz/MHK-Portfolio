@@ -3,49 +3,54 @@
 import { useEffect, useRef } from "react";
 import { motionEngine } from "@/lib/motion/engine";
 
-const PILL_ROTATIONS = [-7, -9, -5] as const;
-const PILL_DISTANCES = [0.7, 0.88, 1.05] as const;
-const PATH =
-  "M 34 452 C 188 258 318 504 486 326 C 642 160 728 386 926 112";
+const PILL_LABELS = ["INTERFACE", "ANIMATION", "TECHNIQUES"] as const;
+const PILL_ROTATIONS = [-5.5, -7, -4.5] as const;
+const PILL_X_OFFSETS = [-28, 24, -18] as const;
+const PILL_TRAVEL = [-42, -58, -74] as const;
+const CURVED_PATH =
+  "M 42 448 C 188 238 336 516 500 322 C 662 132 748 394 918 116";
 
 function CirclePattern() {
   return (
     <svg
-      viewBox="0 0 640 280"
+      viewBox="0 0 720 360"
       preserveAspectRatio="xMidYMin slice"
-      className="absolute right-[-8rem] top-[-9rem] h-[24rem] w-[46rem] opacity-55 md:right-[-4rem] md:top-[-7rem]"
+      className="absolute right-[-9rem] top-[-11rem] h-[28rem] w-[52rem] opacity-55 md:right-[-5rem] md:top-[-10rem]"
       aria-hidden="true"
     >
-      {Array.from({ length: 8 }, (_, index) => (
+      {Array.from({ length: 9 }, (_, index) => (
         <circle
           key={index}
-          cx="414"
-          cy="116"
-          r={36 + index * 31}
+          cx="480"
+          cy="140"
+          r={38 + index * 34}
           fill="none"
           stroke="#D4DFEA"
-          strokeOpacity={Math.max(0.08, 0.34 - index * 0.034)}
-          strokeWidth="1.25"
+          strokeOpacity={Math.max(0.07, 0.38 - index * 0.038)}
+          strokeWidth="1.15"
         />
       ))}
-      <circle cx="414" cy="116" r="8" fill="#D4DFEA" fillOpacity="0.72" />
+      <circle cx="480" cy="140" r="7" fill="#D4DFEA" fillOpacity="0.78" />
     </svg>
   );
 }
 
-function CloudShape() {
+function CloudCap() {
   return (
-    <svg
-      viewBox="0 0 1440 900"
-      preserveAspectRatio="none"
-      className="absolute inset-0 h-full w-full"
-      aria-hidden="true"
-    >
-      <path
-        fill="#000000"
-        d="M0,900 L0,190 C134,106 234,214 382,140 C520,72 634,172 776,116 C944,50 1056,196 1216,126 C1340,73 1394,112 1440,62 L1440,900 Z"
-      />
-    </svg>
+    <>
+      <svg
+        viewBox="0 0 1440 220"
+        preserveAspectRatio="none"
+        className="absolute inset-x-0 top-0 h-[13.5rem] w-full overflow-visible"
+        aria-hidden="true"
+      >
+        <path
+          fill="#000000"
+          d="M0,220 L0,134 C104,82 178,150 284,94 C404,32 496,132 622,70 C750,10 820,146 956,78 C1078,18 1170,116 1282,62 C1362,25 1418,44 1440,38 L1440,220 Z"
+        />
+      </svg>
+      <div className="absolute inset-x-0 bottom-0 top-[13.4rem] bg-black" aria-hidden="true" />
+    </>
   );
 }
 
@@ -90,15 +95,18 @@ export function GSAPShowcase() {
       };
 
       gsap.set(pattern, { y: 0, opacity: 0.55 });
-      gsap.set(pills, {
-        xPercent: -50,
-        y: 0,
-        rotation: (index) => PILL_ROTATIONS[index] ?? -6,
+      pills.forEach((pill, index) => {
+        gsap.set(pill, {
+          x: PILL_X_OFFSETS[index] ?? 0,
+          y: 0,
+          rotation: PILL_ROTATIONS[index] ?? -5,
+          transformOrigin: "50% 50%",
+        });
       });
-      gsap.set(cloudLayer, { yPercent: 112 });
-      gsap.set(cloudCopy, { y: 34, opacity: 0 });
-      gsap.set(blueLayer, { yPercent: 112 });
-      gsap.set([blueTitle, blueCopy], { y: 38, opacity: 0 });
+      gsap.set(cloudLayer, { yPercent: 100 });
+      gsap.set(cloudCopy, { y: 38, opacity: 0 });
+      gsap.set(blueLayer, { yPercent: 100 });
+      gsap.set([blueTitle, blueCopy], { y: 52, opacity: 0 });
       gsap.set(path, {
         strokeDasharray: pathLength,
         strokeDashoffset: pathLength,
@@ -110,8 +118,10 @@ export function GSAPShowcase() {
         scrollTrigger: {
           trigger: node,
           start: "top top",
-          end: "bottom bottom",
-          scrub: 0.72,
+          end: "+=4200",
+          pin: true,
+          anticipatePin: 1,
+          scrub: 0.68,
           invalidateOnRefresh: true,
         },
       });
@@ -120,28 +130,36 @@ export function GSAPShowcase() {
         timeline.to(
           pill,
           {
-            y: () => -window.innerHeight * (PILL_DISTANCES[index] ?? 0.8),
-            duration: 0.48,
+            y: PILL_TRAVEL[index] ?? -48,
+            rotation: PILL_ROTATIONS[index] ?? -5,
+            duration: 0.46,
           },
-          index * 0.045,
+          index * 0.055,
         );
       });
-      timeline.to(pattern, { y: () => -window.innerHeight * 0.22, opacity: 0.28, duration: 0.48 }, 0);
-      timeline.fromTo(cloudLayer, { yPercent: 112 }, { yPercent: 0, duration: 0.42 }, 0.42);
-      timeline.fromTo(cloudCopy, { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.22 }, 0.76);
-      timeline.fromTo(blueLayer, { yPercent: 112 }, { yPercent: 0, duration: 0.34 }, 1.05);
-      timeline.to(path, { strokeDashoffset: 0, duration: 0.58 }, 1.28);
+      timeline.to(pattern, { y: -34, opacity: 0.38, duration: 0.52 }, 0);
+
+      timeline.fromTo(cloudLayer, { yPercent: 100 }, { yPercent: 0, duration: 0.86 }, 0.64);
+      timeline.fromTo(
+        cloudCopy,
+        { y: 38, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.3 },
+        1.56,
+      );
+
+      timeline.fromTo(blueLayer, { yPercent: 100 }, { yPercent: 0, duration: 0.62 }, 2.02);
+      timeline.to(path, { strokeDashoffset: 0, duration: 0.72 }, 2.72);
       timeline.to(
         travel,
         {
           progress: 1,
-          duration: 0.58,
+          duration: 0.72,
           onUpdate: setDot,
         },
-        1.28,
+        2.72,
       );
-      timeline.fromTo(blueTitle, { y: 38, opacity: 0 }, { y: 0, opacity: 1, duration: 0.24 }, 1.48);
-      timeline.fromTo(blueCopy, { y: 38, opacity: 0 }, { y: 0, opacity: 1, duration: 0.24 }, 1.55);
+      timeline.fromTo(blueTitle, { y: 52, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 }, 3.08);
+      timeline.fromTo(blueCopy, { y: 52, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 }, 3.18);
     }, node);
 
     return () => ctx.revert();
@@ -150,75 +168,78 @@ export function GSAPShowcase() {
   return (
     <section
       ref={root}
-      aria-label="Interactive scroll showcase"
-      className="relative z-[1] h-[340svh] overflow-clip bg-[#050505]"
+      aria-label="GSAP cinematic scroll showcase"
+      className="relative z-[1] h-[100svh] overflow-hidden bg-black text-white"
     >
-      <div className="sticky top-0 h-[100svh] overflow-hidden bg-[#050505]">
-        <div className="absolute inset-0" aria-hidden="true">
-          <div data-showcase-pattern className="absolute inset-0 will-change-transform">
-            <CirclePattern />
-          </div>
+      <div className="relative h-full overflow-hidden bg-[#050505]">
+        <div
+          data-showcase-pattern
+          className="pointer-events-none absolute inset-0 z-0 will-change-transform"
+          aria-hidden="true"
+        >
+          <CirclePattern />
         </div>
 
-        <div className="absolute inset-0 overflow-hidden bg-[#050505]">
-          {(["INTERFACE", "ANIMATION", "TECHNIQUES"] as const).map((label, index) => (
-            <div
-              key={label}
-              data-showcase-pill
-              className="absolute left-1/2 flex h-[clamp(6.5rem,20vw,14rem)] w-[130vw] items-center justify-center rounded-full bg-white will-change-transform"
-              style={{
-                top: `${15 + index * 14}svh`,
-                transform: `translateX(-50%) rotate(${PILL_ROTATIONS[index] ?? -6}deg)`,
-              }}
-            >
-              <span className="translate-y-[-0.04em] select-none font-sans text-[clamp(3.2rem,10vw,11rem)] font-black leading-none tracking-[-0.075em] text-black">
-                {label}
-              </span>
-            </div>
-          ))}
+        <div className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden px-4">
+          <div className="relative flex w-full flex-col items-center justify-center">
+            {PILL_LABELS.map((label, index) => (
+              <div
+                key={label}
+                data-showcase-pill
+                className="flex h-[clamp(6.35rem,18vw,13.5rem)] w-[min(92vw,68rem)] items-center justify-center rounded-[9999px] bg-white text-black shadow-[0_0_90px_rgba(212,223,234,0.12)] will-change-transform"
+                style={{ marginTop: index === 0 ? 0 : "-3.15rem" }}
+              >
+                <span className="select-none whitespace-nowrap font-sans text-[clamp(3.1rem,9vw,9.4rem)] font-black uppercase leading-none tracking-[-0.08em]">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div
           data-cloud-layer
-          className="pointer-events-none absolute inset-0 z-20 translate-y-[112%] overflow-hidden will-change-transform"
+          className="pointer-events-none absolute inset-0 z-30 translate-y-full overflow-hidden will-change-transform"
           aria-hidden="true"
         >
-          <CloudShape />
+          <CloudCap />
         </div>
 
         <div
           data-cloud-copy
-          className="absolute inset-0 z-30 grid place-items-center px-6 py-20 text-center opacity-0 will-change-transform"
+          className="absolute inset-0 z-40 grid place-items-center px-6 py-20 text-center opacity-0 will-change-transform"
         >
           <div className="max-w-2xl">
-            <p className="font-mono text-[0.68rem] uppercase tracking-[0.32em] text-white/58">
-              Craft · Motion · Systems
+            <p className="font-mono text-[0.68rem] uppercase tracking-[0.34em] text-white/58">
+              Transition · 02
             </p>
-            <p className="mt-6 text-balance text-lg leading-relaxed text-white md:text-2xl">
-              Motion is treated as structure: every transition, reveal, and path is
-              timed against intent so the interface feels precise, legible, and alive.
+            <p className="mt-7 text-balance text-lg font-medium leading-relaxed text-white md:text-2xl">
+              Every layer is choreographed in sequence: the interface holds, the cloud
+              rises, the message lands, then the next canvas cuts over the frame.
             </p>
           </div>
         </div>
 
         <div
           data-blue-layer
-          className="absolute inset-0 z-40 translate-y-[112%] overflow-hidden bg-[#D4DFEA] text-black will-change-transform"
+          className="absolute inset-0 z-50 translate-y-full overflow-hidden bg-[#D4DFEA] text-black will-change-transform"
         >
-          <div className="absolute inset-0 px-6 py-8 md:px-10 lg:px-14">
+          <div className="absolute inset-0 overflow-hidden px-6 py-8 md:px-10 lg:px-14">
             <svg
               viewBox="0 0 960 560"
               preserveAspectRatio="none"
-              className="absolute inset-x-0 top-[3svh] h-[68svh] w-full overflow-visible"
+              className="absolute inset-x-0 top-[2svh] h-[68svh] w-full overflow-visible"
               aria-hidden="true"
             >
               <path
                 data-showcase-path
-                d={PATH}
+                d={CURVED_PATH}
                 fill="none"
                 stroke="#000000"
                 strokeLinecap="round"
+                strokeLinejoin="round"
                 strokeWidth="5"
+                vectorEffect="non-scaling-stroke"
               />
               <circle
                 data-showcase-dot
@@ -228,21 +249,22 @@ export function GSAPShowcase() {
                 fill="#000000"
                 stroke="#D4DFEA"
                 strokeWidth="4"
+                vectorEffect="non-scaling-stroke"
               />
             </svg>
 
             <h2
               data-blue-title
-              className="absolute bottom-[clamp(5rem,14svh,9rem)] left-6 max-w-[9ch] font-sans text-[clamp(2.5rem,9vw,10.5rem)] font-black uppercase leading-[0.86] tracking-[-0.075em] opacity-0 will-change-transform md:left-10 lg:left-14"
+              className="absolute bottom-[clamp(5.25rem,14svh,9.5rem)] left-6 max-w-[9ch] font-sans text-[clamp(2.45rem,9vw,10.5rem)] font-black uppercase leading-[0.85] tracking-[-0.075em] opacity-0 will-change-transform md:left-10 lg:left-14"
             >
               1 THE BASICS
             </h2>
             <p
               data-blue-copy
-              className="absolute bottom-[clamp(11rem,24svh,14rem)] right-6 max-w-sm text-sm leading-relaxed text-black/70 opacity-0 will-change-transform md:bottom-[clamp(5.5rem,13svh,8.5rem)] md:right-10 md:text-base lg:right-14"
+              className="absolute bottom-[clamp(11.5rem,25svh,15rem)] right-6 max-w-sm text-sm font-medium leading-relaxed text-black/70 opacity-0 will-change-transform md:bottom-[clamp(5.75rem,14svh,9.5rem)] md:right-10 md:text-base lg:right-14"
             >
-              Strong timing, clear hierarchy, and measured interaction give every
-              interface a dependable foundation before the spectacle begins.
+              Lock the frame, slow the cut, give every object a directional reason,
+              and only introduce the next scene after the previous one has resolved.
             </p>
           </div>
         </div>

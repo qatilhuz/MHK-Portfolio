@@ -93,7 +93,7 @@ export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: `${siteConfig.legalName} — ${siteConfig.role}`,
+    name: siteConfig.seoTitle,
     alternateName: siteConfig.displayName,
     url,
     description: siteConfig.description,

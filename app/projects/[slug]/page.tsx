@@ -23,10 +23,8 @@ export async function generateMetadata({
   if (!project) {
     return { title: "Project not found" };
   }
-  const title = project.isDemo ? `${project.title} (Demo)` : project.title;
-  const description = project.isDemo
-    ? `Placeholder demonstration page: ${project.shortDescription}`
-    : project.shortDescription;
+  const title = project.title;
+  const description = project.shortDescription;
   return pageMetadata({
     title,
     description,

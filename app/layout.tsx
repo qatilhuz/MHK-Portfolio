@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   applicationName: siteConfig.displayName,
   authors: [{ name: siteConfig.legalName }],
   openGraph: {
-    title: `${siteConfig.displayName} — ${siteConfig.role}`,
+    title: siteConfig.seoTitle,
     description: siteConfig.description,
     type: "website",
     siteName: siteConfig.displayName,
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: `${siteConfig.displayName} — ${siteConfig.role}`,
+    title: siteConfig.seoTitle,
     description: siteConfig.description,
   },
   robots: {

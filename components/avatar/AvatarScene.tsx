@@ -16,7 +16,7 @@ export function AvatarScene({ status }: { status: AssistantStatus }) {
       camera={{ position: [0.6, 1.1, 2.4], fov: 40 }}
       gl={{ antialias: true, alpha: false }}
       className="h-full w-full"
-      aria-label="Portfolio assistant avatar placeholder"
+      aria-label="Portfolio assistant visual"
     >
       <color attach="background" args={[materials.sceneBg]} />
       <ambientLight intensity={0.4} />

@@ -106,7 +106,7 @@ export function Hero() {
           ) : null}
         </div>
 
-        <InView className="relative z-20 lg:mt-24" y={18}>
+        <InView className="relative z-20 lg:mt-21" y={18}>
           <TerminalBrailleImage />
         </InView>
 
@@ -115,9 +115,6 @@ export function Hero() {
             <ArrowDown size={12} aria-hidden="true" />
           </span>
           Trace the data core
-        </div>
-        <div className="pointer-events-none absolute right-[var(--page-gutter)] top-8 font-mono text-[9px] uppercase tracking-[0.24em] text-white/30">
-          01 / Origin
         </div>
       </Container>
     </section>

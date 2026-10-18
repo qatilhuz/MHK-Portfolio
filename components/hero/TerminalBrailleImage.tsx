@@ -179,43 +179,41 @@ export function TerminalBrailleImage({
         <div className="hidden text-[10px] uppercase tracking-[0.2em] text-white/35 sm:block">utf-8</div>
       </div>
 
-      <div className="relative flex flex-col p-2 font-mono sm:p-3">
-        <div className="rounded-2xl border border-cyan-200/[0.09] bg-black/32 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.045),inset_0_0_34px_rgba(34,211,238,0.035)] sm:p-3">
-          <div className="mb-2 flex flex-wrap gap-x-2 gap-y-1 text-[10px] leading-relaxed text-white/70">
-            <span className="text-emerald-300">$</span>
-            <span className="break-all">
-              render-image --protocol=braille --columns={columns}
-            </span>
-          </div>
+      <div className="relative m-2 rounded-2xl border border-cyan-200/[0.09] bg-black/32 p-2.5 font-mono shadow-[inset_0_1px_0_rgba(255,255,255,0.045),inset_0_0_34px_rgba(34,211,238,0.035)] sm:m-3 sm:p-3">
+        <div className="mb-2 flex flex-wrap gap-x-2 gap-y-1 text-[10px] leading-relaxed text-white/70">
+          <span className="text-emerald-300">$</span>
+          <span className="break-all">
+            render-image --protocol=braille --columns={columns}
+          </span>
+        </div>
 
-          <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 border-y border-white/[0.06] py-1.5 text-[8px] uppercase tracking-[0.18em] text-white/36">
-            <span>cell 2x4</span>
-            <span>threshold {threshold}</span>
-            <span>{status === "ready" ? `${cellCount} glyph cells` : "decoding pixels"}</span>
-          </div>
+        <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 border-y border-white/[0.06] py-1.5 text-[8px] uppercase tracking-[0.18em] text-white/36">
+          <span>cell 2x4</span>
+          <span>threshold {threshold}</span>
+          <span>{status === "ready" ? `${cellCount} glyph cells` : "decoding pixels"}</span>
+        </div>
 
-          <div
-            className="overflow-hidden rounded-xl border border-white/[0.055] bg-slate-950/62 px-2 py-2 shadow-[inset_0_0_28px_rgba(2,6,23,0.72)]"
-            aria-live="polite"
-          >
-            {shouldShowOutput ? (
-              <pre
-                role="img"
-                aria-label="Cyberpunk profile image rendered as Unicode Braille characters"
-                className="braille-reveal mx-auto block max-w-full select-all overflow-hidden whitespace-pre text-center text-[clamp(0.375rem,0.7vw,0.5rem)] leading-[1.08] text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.34)] [text-shadow:0_0_8px_rgba(103,232,249,0.72),0_0_20px_rgba(34,211,238,0.22)]"
-              >
-                {output}
-              </pre>
-            ) : (
-              <div className="grid h-[184px] place-items-center text-center text-[10px] uppercase tracking-[0.24em] text-cyan-100/42 sm:h-[244px]">
-                <div>
-                  <span className="mb-2 block h-px w-28 bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" aria-hidden="true" />
-                  {status === "failed" ? "image buffer unavailable" : revealed ? "sampling image cells…" : "arming unicode buffer…"}
-                  <span className="mt-2 block h-px w-28 bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" aria-hidden="true" />
-                </div>
+        <div
+          className="overflow-hidden rounded-xl border border-white/[0.055] bg-slate-950/62 px-2 py-2 shadow-[inset_0_0_28px_rgba(2,6,23,0.72)]"
+          aria-live="polite"
+        >
+          {shouldShowOutput ? (
+            <pre
+              role="img"
+              aria-label="Cyberpunk profile image rendered as Unicode Braille characters"
+              className="braille-reveal mx-auto block max-w-full select-all overflow-hidden whitespace-pre text-center text-[clamp(0.375rem,0.7vw,0.5rem)] leading-[1.08] text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.34)] [text-shadow:0_0_8px_rgba(103,232,249,0.72),0_0_20px_rgba(34,211,238,0.22)]"
+            >
+              {output}
+            </pre>
+          ) : (
+            <div className="grid h-[184px] place-items-center text-center text-[10px] uppercase tracking-[0.24em] text-cyan-100/42 sm:h-[244px]">
+              <div>
+                <span className="mb-2 block h-px w-28 bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" aria-hidden="true" />
+                {status === "failed" ? "image buffer unavailable" : revealed ? "sampling image cells…" : "arming unicode buffer…"}
+                <span className="mt-2 block h-px w-28 bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" aria-hidden="true" />
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

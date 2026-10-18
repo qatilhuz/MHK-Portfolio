@@ -5,7 +5,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
 import {
   isCompactViewport,
-  isPastTrigger,
   motionEngine,
   prefersReducedMotion,
 } from "@/lib/motion/engine";
@@ -75,21 +74,16 @@ export function TextReveal({
         );
       }
 
-      const play = () => {
-        if (tl.progress() === 0) tl.play();
-      };
-
       if (once) {
         ScrollTrigger.create({
           trigger: node,
           start: "top 80%",
-          once: true,
+          animation: tl,
+          toggleActions: "play reverse play reverse",
           invalidateOnRefresh: true,
-          onEnter: play,
         });
-        if (isPastTrigger(node, 0.8)) play();
       } else {
-        play();
+        tl.play();
       }
     }, node);
 

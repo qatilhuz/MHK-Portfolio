@@ -3,7 +3,7 @@
 import { createElement, useEffect, useMemo, useRef } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
-import { isPastTrigger, motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
+import { motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
 
 type Props = {
   text: string;
@@ -40,19 +40,13 @@ export function TypeIn({ text, as = "p", className }: Props) {
         time += step + pauseFor(mark.textContent ?? "");
       });
 
-      const play = () => {
-        if (tl.progress() === 0) tl.play();
-      };
-
       ScrollTrigger.create({
         trigger: node,
         start: "top 72%",
-        once: true,
+        animation: tl,
+        toggleActions: "play reverse play reverse",
         invalidateOnRefresh: true,
-        onEnter: play,
       });
-
-      if (isPastTrigger(node, 0.72)) play();
     }, node);
 
     return () => ctx.revert();

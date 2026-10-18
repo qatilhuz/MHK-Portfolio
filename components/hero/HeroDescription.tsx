@@ -1,12 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { siteConfig } from "@/data/site";
 import { isPageRevealed, onPageRevealed } from "@/lib/boot/reveal";
 import { motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
-
-const linkClass = "text-foreground underline-offset-4 hover:underline";
 
 function pauseFor(char: string) {
   if (/[.!?]/.test(char)) return 0.09;
@@ -62,34 +59,7 @@ export function HeroDescription() {
 
   return (
     <p ref={root} className="type-in mt-5 max-w-xl text-lg leading-relaxed text-muted">
-      {chars(
-        `Full-stack developer in ${siteConfig.location}, focused on ${siteConfig.specialization}. Browse `,
-        "a",
-      )}
-      <Link href="/about" className={linkClass}>
-        {chars("about", "about")}
-      </Link>
-      {chars(", ", "b")}
-      <Link href="/projects" className={linkClass}>
-        {chars("projects", "projects")}
-      </Link>
-      {chars(", or try the ", "c")}
-      <Link href="/#arcade" className={linkClass}>
-        {chars("Dev Arcade", "arcade")}
-      </Link>
-      {chars(" and ", "d")}
-      <Link href="/#qa" className={linkClass}>
-        {chars("QA Bug Hunt", "qa")}
-      </Link>
-      {chars(", or the ", "e")}
-      <Link href="/#terminal" className={linkClass}>
-        {chars("terminal", "term")}
-      </Link>
-      {chars(". Ask the ", "f")}
-      <Link href="/#avatar" className={linkClass}>
-        {chars("portfolio assistant", "assist")}
-      </Link>
-      {chars(".", "g")}
+      {chars(siteConfig.heroDescription, "hero-description")}
     </p>
   );
 }

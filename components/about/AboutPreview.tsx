@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Section } from "@/components/ui/Section";
 import { education } from "@/data/education";
@@ -7,31 +6,44 @@ import { InView } from "@/components/motion/InView";
 
 const focusAreas = [
   {
-    index: "A1",
-    title: "Frontend",
-    body: "Next.js, React, Angular, HTML, CSS, JavaScript, TypeScript, and GSAP.",
+    index: "01",
+    label: "Development",
+    title: "Full-Stack Web Development",
+    body: "Building scalable, responsive applications with Next.js, React, TypeScript, and modern web technologies.",
   },
   {
-    index: "A2",
-    title: "Full stack",
-    body: ".NET and C# at Techcose Solutions; PHP and Flutter on selected projects.",
+    index: "02",
+    label: "Engineering",
+    title: "Software Engineering",
+    body: "Developing reliable frontend and backend systems with maintainable code and current hands-on .NET experience.",
   },
   {
-    index: "A3",
-    title: "Delivery",
-    body: "Responsive UI, API integration, cross-browser work, and team collaboration.",
+    index: "03",
+    label: "Quality",
+    title: "Software Testing",
+    body: "Applying a quality-focused mindset to catch issues early, improve usability, and deliver dependable products.",
   },
-];
+] as const;
+
+const profileRows = [
+  { label: "Name", value: siteConfig.legalName },
+  { label: "Role", value: siteConfig.role },
+  { label: "Location", value: siteConfig.location },
+  { label: "Current Role", value: ".NET Developer · Techcose Solutions" },
+  { label: "Experience", value: siteConfig.experienceSummary },
+  { label: "Focus", value: siteConfig.focusSummary },
+  { label: "Languages", value: siteConfig.spokenLanguages.join(" · ") },
+] as const;
 
 export function AboutPreview({ headingLevel = "h2" }: { headingLevel?: "h1" | "h2" }) {
   return (
     <Section
       id="about"
-      eyebrow="About"
+      eyebrow="A LITTLE ABOUT ME"
       headingLevel={headingLevel}
-      title={`I’m ${siteConfig.displayName}.`}
+      title={siteConfig.displayName ? `I’m ${siteConfig.displayName}.` : "I’m Huzaifa Khan."}
       titleMotion="words"
-      description={`${siteConfig.role} in ${siteConfig.location}, specializing in ${siteConfig.specialization}.`}
+      description="I am a full-stack developer based in Karachi, Pakistan, with 1.5+ years of development experience across frontend and backend technologies. I specialize in Next.js, React, TypeScript, and modern web development, and I bring hands-on software testing experience into how I build reliable, user-focused products."
       className="relative min-h-[88svh] border-b border-white/10 bg-transparent"
     >
       <div
@@ -52,32 +64,10 @@ export function AboutPreview({ headingLevel = "h2" }: { headingLevel?: "h1" | "h
             Profile transmission
           </p>
           <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
-            {siteConfig.legalName} builds web and mobile software across frontend and backend.
-            Current work is .NET development; previous work was Next.js and React.
+            I enjoy working at the intersection of product thinking, clean implementation, and practical quality. My current work as a .NET Developer at Techcose Solutions complements previous Next.js and React experience at Hudasoft.
           </p>
           <p className="mt-4 max-w-2xl leading-8 text-white/55">
-            Languages spoken: {siteConfig.spokenLanguages.join(" and ")}. Explore the{" "}
-            <Link
-              href="/experience"
-              className="text-cyan-100 underline decoration-cyan-300/30 underline-offset-4 transition-colors hover:text-white"
-            >
-              experience
-            </Link>
-            ,{" "}
-            <Link
-              href="/projects"
-              className="text-cyan-100 underline decoration-cyan-300/30 underline-offset-4 transition-colors hover:text-white"
-            >
-              projects
-            </Link>
-            , and the{" "}
-            <Link
-              href="/#avatar"
-              className="text-cyan-100 underline decoration-cyan-300/30 underline-offset-4 transition-colors hover:text-white"
-            >
-              assistant
-            </Link>
-            .
+            I care about building software that is responsive, maintainable, and useful—then checking that it actually behaves the way people expect it to behave.
           </p>
 
           <div className="mt-7 border-t border-white/8 pt-5">
@@ -124,33 +114,30 @@ export function AboutPreview({ headingLevel = "h2" }: { headingLevel?: "h1" | "h
           />
           <div className="relative flex items-center justify-between gap-4">
             <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-100/60">
-              Digital ID
+              Profile
             </p>
             <span className="rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.16em] text-emerald-200/70">
-              Verified
+              Available
             </span>
           </div>
-          <div className="relative mt-6 flex h-32 items-center justify-center overflow-hidden rounded-2xl border border-white/8 bg-black/25 font-mono text-[9px] uppercase tracking-[0.24em] text-white/35">
+          <div className="relative mt-6 flex h-24 items-center justify-center overflow-hidden rounded-2xl border border-white/8 bg-black/25 font-mono text-[9px] uppercase tracking-[0.24em] text-white/35">
             <div className="absolute inset-0 grid-fade opacity-50" aria-hidden="true" />
-            <span className="relative">Identity encrypted</span>
+            <span className="relative">Build · Test · Improve</span>
           </div>
           <dl className="relative mt-6 space-y-4 text-sm">
-            <div className="flex justify-between gap-4 border-b border-white/7 pb-3">
-              <dt className="text-white/40">Name</dt>
-              <dd className="text-right text-white/80">{siteConfig.legalName}</dd>
-            </div>
-            <div className="flex justify-between gap-4 border-b border-white/7 pb-3">
-              <dt className="text-white/40">Role</dt>
-              <dd className="text-right text-white/80">{siteConfig.role}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-white/40">Location</dt>
-              <dd className="text-right text-white/80">{siteConfig.location}</dd>
-            </div>
+            {profileRows.map((row, index) => (
+              <div
+                key={row.label}
+                className={`flex justify-between gap-4 ${index < profileRows.length - 1 ? "border-b border-white/7 pb-3" : ""}`}
+              >
+                <dt className="text-white/40">{row.label}</dt>
+                <dd className="text-right text-white/80">{row.value}</dd>
+              </div>
+            ))}
           </dl>
           <div className="relative mt-6 flex flex-wrap gap-2">
-            <Badge className="border-white/10 bg-white/[0.055] text-white/55">CV-backed</Badge>
-            <Badge className="border-white/10 bg-white/[0.055] text-white/55">Human-built</Badge>
+            <Badge className="border-white/10 bg-white/[0.055] text-white/55">Karachi-based</Badge>
+            <Badge className="border-white/10 bg-white/[0.055] text-white/55">Quality-minded</Badge>
           </div>
         </aside>
       </InView>
@@ -163,12 +150,19 @@ export function AboutPreview({ headingLevel = "h2" }: { headingLevel?: "h1" | "h
             className="group rounded-2xl border border-white/9 bg-white/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.055)] backdrop-blur-lg transition-[border-color,background-color,transform] duration-300 hover:-translate-y-1 hover:border-cyan-200/20 hover:bg-cyan-300/[0.045]"
           >
             <div className="flex items-center justify-between gap-4">
-              <h3 className="text-sm text-white/90">{item.title}</h3>
+              <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-cyan-200/45">{item.label}</p>
               <span className="font-mono text-[9px] text-cyan-200/45">{item.index}</span>
             </div>
+            <h3 className="mt-3 text-sm text-white/90">{item.title}</h3>
             <p className="mt-3 text-sm leading-6 text-white/48">{item.body}</p>
           </article>
         ))}
+      </InView>
+
+      <InView className="relative mt-10" y={10}>
+        <p className="max-w-2xl text-base leading-7 text-white/62">
+          I don’t just focus on how software looks. I care about how it works.
+        </p>
       </InView>
     </Section>
   );

@@ -52,7 +52,7 @@ export function Hero() {
             </div>
           </InView>
 
-          <HeroMotion role={siteConfig.role} name={siteConfig.displayName} />
+          <HeroMotion name={siteConfig.heroTitle} />
           <div className="mt-1 max-w-2xl border-l border-cyan-300/25 bg-black/[0.08] pl-5 backdrop-blur-[1px]">
             <HeroDescription />
           </div>

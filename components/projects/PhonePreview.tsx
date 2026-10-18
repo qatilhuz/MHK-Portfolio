@@ -21,8 +21,8 @@ export function PhonePreview({ project }: { project: Project }) {
             />
           ) : (
             <MediaPending
-              label="Device preview"
-              note="Project media coming soon"
+              label="Mobile app"
+              note="Case-study details are listed below."
             />
           )}
         </div>

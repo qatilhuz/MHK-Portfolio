@@ -9,7 +9,7 @@ export function MediaPending({ label, note }: MediaPendingProps) {
       <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted">
         {label}
       </p>
-      <p className="text-sm text-muted">{note ?? "Project media coming soon"}</p>
+      <p className="text-sm text-muted">{note ?? "Project overview"}</p>
     </div>
   );
 }

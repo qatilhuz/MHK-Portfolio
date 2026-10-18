@@ -18,7 +18,7 @@ export function ProjectPreview({ project }: { project: Project }) {
               ? "Case study"
               : "Project preview"
           }
-          note="Project media coming soon"
+          note="Case-study details are listed below."
         />
       </div>
     );
@@ -56,7 +56,7 @@ export function ProjectPreview({ project }: { project: Project }) {
       if (project.screenshots.length === 0) {
         return (
           <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border">
-            <MediaPending label="Case study" note="Project media coming soon" />
+            <MediaPending label="Case study" note="Project details are listed below." />
           </div>
         );
       }

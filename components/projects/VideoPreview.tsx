@@ -5,7 +5,7 @@ export function VideoPreview({ project }: { project: Project }) {
   if (!project.video) {
     return (
       <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border">
-        <MediaPending label="Demo video" note="Demo video coming soon." />
+        <MediaPending label="Project video" note="Project details are listed below." />
       </div>
     );
   }

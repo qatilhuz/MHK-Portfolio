@@ -23,9 +23,9 @@ export function ProjectCard({ project }: { project: Project }) {
             <div className="flex h-full flex-col items-center justify-center gap-1 px-4 text-center">
               <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted">
                 {project.isDemo
-                  ? "Demo Preview"
+                  ? "Interface Exercise"
                   : project.mediaStatus === "coming-soon"
-                    ? "Project media coming soon"
+                    ? project.category
                     : previewLabel(project.projectType)}
               </p>
             </div>

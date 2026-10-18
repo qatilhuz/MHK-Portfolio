@@ -128,7 +128,9 @@ export function QaHunt() {
   const scenario = qaScenarios[index];
   const Demo = demos[scenario.id as keyof typeof demos];
   const score = Object.values(found).filter(Boolean).length;
-  const done = Object.keys(found).length === qaScenarios.length;
+  const completed = Object.keys(found).length;
+  const accuracy = completed > 0 ? Math.round((score / completed) * 100) : 0;
+  const done = completed === qaScenarios.length;
 
   const result = useMemo(() => {
     if (!choice) return null;
@@ -156,10 +158,54 @@ export function QaHunt() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted" role="status">
-        Bugs found {score} / {qaScenarios.length}
-        {done ? " · Hunt complete" : ""}
-      </p>
+      <Card>
+        <h3>The Bug Hunt</h3>
+        <p className="mt-2 text-sm text-muted">
+          Explore test scenarios designed to simulate the kinds of issues a tester might find in real product interfaces.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            onClick={() => {
+              setIndex(0);
+              setChoice(null);
+              setFound({});
+            }}
+          >
+            Start the Challenge ↗
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setIndex(0);
+              setChoice(null);
+            }}
+          >
+            View Test Scenarios
+          </Button>
+        </div>
+      </Card>
+
+      <dl className="grid gap-3 text-sm sm:grid-cols-3" role="status">
+        <div className="rounded-[var(--radius-md)] border border-border bg-surface p-3">
+          <dt className="text-muted">Bugs Found</dt>
+          <dd className="mt-1 text-base text-foreground">
+            {score} / {qaScenarios.length}
+          </dd>
+        </div>
+        <div className="rounded-[var(--radius-md)] border border-border bg-surface p-3">
+          <dt className="text-muted">Challenges Completed</dt>
+          <dd className="mt-1 text-base text-foreground">
+            {completed} / {qaScenarios.length}
+          </dd>
+        </div>
+        <div className="rounded-[var(--radius-md)] border border-border bg-surface p-3">
+          <dt className="text-muted">Accuracy</dt>
+          <dd className="mt-1 text-base text-foreground">{accuracy}%</dd>
+        </div>
+      </dl>
+
       <Card>
         <p className="label">
           Scenario {index + 1} · {scenario.type}
@@ -189,15 +235,15 @@ export function QaHunt() {
         ))}
       </fieldset>
       <Button type="button" onClick={submit} disabled={!choice}>
-        Report bug
+        Report Bug
       </Button>
 
       {found[scenario.id] !== undefined && result ? (
         <Card>
           {result.correct ? (
-            <p className="text-sm">Bug found</p>
+            <p className="text-sm">Bug Found</p>
           ) : (
-            <p className="text-sm">Not the primary defect — try the other options.</p>
+            <p className="text-sm">Not quite — review the scenario and try the other options.</p>
           )}
           {result.correct ? (
             <dl className="mt-4 space-y-2 text-sm">
@@ -276,10 +322,9 @@ export function QaHunt() {
 
       {done ? (
         <Card>
-          <h3>QA mindset</h3>
+          <h3>Hunt Complete</h3>
           <p className="mt-2 text-sm text-muted">
-            Identify → Reproduce → Classify → Report → Verify. This hunt is a
-            teaching demo, not a log of client defects.
+            Nice work — you identified and documented all of the intentional bugs in this challenge set.
           </p>
         </Card>
       ) : null}

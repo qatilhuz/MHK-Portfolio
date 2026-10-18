@@ -5,9 +5,9 @@ export function QaSection() {
   return (
     <Section
       id="qa"
-      eyebrow="QA"
+      eyebrow="TESTING IN ACTION"
       title="QA Bug Hunt"
-      description="Deliberate defects to practise identifying, classifying, and reporting issues. Not a client project."
+      description="A hands-on testing challenge where you inspect deliberately introduced bugs, classify the issue, and see how a tester documents expected versus actual behavior."
     >
       <QaHunt />
     </Section>

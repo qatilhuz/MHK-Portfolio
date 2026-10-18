@@ -18,8 +18,8 @@ export function TerminalWindow() {
   const [lines, setLines] = useState<Line[]>([
     {
       id: 0,
-      prompt: "help",
-      output: runTerminalCommand("help") as TerminalOutput,
+      prompt: "welcome",
+      output: runTerminalCommand("welcome") as TerminalOutput,
     },
   ]);
   const [value, setValue] = useState("");
@@ -84,7 +84,7 @@ export function TerminalWindow() {
         <span className="h-2.5 w-2.5 rounded-full bg-border" aria-hidden />
         <span className="h-2.5 w-2.5 rounded-full bg-border" aria-hidden />
         <span className="h-2.5 w-2.5 rounded-full bg-accent/70" aria-hidden />
-        <p className="ml-2 font-mono text-xs text-muted">huzaifa@portfolio — simulated</p>
+        <p className="ml-2 font-mono text-xs text-muted">huzaifa@portfolio — HuzaifaOS</p>
       </div>
       <div
         ref={logRef}
@@ -96,7 +96,7 @@ export function TerminalWindow() {
         {lines.map((line) => (
           <div key={line.id} className="space-y-2">
             <p className="font-mono text-sm">
-              <span className="text-muted">guest@mhk</span>
+              <span className="text-muted">guest@huzaifa-os</span>
               <span className="text-accent">:~$</span> {line.prompt}
             </p>
             {line.output ? <TerminalOutputView output={line.output} /> : null}
@@ -111,7 +111,7 @@ export function TerminalWindow() {
           Terminal command
         </label>
         <span className="hidden font-mono text-sm text-muted sm:inline" aria-hidden>
-          guest@mhk:~$
+          guest@huzaifa-os:~$
         </span>
         <input
           ref={inputRef}

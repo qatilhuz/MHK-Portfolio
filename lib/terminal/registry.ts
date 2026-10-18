@@ -9,29 +9,30 @@ import type { TerminalCommand, TerminalOutput } from "./types";
 const publicCommands: TerminalCommand[] = [
   {
     name: "help",
-    description: "List available commands",
+    description: "Show available commands",
     run: () => ({
       title: "Commands",
-      list: publicCommands.map((item) => `${item.name} — ${item.description}`),
+      list: publicCommands.map((item) => item.name),
+      body: ["Use any command label to explore the portfolio."],
     }),
   },
   {
     name: "about",
-    description: "Who Huzaifa is",
+    description: "Learn about Huzaifa",
     run: () => ({
       title: siteConfig.legalName,
       body: [
         `${siteConfig.role} in ${siteConfig.location}, specializing in ${siteConfig.specialization}.`,
-        `Also known as ${siteConfig.displayName}. Languages: ${siteConfig.spokenLanguages.join(", ")}.`,
+        siteConfig.heroDescription,
       ],
       links: [{ href: "/about", label: "About page" }],
     }),
   },
   {
     name: "skills",
-    description: "Verified skills",
+    description: "View skills",
     run: () => ({
-      title: "Skills",
+      title: "Skills & Technologies",
       list: [
         ...getActiveSkillCategories().map((category) => {
           const names = getSkillsByCategory(category)
@@ -46,9 +47,9 @@ const publicCommands: TerminalCommand[] = [
   },
   {
     name: "projects",
-    description: "CV-backed projects",
+    description: "View projects",
     run: () => ({
-      title: "Projects",
+      title: "Selected Work",
       list: projects
         .filter((project) => !project.isDemo)
         .map(
@@ -60,9 +61,9 @@ const publicCommands: TerminalCommand[] = [
   },
   {
     name: "experience",
-    description: "Professional roles",
+    description: "View experience",
     run: () => ({
-      title: "Experience",
+      title: "Experience in Practice",
       list: experience.map((item) => {
         const end = item.endDate ?? "Present";
         return `${item.role} · ${item.company} · ${item.location} · ${item.startDate} – ${end}`;
@@ -71,8 +72,43 @@ const publicCommands: TerminalCommand[] = [
     }),
   },
   {
+    name: "contact",
+    description: "Contact information",
+    run: () => {
+      const socials = getActiveSocialLinks();
+      return {
+        title: "Contact",
+        body: [
+          socials.length
+            ? socials.map((item) => `${item.label}: ${item.url}`).join(" · ")
+            : "Use the contact form on this portfolio.",
+          "Open to relevant opportunities.",
+        ],
+        links: [{ href: "/contact", label: "Contact" }],
+      };
+    },
+  },
+  {
+    name: "clear",
+    description: "Clear the terminal",
+    run: () => "clear",
+  },
+];
+
+const extraCommands: TerminalCommand[] = [
+  {
+    name: "welcome",
+    description: "Show the welcome message",
+    hidden: true,
+    run: () => ({
+      title: "Welcome",
+      body: ["Welcome to HuzaifaOS. Type “help” to explore available commands."],
+    }),
+  },
+  {
     name: "education",
-    description: "Education from the CV",
+    description: "Education details",
+    hidden: true,
     run: () => ({
       title: "Education",
       list: education.map(
@@ -84,74 +120,53 @@ const publicCommands: TerminalCommand[] = [
   {
     name: "arcade",
     description: "Dev Arcade games",
+    hidden: true,
     run: () => ({
       title: "Dev Arcade",
       body: [
-        "Portfolio demos: Rock Paper Scissors, Snake, Memory Game, Reaction Speed Test. Not commercial products.",
+        "Interactive portfolio demos: Rock Paper Scissors, Snake, Memory Game, and a Reaction Speed Test.",
       ],
-      links: [{ href: "/#arcade", label: "Open arcade" }],
+      links: [{ href: "/#arcade", label: "Dev Arcade" }],
     }),
   },
   {
     name: "qa",
     description: "QA Bug Hunt",
+    hidden: true,
     run: () => ({
       title: "QA Bug Hunt",
       body: [
-        "A teaching demo with deliberate defects to identify, classify, and report. Not a client defect log.",
+        "An interactive testing challenge with deliberate defects to identify, classify, and report.",
       ],
-      links: [{ href: "/#qa", label: "Open QA Bug Hunt" }],
+      links: [{ href: "/#qa", label: "QA Bug Hunt" }],
     }),
   },
   {
     name: "assistant",
-    description: "Digital portfolio assistant",
+    description: "Portfolio assistant",
+    hidden: true,
     run: () => ({
-      title: "Assistant",
+      title: "Portfolio Assistant",
       body: [
-        "An interactive FAQ/avatar that answers only from verified portfolio data.",
+        "An interactive assistant that answers from the portfolio’s provided content.",
       ],
-      links: [{ href: "/#avatar", label: "Open assistant" }],
+      links: [{ href: "/#avatar", label: "Assistant" }],
     }),
   },
   {
     name: "resume",
     description: "Resume section",
+    hidden: true,
     run: () => ({
       title: "Resume",
       body: [
         siteConfig.resumeAvailable
           ? `A PDF is available at ${siteConfig.resumePath}.`
-          : "The resume section is ready, but the PDF is not in the repository yet. Nothing is downloadable until that file is added.",
+          : "The resume section is ready, and the PDF will become available when the file is published on this site.",
       ],
       links: [{ href: "/#resume", label: "Resume section" }],
     }),
   },
-  {
-    name: "contact",
-    description: "Public contact paths",
-    run: () => {
-      const socials = getActiveSocialLinks();
-      return {
-        title: "Contact",
-        body: [
-          socials.length
-            ? socials.map((item) => `${item.label}: ${item.url}`).join(" · ")
-            : "No public profiles listed.",
-          "Email and LinkedIn are not listed on this site.",
-        ],
-        links: [{ href: "/#contact", label: "Contact" }],
-      };
-    },
-  },
-  {
-    name: "clear",
-    description: "Clear this session’s output",
-    run: () => "clear",
-  },
-];
-
-const easterEggs: TerminalCommand[] = [
   {
     name: "sudo hire-huzaifa",
     description: "Easter egg",
@@ -159,9 +174,9 @@ const easterEggs: TerminalCommand[] = [
     run: () => ({
       title: "Permission granted (playfully)",
       body: [
-        "This is not a real shell and does not grant system access. If you want to work with Huzaifa, use the contact section.",
+        "This simulated terminal cannot grant system access. If you want to work with Huzaifa, use the contact section.",
       ],
-      links: [{ href: "/#contact", label: "Contact" }],
+      links: [{ href: "/contact", label: "Contact" }],
     }),
   },
   {
@@ -177,7 +192,7 @@ const easterEggs: TerminalCommand[] = [
   },
 ];
 
-const registry: TerminalCommand[] = [...publicCommands, ...easterEggs];
+const registry: TerminalCommand[] = [...publicCommands, ...extraCommands];
 
 export function listHelp(): TerminalCommand[] {
   return publicCommands;
@@ -188,7 +203,7 @@ export function runTerminalCommand(raw: string): TerminalOutput | "clear" {
   const match = registry.find((item) => item.name === input);
   if (!match) {
     return {
-      body: ['Command not found. Type "help" to see available commands.'],
+      body: ["Command not found. Type “help” to see available commands."],
     };
   }
   return match.run();

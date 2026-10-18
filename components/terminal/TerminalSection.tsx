@@ -8,12 +8,13 @@ export function TerminalSection() {
       <AmbientBackground variant="terminal" />
       <Section
         id="terminal"
-        eyebrow="CLI"
+        eyebrow="INTERACTIVE PORTFOLIO"
         title="Developer Terminal"
-        description="A simulated command surface over the same portfolio data as the rest of the site. It is not a real shell and cannot run system commands."
+        description="Explore the portfolio through a simulated command-line experience powered by HuzaifaOS."
         className="relative"
       >
         <TerminalWindow />
+        <p className="mt-6 text-sm text-muted">Less clicking. More exploring.</p>
       </Section>
     </div>
   );

@@ -4,9 +4,9 @@ import { useEffect, useRef } from "react";
 import { motionEngine } from "@/lib/motion/engine";
 
 const PILL_LABELS = ["INTERFACE", "ANIMATION", "TECHNIQUES"] as const;
-const PILL_ROTATIONS = [-5.5, -7, -4.5] as const;
-const PILL_X_OFFSETS = [-28, 24, -18] as const;
-const PILL_TRAVEL = [-42, -58, -74] as const;
+const PILL_ROTATIONS = [-6, -5, -6] as const;
+const PILL_OFFSET_X = [-36, 28, -24] as const;
+const PILL_REPEAT_Y = [36, 28, 44] as const;
 const CURVED_PATH =
   "M 42 448 C 188 238 336 516 500 322 C 662 132 748 394 918 116";
 
@@ -35,7 +35,7 @@ function CirclePattern() {
   );
 }
 
-function CloudCap() {
+function CloudEdge() {
   return (
     <>
       <svg
@@ -49,16 +49,16 @@ function CloudCap() {
           d="M0,220 L0,134 C104,82 178,150 284,94 C404,32 496,132 622,70 C750,10 820,146 956,78 C1078,18 1170,116 1282,62 C1362,25 1418,44 1440,38 L1440,220 Z"
         />
       </svg>
-      <div className="absolute inset-x-0 bottom-0 top-[13.4rem] bg-black" aria-hidden="true" />
+      <div className="absolute inset-x-0 top-[13.4rem] bottom-0 bg-black" aria-hidden="true" />
     </>
   );
 }
 
 export function GSAPShowcase() {
-  const root = useRef<HTMLElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const node = root.current;
+    const node = containerRef.current;
     if (!node) return;
 
     const gsap = motionEngine();
@@ -87,6 +87,8 @@ export function GSAPShowcase() {
         return;
       }
 
+      const cloudElement = cloudLayer;
+      const blueElement = blueLayer;
       const pathLength = path.getTotalLength();
       const travel = { progress: 0 };
       const setDot = () => {
@@ -97,15 +99,15 @@ export function GSAPShowcase() {
       gsap.set(pattern, { y: 0, opacity: 0.55 });
       pills.forEach((pill, index) => {
         gsap.set(pill, {
-          x: PILL_X_OFFSETS[index] ?? 0,
+          x: PILL_OFFSET_X[index] ?? 0,
           y: 0,
-          rotation: PILL_ROTATIONS[index] ?? -5,
+          rotation: PILL_ROTATIONS[index] ?? -6,
           transformOrigin: "50% 50%",
         });
       });
-      gsap.set(cloudLayer, { yPercent: 100 });
+      gsap.set(cloudElement, { yPercent: 100 });
       gsap.set(cloudCopy, { y: 38, opacity: 0 });
-      gsap.set(blueLayer, { yPercent: 100 });
+      gsap.set(blueElement, { yPercent: 100 });
       gsap.set([blueTitle, blueCopy], { y: 52, opacity: 0 });
       gsap.set(path, {
         strokeDasharray: pathLength,
@@ -118,48 +120,81 @@ export function GSAPShowcase() {
         scrollTrigger: {
           trigger: node,
           start: "top top",
-          end: "+=4200",
+          end: "+=4000",
           pin: true,
+          pinSpacing: true,
           anticipatePin: 1,
-          scrub: 0.68,
+          scrub: 0.65,
           invalidateOnRefresh: true,
         },
       });
 
+      // Step 1 — the pinned scene keeps its viewport while the pills drift upward.
       pills.forEach((pill, index) => {
         timeline.to(
           pill,
           {
-            y: PILL_TRAVEL[index] ?? -48,
-            rotation: PILL_ROTATIONS[index] ?? -5,
-            duration: 0.46,
+            y: PILL_REPEAT_Y[index] ?? 32,
+            rotation: PILL_ROTATIONS[index] ?? -6,
+            duration: 0.75,
           },
-          index * 0.055,
+          index * 0.06,
         );
       });
-      timeline.to(pattern, { y: -34, opacity: 0.38, duration: 0.52 }, 0);
+      timeline.to(pattern, { y: -28, opacity: 0.38, duration: 0.7 }, 0);
+      timeline.to({}, { duration: 0.1 });
 
-      timeline.fromTo(cloudLayer, { yPercent: 100 }, { yPercent: 0, duration: 0.86 }, 0.64);
-      timeline.fromTo(
-        cloudCopy,
-        { y: 38, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.3 },
-        1.56,
-      );
+      // Step 2 — the bubbly SVG cap and solid body rise from below the viewport.
+      timeline.to(cloudElement, {
+        yPercent: 0,
+        duration: 1.6,
+        ease: "power2.inOut",
+      });
 
-      timeline.fromTo(blueLayer, { yPercent: 100 }, { yPercent: 0, duration: 0.62 }, 2.02);
-      timeline.to(path, { strokeDashoffset: 0, duration: 0.72 }, 2.72);
+      // Step 3 — the centered statement appears only once black covers the frame.
+      timeline.to(cloudCopy, {
+        y: 0,
+        opacity: 1,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+
+      // Step 4 — the pastel canvas cuts over the held frame like a curtain.
+      timeline.to(blueElement, {
+        yPercent: 0,
+        duration: 1.1,
+        ease: "power3.inOut",
+      });
+
+      // Step 5 — draw the path, move the dot along it, then reveal its labels.
+      timeline.to(path, {
+        strokeDashoffset: 0,
+        duration: 1.1,
+        ease: "none",
+      });
       timeline.to(
         travel,
         {
           progress: 1,
-          duration: 0.72,
+          duration: 1.1,
+          ease: "none",
           onUpdate: setDot,
         },
-        2.72,
+        "<",
       );
-      timeline.fromTo(blueTitle, { y: 52, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 }, 3.08);
-      timeline.fromTo(blueCopy, { y: 52, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 }, 3.18);
+      timeline.to(blueTitle, {
+        y: 0,
+        opacity: 1,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+      timeline.to(blueCopy, {
+        y: 0,
+        opacity: 1,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+      timeline.to({}, { duration: 0.25 });
     }, node);
 
     return () => ctx.revert();
@@ -167,62 +202,66 @@ export function GSAPShowcase() {
 
   return (
     <section
-      ref={root}
       aria-label="GSAP cinematic scroll showcase"
-      className="relative z-[1] h-[100svh] overflow-hidden bg-black text-white"
+      className="relative w-full bg-black"
     >
-      <div className="relative h-full overflow-hidden bg-[#050505]">
-        <div
-          data-showcase-pattern
-          className="pointer-events-none absolute inset-0 z-0 will-change-transform"
-          aria-hidden="true"
-        >
-          <CirclePattern />
-        </div>
+      <div
+        ref={containerRef}
+        className="relative h-screen w-full overflow-hidden bg-black text-white"
+      >
+        <div className="absolute inset-0 bg-[#050505]">
+          <div
+            data-showcase-pattern
+            className="pointer-events-none absolute inset-0 z-0 will-change-transform"
+            aria-hidden="true"
+          >
+            <CirclePattern />
+          </div>
 
-        <div className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden px-4">
-          <div className="relative flex w-full flex-col items-center justify-center">
-            {PILL_LABELS.map((label, index) => (
-              <div
-                key={label}
-                data-showcase-pill
-                className="flex h-[clamp(6.35rem,18vw,13.5rem)] w-[min(92vw,68rem)] items-center justify-center rounded-[9999px] bg-white text-black shadow-[0_0_90px_rgba(212,223,234,0.12)] will-change-transform"
-                style={{ marginTop: index === 0 ? 0 : "-3.15rem" }}
-              >
-                <span className="select-none whitespace-nowrap font-sans text-[clamp(3.1rem,9vw,9.4rem)] font-black uppercase leading-none tracking-[-0.08em]">
-                  {label}
-                </span>
-              </div>
-            ))}
+          <div className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden px-4">
+            <div className="relative flex w-full flex-col items-center justify-center">
+              {PILL_LABELS.map((label, index) => (
+                <div
+                  key={label}
+                  data-showcase-pill
+                  className="flex h-[clamp(6.35rem,18vw,13.5rem)] w-[min(92vw,68rem)] items-center justify-center rounded-full bg-white text-black shadow-[0_0_90px_rgba(212,223,234,0.12)] will-change-transform"
+                  style={{ marginTop: index === 0 ? 0 : "-3.15rem" }}
+                >
+                  <span className="select-none whitespace-nowrap font-sans text-[clamp(3.1rem,9vw,9.4rem)] font-black uppercase leading-none tracking-[-0.08em]">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         <div
           data-cloud-layer
-          className="pointer-events-none absolute inset-0 z-30 translate-y-full overflow-hidden will-change-transform"
+          className="absolute inset-0 z-50 translate-y-full overflow-hidden will-change-transform"
           aria-hidden="true"
         >
-          <CloudCap />
+          <CloudEdge />
         </div>
 
         <div
           data-cloud-copy
-          className="absolute inset-0 z-40 grid place-items-center px-6 py-20 text-center opacity-0 will-change-transform"
+          className="absolute inset-0 z-[60] grid place-items-center px-6 py-20 text-center opacity-0 will-change-transform"
         >
           <div className="max-w-2xl">
             <p className="font-mono text-[0.68rem] uppercase tracking-[0.34em] text-white/58">
               Transition · 02
             </p>
             <p className="mt-7 text-balance text-lg font-medium leading-relaxed text-white md:text-2xl">
-              Every layer is choreographed in sequence: the interface holds, the cloud
-              rises, the message lands, then the next canvas cuts over the frame.
+              The frame stays locked while the interface changes beneath it: first
+              the pills settle, then the cloud rises, and only then the message lands.
             </p>
           </div>
         </div>
 
         <div
           data-blue-layer
-          className="absolute inset-0 z-50 translate-y-full overflow-hidden bg-[#D4DFEA] text-black will-change-transform"
+          className="absolute inset-0 z-[70] translate-y-full overflow-hidden bg-[#D4DFEA] text-black will-change-transform"
         >
           <div className="absolute inset-0 overflow-hidden px-6 py-8 md:px-10 lg:px-14">
             <svg
@@ -263,8 +302,8 @@ export function GSAPShowcase() {
               data-blue-copy
               className="absolute bottom-[clamp(11.5rem,25svh,15rem)] right-6 max-w-sm text-sm font-medium leading-relaxed text-black/70 opacity-0 will-change-transform md:bottom-[clamp(5.75rem,14svh,9.5rem)] md:right-10 md:text-base lg:right-14"
             >
-              Lock the frame, slow the cut, give every object a directional reason,
-              and only introduce the next scene after the previous one has resolved.
+              Lock the frame, slow the cut, give each object a directional reason,
+              and reveal the next canvas only after the previous one has resolved.
             </p>
           </div>
         </div>

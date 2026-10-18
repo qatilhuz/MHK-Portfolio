@@ -6,7 +6,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Contact",
   description:
-    "Contact Huzaifa Khan, full stack developer and QA. GitHub is listed; email and LinkedIn will appear when provided.",
+    "Contact Huzaifa Khan about relevant development and software engineering opportunities.",
   path: "/contact",
 });
 
@@ -15,11 +15,12 @@ export default function ContactPage() {
 
   return (
     <Section
-      eyebrow="Contact"
+      eyebrow="LET’S CONNECT"
       headingLevel="h1"
-      title="Contact Huzaifa Khan"
-      description="Send a short message. GitHub is also listed. Email and LinkedIn stay omitted until they are public."
+      title="Have an Opportunity in Mind?"
+      description="Tell me about your project, role, or idea. I’m currently open to relevant development and software engineering opportunities."
     >
+      <p className="label mb-3">Prefer another way?</p>
       {socials.length > 0 ? (
         <ul className="mb-10 space-y-2">
           {socials.map((link) => (

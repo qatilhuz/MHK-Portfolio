@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Experience",
   description:
-    "Experience of Huzaifa Khan: .NET Developer at Techcose Solutions and previously Next.js & React Developer at Hudasoft.",
+    "Huzaifa Khan’s experience in practice across .NET development at Techcose Solutions and Next.js and React development at Hudasoft.",
   path: "/experience",
 });
 

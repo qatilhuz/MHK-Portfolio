@@ -198,14 +198,14 @@ export function ContactForm() {
         disabled={status === "sending"}
         className="border border-blue-200/20 bg-blue-500/85 px-6 text-white shadow-[0_12px_35px_-14px_rgba(59,130,246,0.95),inset_0_1px_0_rgba(255,255,255,0.2)] hover:bg-blue-400 hover:brightness-105"
       >
-        {status === "sending" ? "Sending…" : "Send message"}
+        {status === "sending" ? "Sending…" : "Send Message ↗"}
       </Button>
 
       <p className="min-h-5 text-sm text-white/60" role="status" aria-live="polite">
         {status === "success"
-          ? "Message sent successfully. I’ll get back to you soon."
+          ? "Thanks for reaching out. Your message has been sent successfully."
           : status === "unavailable"
-            ? "Contact service is temporarily unavailable. Please try again later."
+            ? "The contact service is temporarily unavailable. Please try again later."
             : status === "error"
               ? "Something went wrong. Please try again."
               : ""}

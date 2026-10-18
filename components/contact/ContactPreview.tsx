@@ -29,9 +29,9 @@ export function ContactPreview() {
   return (
     <Section
       id="contact"
-      eyebrow="Contact"
-      title="Let’s talk"
-      description="A short note is enough. No spam, no stored copies of your message on this site."
+      eyebrow="LET’S CONNECT"
+      title="Have an Opportunity in Mind?"
+      description="Tell me about your project, role, or idea. I’m open to discussing relevant development and software engineering opportunities."
       className="relative isolate overflow-hidden bg-[radial-gradient(ellipse_at_75%_46%,rgba(37,99,235,0.16),transparent_42%),linear-gradient(180deg,transparent,rgba(2,6,23,0.72))] [&>div>header]:relative [&>div>header]:z-10"
     >
       <StarsCanvas />
@@ -53,23 +53,29 @@ export function ContactPreview() {
             aria-hidden="true"
           />
           {socials.length > 0 ? (
-            <p className="relative z-10 mb-7 text-sm text-white/65">
-              Also on{" "}
-              {socials.map((link, index) => (
-                <span key={link.platform}>
-                  <a
-                    href={link.url}
-                    className="text-white underline-offset-4 transition-colors hover:text-blue-200 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {link.label}
-                  </a>
-                  {index < socials.length - 1 ? " · " : ""}
-                </span>
-              ))}
-            </p>
+            <div className="relative z-10 mb-7">
+              <p className="label">Prefer another way?</p>
+              <p className="mt-2 text-sm text-white/65">
+                Explore Huzaifa’s{" "}
+                {socials.map((link, index) => (
+                  <span key={link.platform}>
+                    <a
+                      href={link.url}
+                      className="text-white underline-offset-4 transition-colors hover:text-blue-200 hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {link.label}
+                    </a>
+                    {index < socials.length - 1 ? " · " : ""}
+                  </span>
+                ))}
+              </p>
+            </div>
           ) : null}
+          <p className="relative z-10 mb-5 rounded-xl border border-emerald-300/12 bg-emerald-300/[0.055] px-4 py-3 text-sm text-emerald-100/70">
+            Currently open to relevant development and software engineering opportunities.
+          </p>
           <div className="relative z-10">
             <ContactForm />
           </div>

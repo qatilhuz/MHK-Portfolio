@@ -1,21 +1,28 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { motionEngine } from "@/lib/motion/engine";
 
 const PILL_LABELS = ["INTERFACE", "ANIMATION", "TECHNIQUES"] as const;
-const PILL_ROTATIONS = [-6, -5, -6] as const;
-const PILL_OFFSET_X = [-36, 28, -24] as const;
-const PILL_REPEAT_Y = [36, 28, 44] as const;
+const PILL_ROTATIONS = [-5.5, -7, -4.5] as const;
+const PILL_OFFSET_X = [-36, 30, -24] as const;
 const CURVED_PATH =
   "M 42 448 C 188 238 336 516 500 322 C 662 132 748 394 918 116";
+
+const CLOUD_FILL_PATH =
+  "M1680.34 213.625C1689.72 192.662 1694.94 169.427 1694.94 144.972C1694.94 52.0827 1619.64 -23.2194 1526.75 -23.2194C1461 -23.2194 1404.06 14.5082 1376.4 69.4959C1261.44 46.6955 1167.26 64.7229 1139.78 123.426C1133.24 137.403 1130.89 152.806 1132.34 169.159C1110.5 173.48 1093.9 192.358 1093.07 215.259C1092.46 215.252 1091.85 215.249 1091.23 215.249C1004.17 215.249 932.551 281.408 923.916 366.197C906.134 359.8 886.963 356.315 866.978 356.315C820.864 356.315 779.085 374.873 748.701 404.928C734.586 394.979 717.369 389.135 698.787 389.135C674.32 389.135 652.219 399.266 636.45 415.562C623.951 387.428 595.764 367.807 562.994 367.807C518.835 367.807 482.997 403.435 482.658 447.514C468.994 451.07 456.172 456.712 444.551 464.079C441.448 463.776 438.302 463.62 435.12 463.62C432.535 463.62 429.974 463.723 427.44 463.924C429.165 445.963 426.227 429.188 418.041 414.525C386.983 358.896 290.384 351.616 188.23 392.027C189.928 374.116 186.984 357.387 178.818 342.76C168.7 324.635 151.623 311.643 129.664 303.761C119.906 299.609 109.317 297.032 98.2156 296.347C62.9095 291.678 20.1791 296.534 -24.6801 310.857C-36.4426 286.183 -58.4607 267.338 -85.2206 259.836C-83.8891 252.211 -83.1949 244.366 -83.1949 236.359C-83.1949 182.939 -114.094 136.736 -158.995 114.649C-214.602 85.6152 -313.342 97.7415 -407.854 150.508C-528.018 217.596 -595.845 324.974 -559.349 390.343C-543.577 418.593 -510.902 434.375 -469.18 437.773C-472.258 447.161 -473.923 457.189 -473.923 467.606C-473.923 494.09 -463.164 518.06 -445.778 535.386C-463.164 552.711 -473.923 576.682 -473.923 603.165C-473.923 656.013 -431.081 698.854 -378.234 698.854C-369.903 698.854 -361.82 697.789 -354.115 695.789C-351.619 726.523 -325.885 750.687 -294.508 750.687C-269.177 750.687 -247.524 734.938 -238.807 712.699C-232.34 714.078 -225.631 714.803 -218.753 714.803C-197.264 714.803 -177.43 707.72 -161.457 695.76C-153.5 740.577 -114.347 774.608 -67.2455 774.608C-19.7396 774.608 19.6808 739.99 27.1642 694.604C84.0541 717.809 177.19 704.248 266.546 654.36C297.042 637.334 324.168 617.713 347.072 596.842C357.323 620.859 377.114 639.83 401.683 648.994C425.461 687.597 468.115 713.331 516.781 713.331C552.644 713.331 585.243 699.355 609.428 676.553C630.951 695.046 658.942 706.221 689.544 706.221C724.715 706.221 756.438 691.459 778.855 667.792C804.482 683.586 834.666 692.698 866.978 692.698C923.467 692.698 973.452 664.85 1003.95 622.133C1034.53 664.111 1084.07 691.394 1139.99 691.394C1179.19 691.394 1215.26 677.979 1243.86 655.49C1263.02 675.075 1284.06 694.286 1306.79 712.722C1459.61 836.674 1630.93 878.675 1689.44 806.534C1743.54 739.835 1682.28 598.922 1551.96 480.078C1665.36 501.845 1757.95 483.596 1785.15 425.478C1812.08 367.938 1767.94 286.219 1680.34 213.625Z";
+
+const CLOUD_OUTLINE_PATH =
+  "M1680.34 213.625L1679.88 213.421L1679.72 213.768L1680.02 214.01L1680.34 213.625ZM1376.4 69.4959L1376.3 69.9863L1376.68 70.0603L1376.85 69.7206L1376.4 69.4959ZM1139.78 123.426L1139.33 123.214L1139.33 123.214L1139.78 123.426ZM1132.34 169.159L1132.44 169.649L1132.88 169.562L1132.84 169.115L1132.34 169.159ZM1093.07 215.259L1093.07 215.759L1093.56 215.764L1093.57 215.277L1093.07 215.259ZM923.916 366.197L923.746 366.667L924.348 366.884L924.413 366.247L923.916 366.197ZM748.701 404.928L748.413 405.337L748.755 405.578L749.053 405.283L748.701 404.928ZM636.45 415.562L635.993 415.765L636.294 416.442L636.809 415.91L636.45 415.562ZM482.658 447.514L482.784 447.998L483.155 447.901L483.158 447.518L482.658 447.514ZM444.551 464.079L444.502 464.577L444.674 464.594L444.819 464.502L444.551 464.079ZM427.44 463.924L426.943 463.876L426.886 464.47L427.48 464.423L427.44 463.924ZM418.041 414.525L418.478 414.281L418.478 414.281L418.041 414.525ZM188.23 392.027L187.732 391.98L187.655 392.792L188.414 392.492L188.23 392.027ZM178.818 342.76L179.255 342.516L179.255 342.516L178.818 342.76ZM129.664 303.761L129.469 304.221L129.482 304.226L129.495 304.231L129.664 303.761ZM98.2156 296.347L98.15 296.843L98.1674 296.845L98.1848 296.846L98.2156 296.347ZM-24.6801 310.857L-25.1314 311.072L-24.9436 311.466L-24.528 311.333L-24.6801 310.857ZM-85.2206 259.836L-85.7131 259.75L-85.7909 260.196L-85.3555 260.318L-85.2206 259.836ZM-158.995 114.649L-159.226 115.092L-159.215 115.097L-158.995 114.649ZM-407.854 150.508L-407.61 150.944L-407.61 150.944L-407.854 150.508ZM-559.349 390.343L-558.912 390.099L-558.912 390.099L-559.349 390.343ZM-469.18 437.773L-468.705 437.929L-468.508 437.326L-469.14 437.275L-469.18 437.773ZM-445.778 535.386L-445.426 535.74L-445.07 535.386L-445.426 535.032L-445.778 535.386ZM-354.115 695.789L-353.616 695.748L-353.665 695.155L-354.24 695.305L-354.115 695.789ZM-238.807 712.699L-238.702 712.21L-239.117 712.121L-239.272 712.516L-238.807 712.699ZM-161.457 695.76L-160.965 695.673L-161.107 694.873L-161.757 695.36L-161.457 695.76ZM27.1642 694.604L27.3531 694.141L26.7729 693.904L26.6709 694.522L27.1642 694.604ZM266.546 654.36L266.302 653.924L266.302 653.924L266.546 654.36ZM347.072 596.842L347.532 596.646L347.256 595.998L346.736 596.473L347.072 596.842ZM401.683 648.994L402.109 648.731L402.018 648.585L401.858 648.525L401.683 648.994ZM609.428 676.553L609.754 676.174L609.413 675.88L609.085 676.189L609.428 676.553ZM778.855 667.792L779.118 667.366L778.772 667.153L778.492 667.448L778.855 667.792ZM1003.95 622.133L1004.36 621.839L1003.95 621.278L1003.55 621.843L1003.95 622.133ZM1243.86 655.49L1244.22 655.14L1243.91 654.82L1243.56 655.097L1243.86 655.49ZM1306.79 712.722L1306.48 713.11L1306.48 713.11L1306.79 712.722ZM1689.44 806.534L1689.83 806.849L1689.83 806.849L1689.44 806.534ZM1551.96 480.078L1552.05 479.587L1550.31 479.253L1551.62 480.448L1551.96 480.078ZM1785.15 425.478L1785.6 425.69L1785.6 425.69L1785.15 425.478ZM1694.44 144.972C1694.44 169.355 1689.24 192.521 1679.88 213.421L1680.79 213.829C1690.21 192.803 1695.44 169.498 1695.44 144.972H1694.44ZM1526.75 -22.7194C1619.36 -22.7194 1694.44 52.3588 1694.44 144.972H1695.44C1695.44 51.8065 1619.91 -23.7194 1526.75 -23.7194V-22.7194ZM1376.85 69.7206C1404.43 14.8951 1461.19 -22.7194 1526.75 -22.7194V-23.7194C1460.8 -23.7194 1403.69 14.1212 1375.95 69.2712L1376.85 69.7206ZM1140.23 123.638C1153.88 94.482 1184.12 75.3625 1225.39 66.3856C1266.65 57.4099 1318.87 58.5948 1376.3 69.9863L1376.5 69.0054C1318.97 57.5966 1266.61 56.3949 1225.18 65.4085C1183.74 74.421 1153.16 93.6667 1139.33 123.214L1140.23 123.638ZM1132.84 169.115C1131.4 152.839 1133.73 137.525 1140.23 123.638L1139.33 123.214C1132.74 137.28 1130.39 152.774 1131.84 169.203L1132.84 169.115ZM1093.57 215.277C1094.4 192.612 1110.83 173.926 1132.44 169.649L1132.24 168.668C1110.18 173.034 1093.41 192.105 1092.58 215.241L1093.57 215.277ZM1091.23 215.749C1091.85 215.749 1092.46 215.752 1093.07 215.759L1093.08 214.759C1092.47 214.752 1091.85 214.749 1091.23 214.749V215.749ZM924.413 366.247C933.022 281.711 1004.43 215.749 1091.23 215.749V214.749C1003.91 214.749 932.079 281.104 923.418 366.146L924.413 366.247ZM866.978 356.815C886.905 356.815 906.018 360.29 923.746 366.667L924.085 365.726C906.249 359.31 887.022 355.815 866.978 355.815V356.815ZM749.053 405.283C779.347 375.317 821.001 356.815 866.978 356.815V355.815C820.727 355.815 778.823 374.429 748.35 404.572L749.053 405.283ZM698.787 389.635C717.263 389.635 734.38 395.445 748.413 405.337L748.989 404.519C734.793 394.513 717.475 388.635 698.787 388.635V389.635ZM636.809 415.91C652.488 399.707 674.461 389.635 698.787 389.635V388.635C674.179 388.635 651.95 398.825 636.09 415.214L636.809 415.91ZM562.994 368.307C595.559 368.307 623.572 387.805 635.993 415.765L636.907 415.359C624.331 387.051 595.969 367.307 562.994 367.307V368.307ZM483.158 447.518C483.495 403.713 519.11 368.307 562.994 368.307V367.307C518.56 367.307 482.499 403.157 482.158 447.51L483.158 447.518ZM444.819 464.502C456.396 457.162 469.171 451.541 482.784 447.998L482.532 447.03C468.817 450.6 455.947 456.263 444.283 463.657L444.819 464.502ZM444.6 463.582C441.481 463.277 438.318 463.12 435.12 463.12V464.12C438.286 464.12 441.416 464.275 444.502 464.577L444.6 463.582ZM435.12 463.12C432.521 463.12 429.947 463.224 427.401 463.426L427.48 464.423C430 464.222 432.548 464.12 435.12 464.12V463.12ZM427.938 463.972C429.671 445.926 426.721 429.046 418.478 414.281L417.605 414.769C425.734 429.329 428.659 446.001 426.943 463.876L427.938 463.972ZM418.478 414.281C402.837 386.267 370.731 370.493 329.842 366.763C288.945 363.032 239.177 371.335 188.046 391.562L188.414 392.492C239.437 372.308 289.046 364.045 329.751 367.759C370.464 371.473 402.187 387.154 417.605 414.769L418.478 414.281ZM188.728 392.074C190.433 374.079 187.478 357.244 179.255 342.516L178.382 343.004C186.491 357.529 189.422 374.154 187.732 391.98L188.728 392.074ZM179.255 342.516C169.065 324.264 151.879 311.204 129.833 303.29L129.495 304.231C151.367 312.083 168.334 325.007 178.382 343.004L179.255 342.516ZM129.86 303.301C120.05 299.127 109.405 296.536 98.2464 295.848L98.1848 296.846C109.228 297.527 119.762 300.091 129.469 304.221L129.86 303.301ZM98.2811 295.852C62.8845 291.171 20.0782 296.042 -24.8321 310.38L-24.528 311.333C20.28 297.027 62.9346 292.186 98.15 296.843L98.2811 295.852ZM-24.2287 310.642C-36.0525 285.839 -58.1849 266.896 -85.0856 259.355L-85.3555 260.318C-58.7365 267.78 -36.8327 286.526 -25.1314 311.072L-24.2287 310.642ZM-84.728 259.922C-83.3916 252.268 -82.6949 244.395 -82.6949 236.359H-83.6949C-83.6949 244.337 -84.3866 252.153 -85.7131 259.75L-84.728 259.922ZM-82.6949 236.359C-82.6949 182.741 -113.709 136.369 -158.774 114.2L-159.215 115.097C-114.479 137.104 -83.6949 183.137 -83.6949 236.359H-82.6949ZM-158.763 114.205C-186.692 99.6235 -225.394 95.4017 -268.903 101.408C-312.421 107.416 -360.793 123.661 -408.097 150.071L-407.61 150.944C-360.402 124.588 -312.148 108.387 -268.767 102.399C-225.376 96.4086 -186.905 100.64 -159.226 115.092L-158.763 114.205ZM-408.097 150.071C-468.238 183.648 -515.304 227.318 -542.772 270.803C-570.228 314.269 -578.165 357.667 -559.785 390.587L-558.912 390.099C-577.029 357.65 -569.3 314.674 -541.926 271.337C-514.563 228.019 -467.634 184.456 -407.61 150.944L-408.097 150.071ZM-559.785 390.587C-543.9 419.04 -511.03 434.866 -469.221 438.272L-469.14 437.275C-510.774 433.883 -543.254 418.146 -558.912 390.099L-559.785 390.587ZM-469.656 437.618C-472.749 447.055 -474.423 457.136 -474.423 467.606H-473.423C-473.423 457.243 -471.767 447.267 -468.705 437.929L-469.656 437.618ZM-474.423 467.606C-474.423 494.228 -463.607 518.324 -446.131 535.74L-445.426 535.032C-462.721 517.796 -473.423 493.951 -473.423 467.606H-474.423ZM-446.131 535.032C-463.607 552.447 -474.423 576.544 -474.423 603.165H-473.423C-473.423 576.82 -462.721 552.975 -445.426 535.74L-446.131 535.032ZM-474.423 603.165C-474.423 656.289 -431.357 699.354 -378.234 699.354V698.354C-430.805 698.354 -473.423 655.737 -473.423 603.165H-474.423ZM-378.234 699.354C-369.86 699.354 -361.735 698.284 -353.989 696.273L-354.24 695.305C-361.905 697.295 -369.945 698.354 -378.234 698.354V699.354ZM-354.613 695.829C-352.096 726.821 -326.148 751.187 -294.508 751.187V750.187C-325.622 750.187 -351.141 726.225 -353.616 695.748L-354.613 695.829ZM-294.508 751.187C-268.964 751.187 -247.131 735.306 -238.341 712.881L-239.272 712.516C-247.917 734.571 -269.39 750.187 -294.508 750.187V751.187ZM-238.911 713.188C-232.41 714.574 -225.667 715.303 -218.753 715.303V714.303C-225.596 714.303 -232.27 713.581 -238.702 712.21L-238.911 713.188ZM-218.753 715.303C-197.153 715.303 -177.214 708.183 -161.157 696.161L-161.757 695.36C-177.646 707.257 -197.376 714.303 -218.753 714.303V715.303ZM-161.949 695.848C-153.951 740.899 -114.594 775.108 -67.2455 775.108V774.108C-114.1 774.108 -153.049 740.255 -160.965 695.673L-161.949 695.848ZM-67.2455 775.108C-19.4908 775.108 20.135 740.309 27.6576 694.685L26.6709 694.522C19.2266 739.671 -19.9883 774.108 -67.2455 774.108V775.108ZM26.9754 695.066C55.5328 706.715 93.1392 709.12 134.76 702.386C176.388 695.65 222.066 679.767 266.79 654.797L266.302 653.924C221.67 678.842 176.102 694.683 134.6 701.399C93.0918 708.115 55.6855 705.697 27.3531 694.141L26.9754 695.066ZM266.79 654.797C297.318 637.753 324.475 618.11 347.409 597.212L346.736 596.473C323.86 617.317 296.766 636.916 266.302 653.924L266.79 654.797ZM346.612 597.038C356.917 621.181 376.81 640.25 401.508 649.462L401.858 648.525C377.417 639.409 357.73 620.537 347.532 596.646L346.612 597.038ZM516.781 712.831C468.296 712.831 425.799 687.193 402.109 648.731L401.257 649.256C425.122 688 467.935 713.831 516.781 713.831V712.831ZM609.085 676.189C584.989 698.908 552.511 712.831 516.781 712.831V713.831C552.776 713.831 585.497 699.803 609.771 676.917L609.085 676.189ZM689.544 705.721C659.066 705.721 631.189 694.591 609.754 676.174L609.102 676.932C630.712 695.5 658.818 706.721 689.544 706.721V705.721ZM778.492 667.448C756.166 691.019 724.572 705.721 689.544 705.721V706.721C724.858 706.721 756.711 691.898 779.218 668.136L778.492 667.448ZM866.978 692.198C834.761 692.198 804.668 683.114 779.118 667.366L778.593 668.218C804.296 684.059 834.571 693.198 866.978 693.198V692.198ZM1003.55 621.843C973.135 664.434 923.299 692.198 866.978 692.198V693.198C923.636 693.198 973.769 665.266 1004.36 622.424L1003.55 621.843ZM1139.99 690.894C1084.24 690.894 1034.85 663.693 1004.36 621.839L1003.55 622.427C1034.22 664.529 1083.91 691.894 1139.99 691.894V690.894ZM1243.56 655.097C1215.04 677.52 1179.08 690.894 1139.99 690.894V691.894C1179.31 691.894 1215.49 678.439 1244.17 655.883L1243.56 655.097ZM1307.11 712.334C1284.39 693.909 1263.37 674.711 1244.22 655.14L1243.51 655.84C1262.68 675.438 1283.73 694.662 1306.48 713.11L1307.11 712.334ZM1689.05 806.219C1659.99 842.051 1602.8 849.643 1533.6 832.677C1464.44 815.722 1383.47 774.274 1307.11 712.334L1306.48 713.11C1382.93 775.122 1464.03 816.651 1533.36 833.649C1602.65 850.636 1660.38 843.158 1689.83 806.849L1689.05 806.219ZM1551.62 480.448C1616.74 539.834 1664.59 604.717 1689.4 663.056C1714.22 721.424 1715.92 773.091 1689.05 806.219L1689.83 806.849C1717.06 773.278 1715.18 721.139 1690.32 662.665C1665.44 604.162 1617.5 539.166 1552.3 479.709L1551.62 480.448ZM1784.69 425.267C1771.18 454.132 1741.41 473.159 1700.77 482.247C1660.13 491.334 1608.71 490.462 1552.05 479.587L1551.86 480.569C1608.61 491.461 1660.18 492.349 1700.99 483.223C1741.79 474.099 1771.91 454.943 1785.6 425.69L1784.69 425.267ZM1680.02 214.01C1723.79 250.279 1756.67 288.806 1775.25 325.423C1793.83 362.044 1798.07 396.688 1784.69 425.267L1785.6 425.69C1799.16 396.728 1794.8 361.743 1776.14 324.97C1757.48 288.194 1724.49 249.565 1680.65 213.24L1680.02 214.01Z";
 
 function CirclePattern() {
   return (
     <svg
       viewBox="0 0 720 360"
       preserveAspectRatio="xMidYMin slice"
-      className="absolute right-[-9rem] top-[-11rem] h-[28rem] w-[52rem] opacity-55 md:right-[-5rem] md:top-[-10rem]"
+      className="absolute right-[-9rem] top-[-11rem] h-[28rem] w-[52rem] opacity-50 md:right-[-5rem] md:top-[-10rem]"
       aria-hidden="true"
     >
       {Array.from({ length: 9 }, (_, index) => (
@@ -26,8 +33,8 @@ function CirclePattern() {
           r={38 + index * 34}
           fill="none"
           stroke="#D4DFEA"
-          strokeOpacity={Math.max(0.07, 0.38 - index * 0.038)}
-          strokeWidth="1.15"
+          strokeOpacity={Math.max(0.07, 0.36 - index * 0.036)}
+          strokeWidth="1.1"
         />
       ))}
       <circle cx="480" cy="140" r="7" fill="#D4DFEA" fillOpacity="0.78" />
@@ -35,279 +42,249 @@ function CirclePattern() {
   );
 }
 
-function CloudEdge() {
+function CloudSvgEdge() {
   return (
-    <>
-      <svg
-        viewBox="0 0 1440 220"
-        preserveAspectRatio="none"
-        className="absolute inset-x-0 top-0 h-[13.5rem] w-full overflow-visible"
-        aria-hidden="true"
-      >
+    <svg
+      width="1440"
+      height="1272"
+      viewBox="0 0 1440 1272"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="absolute left-0 top-0 w-full -translate-y-[99%]"
+      aria-hidden="true"
+    >
+      <g clipPath="url(#clip0_784_49853)">
         <path
-          fill="#000000"
-          d="M0,220 L0,134 C104,82 178,150 284,94 C404,32 496,132 622,70 C750,10 820,146 956,78 C1078,18 1170,116 1282,62 C1362,25 1418,44 1440,38 L1440,220 Z"
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d={CLOUD_FILL_PATH}
+          fill="#0C0B0B"
         />
-      </svg>
-      <div className="absolute inset-x-0 top-[13.4rem] bottom-0 bg-black" aria-hidden="true" />
-    </>
+        <path d={CLOUD_OUTLINE_PATH} fill="#FDFCFA" />
+        <rect x="-16.5469" y="518.831" width="1476.53" height="769.027" fill="#0C0B0B" />
+      </g>
+      <defs>
+        <clipPath id="clip0_784_49853">
+          <rect width="1440" height="1272" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
   );
 }
 
 export function GSAPShowcase() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const mainContainerRef = useRef<HTMLDivElement>(null);
+  const pillsRef = useRef<HTMLDivElement>(null);
+  const cloudPanelRef = useRef<HTMLDivElement>(null);
+  const panel2TextRef = useRef<HTMLDivElement>(null);
+  const bluePanelRef = useRef<HTMLDivElement>(null);
+  const svgPathRef = useRef<SVGPathElement>(null);
+  const blackDotRef = useRef<SVGCircleElement>(null);
+  const panel3TitleRef = useRef<HTMLHeadingElement>(null);
+  const panel3CopyRef = useRef<HTMLParagraphElement>(null);
 
-  useEffect(() => {
-    const node = containerRef.current;
-    if (!node) return;
+  useGSAP(
+    () => {
+      const node = mainContainerRef.current;
+      if (!node) return;
 
-    const gsap = motionEngine();
-    const ctx = gsap.context(() => {
-      const pills = gsap.utils.toArray<HTMLElement>("[data-showcase-pill]");
-      const pattern = node.querySelector<HTMLElement>("[data-showcase-pattern]");
-      const cloudLayer = node.querySelector<HTMLElement>("[data-cloud-layer]");
-      const cloudCopy = node.querySelector<HTMLElement>("[data-cloud-copy]");
-      const blueLayer = node.querySelector<HTMLElement>("[data-blue-layer]");
-      const blueTitle = node.querySelector<HTMLElement>("[data-blue-title]");
-      const blueCopy = node.querySelector<HTMLElement>("[data-blue-copy]");
-      const path = node.querySelector<SVGPathElement>("[data-showcase-path]");
-      const dot = node.querySelector<SVGCircleElement>("[data-showcase-dot]");
+      const gsap = motionEngine();
+      gsap.registerPlugin(MotionPathPlugin, useGSAP);
 
       if (
-        !pills.length ||
-        !pattern ||
-        !cloudLayer ||
-        !cloudCopy ||
-        !blueLayer ||
-        !blueTitle ||
-        !blueCopy ||
-        !path ||
-        !dot
+        !pillsRef.current ||
+        !cloudPanelRef.current ||
+        !panel2TextRef.current ||
+        !bluePanelRef.current ||
+        !svgPathRef.current ||
+        !blackDotRef.current ||
+        !panel3TitleRef.current ||
+        !panel3CopyRef.current
       ) {
         return;
       }
 
-      const cloudElement = cloudLayer;
-      const blueElement = blueLayer;
-      const pathLength = path.getTotalLength();
-      const travel = { progress: 0 };
-      const setDot = () => {
-        const point = path.getPointAtLength(pathLength * travel.progress);
-        gsap.set(dot, { x: point.x, y: point.y });
-      };
+      const pathLength = svgPathRef.current.getTotalLength();
 
-      gsap.set(pattern, { y: 0, opacity: 0.55 });
-      pills.forEach((pill, index) => {
-        gsap.set(pill, {
-          x: PILL_OFFSET_X[index] ?? 0,
-          y: 0,
-          rotation: PILL_ROTATIONS[index] ?? -6,
-          transformOrigin: "50% 50%",
-        });
+      gsap.set(cloudPanelRef.current, { y: "100%" });
+      gsap.set(panel2TextRef.current, { y: 42, opacity: 0 });
+      gsap.set(bluePanelRef.current, { y: "100%" });
+      gsap.set([panel3TitleRef.current, panel3CopyRef.current], {
+        y: 54,
+        opacity: 0,
       });
-      gsap.set(cloudElement, { yPercent: 100 });
-      gsap.set(cloudCopy, { y: 38, opacity: 0 });
-      gsap.set(blueElement, { yPercent: 100 });
-      gsap.set([blueTitle, blueCopy], { y: 52, opacity: 0 });
-      gsap.set(path, {
+      gsap.set(svgPathRef.current, {
         strokeDasharray: pathLength,
         strokeDashoffset: pathLength,
       });
-      setDot();
 
-      const timeline = gsap.timeline({
+      const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
-          trigger: node,
-          start: "top top",
-          end: "+=4000",
+          trigger: mainContainerRef.current,
           pin: true,
           pinSpacing: true,
+          scrub: 1,
+          start: "top top",
+          end: "+=4000",
           anticipatePin: 1,
-          scrub: 0.65,
           invalidateOnRefresh: true,
         },
       });
 
-      // Step 1 — the pinned scene keeps its viewport while the pills drift upward.
-      pills.forEach((pill, index) => {
-        timeline.to(
-          pill,
-          {
-            y: PILL_REPEAT_Y[index] ?? 32,
-            rotation: PILL_ROTATIONS[index] ?? -6,
-            duration: 0.75,
-          },
-          index * 0.06,
-        );
+      tl.to(pillsRef.current, { y: -150, duration: 1 });
+      tl.to(cloudPanelRef.current, {
+        y: "0%",
+        duration: 2,
+        ease: "power1.inOut",
       });
-      timeline.to(pattern, { y: -28, opacity: 0.38, duration: 0.7 }, 0);
-      timeline.to({}, { duration: 0.1 });
-
-      // Step 2 — the bubbly SVG cap and solid body rise from below the viewport.
-      timeline.to(cloudElement, {
-        yPercent: 0,
-        duration: 1.6,
-        ease: "power2.inOut",
-      });
-
-      // Step 3 — the centered statement appears only once black covers the frame.
-      timeline.to(cloudCopy, {
-        y: 0,
+      tl.to(panel2TextRef.current, {
         opacity: 1,
-        duration: 0.5,
+        y: 0,
+        duration: 1,
         ease: "power2.out",
       });
-
-      // Step 4 — the pastel canvas cuts over the held frame like a curtain.
-      timeline.to(blueElement, {
-        yPercent: 0,
-        duration: 1.1,
-        ease: "power3.inOut",
-      });
-
-      // Step 5 — draw the path, move the dot along it, then reveal its labels.
-      timeline.to(path, {
+      tl.to(
+        bluePanelRef.current,
+        {
+          y: "0%",
+          duration: 2,
+          ease: "power1.inOut",
+        },
+        "+=0.5",
+      );
+      tl.to(svgPathRef.current, {
         strokeDashoffset: 0,
-        duration: 1.1,
+        duration: 2,
         ease: "none",
       });
-      timeline.to(
-        travel,
+      tl.to(
+        blackDotRef.current,
         {
-          progress: 1,
-          duration: 1.1,
+          motionPath: {
+            path: svgPathRef.current,
+            align: svgPathRef.current,
+            alignOrigin: [0.5, 0.5],
+          },
+          duration: 2,
           ease: "none",
-          onUpdate: setDot,
         },
         "<",
       );
-      timeline.to(blueTitle, {
-        y: 0,
+      tl.to(panel3TitleRef.current, {
         opacity: 1,
-        duration: 0.5,
+        y: 0,
+        duration: 1,
         ease: "power2.out",
       });
-      timeline.to(blueCopy, {
-        y: 0,
+      tl.to(panel3CopyRef.current, {
         opacity: 1,
-        duration: 0.5,
+        y: 0,
+        duration: 1,
         ease: "power2.out",
       });
-      timeline.to({}, { duration: 0.25 });
-    }, node);
-
-    return () => ctx.revert();
-  }, []);
+    },
+    { scope: mainContainerRef },
+  );
 
   return (
-    <section
+    <div
+      ref={mainContainerRef}
+      className="relative w-full h-screen overflow-hidden bg-black"
       aria-label="GSAP cinematic scroll showcase"
-      className="relative w-full bg-black"
     >
+      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
+        <CirclePattern />
+        <div className="rotate-[-7deg] will-change-transform">
+          <div ref={pillsRef} className="flex flex-col items-center justify-center">
+            {PILL_LABELS.map((label, index) => (
+              <div
+                key={label}
+                data-showcase-pill
+                className="flex h-[clamp(6.2rem,18vw,13.25rem)] min-w-[min(94vw,67rem)] items-center justify-center rounded-full bg-white px-[clamp(2.5rem,7vw,6rem)] text-black shadow-[0_0_90px_rgba(212,223,234,0.12)] will-change-transform"
+                style={{
+                  marginTop: index === 0 ? 0 : "-3.6rem",
+                  transform: `translateX(${PILL_OFFSET_X[index] ?? 0}px) rotate(${PILL_ROTATIONS[index] ?? -5}deg)`,
+                }}
+              >
+                <span className="select-none whitespace-nowrap font-sans text-[clamp(3rem,9vw,9.4rem)] font-black uppercase leading-none tracking-[-0.08em]">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div
-        ref={containerRef}
-        className="relative h-screen w-full overflow-hidden bg-black text-white"
+        ref={cloudPanelRef}
+        className="absolute inset-0 z-20 w-full h-full bg-black translate-y-full overflow-visible"
       >
-        <div className="absolute inset-0 bg-[#050505]">
-          <div
-            data-showcase-pattern
-            className="pointer-events-none absolute inset-0 z-0 will-change-transform"
-            aria-hidden="true"
-          >
-            <CirclePattern />
-          </div>
-
-          <div className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden px-4">
-            <div className="relative flex w-full flex-col items-center justify-center">
-              {PILL_LABELS.map((label, index) => (
-                <div
-                  key={label}
-                  data-showcase-pill
-                  className="flex h-[clamp(6.35rem,18vw,13.5rem)] w-[min(92vw,68rem)] items-center justify-center rounded-full bg-white text-black shadow-[0_0_90px_rgba(212,223,234,0.12)] will-change-transform"
-                  style={{ marginTop: index === 0 ? 0 : "-3.15rem" }}
-                >
-                  <span className="select-none whitespace-nowrap font-sans text-[clamp(3.1rem,9vw,9.4rem)] font-black uppercase leading-none tracking-[-0.08em]">
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
+        <CloudSvgEdge />
         <div
-          data-cloud-layer
-          className="absolute inset-0 z-50 translate-y-full overflow-hidden will-change-transform"
-          aria-hidden="true"
-        >
-          <CloudEdge />
-        </div>
-
-        <div
-          data-cloud-copy
-          className="absolute inset-0 z-[60] grid place-items-center px-6 py-20 text-center opacity-0 will-change-transform"
+          ref={panel2TextRef}
+          className="absolute inset-0 grid place-items-center px-6 text-center opacity-0 will-change-transform"
         >
           <div className="max-w-2xl">
             <p className="font-mono text-[0.68rem] uppercase tracking-[0.34em] text-white/58">
               Transition · 02
             </p>
             <p className="mt-7 text-balance text-lg font-medium leading-relaxed text-white md:text-2xl">
-              The frame stays locked while the interface changes beneath it: first
-              the pills settle, then the cloud rises, and only then the message lands.
-            </p>
-          </div>
-        </div>
-
-        <div
-          data-blue-layer
-          className="absolute inset-0 z-[70] translate-y-full overflow-hidden bg-[#D4DFEA] text-black will-change-transform"
-        >
-          <div className="absolute inset-0 overflow-hidden px-6 py-8 md:px-10 lg:px-14">
-            <svg
-              viewBox="0 0 960 560"
-              preserveAspectRatio="none"
-              className="absolute inset-x-0 top-[2svh] h-[68svh] w-full overflow-visible"
-              aria-hidden="true"
-            >
-              <path
-                data-showcase-path
-                d={CURVED_PATH}
-                fill="none"
-                stroke="#000000"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="5"
-                vectorEffect="non-scaling-stroke"
-              />
-              <circle
-                data-showcase-dot
-                cx="0"
-                cy="0"
-                r="14"
-                fill="#000000"
-                stroke="#D4DFEA"
-                strokeWidth="4"
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
-
-            <h2
-              data-blue-title
-              className="absolute bottom-[clamp(5.25rem,14svh,9.5rem)] left-6 max-w-[9ch] font-sans text-[clamp(2.45rem,9vw,10.5rem)] font-black uppercase leading-[0.85] tracking-[-0.075em] opacity-0 will-change-transform md:left-10 lg:left-14"
-            >
-              1 THE BASICS
-            </h2>
-            <p
-              data-blue-copy
-              className="absolute bottom-[clamp(11.5rem,25svh,15rem)] right-6 max-w-sm text-sm font-medium leading-relaxed text-black/70 opacity-0 will-change-transform md:bottom-[clamp(5.75rem,14svh,9.5rem)] md:right-10 md:text-base lg:right-14"
-            >
-              Lock the frame, slow the cut, give each object a directional reason,
-              and reveal the next canvas only after the previous one has resolved.
+              The frame holds while the cloud crosses the screen: position, pacing,
+              and legibility settle before the next visual system takes over.
             </p>
           </div>
         </div>
       </div>
-    </section>
+
+      <div
+        ref={bluePanelRef}
+        className="absolute inset-0 z-30 w-full h-full bg-[#D4DFEA] translate-y-full overflow-hidden text-black"
+      >
+        <div className="absolute inset-0 px-6 py-8 md:px-10 lg:px-14">
+          <svg
+            viewBox="0 0 960 560"
+            preserveAspectRatio="none"
+            className="absolute inset-x-0 top-[2svh] h-[68svh] w-full overflow-visible"
+            aria-hidden="true"
+          >
+            <path
+              ref={svgPathRef}
+              d={CURVED_PATH}
+              fill="none"
+              stroke="#000000"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="5"
+              vectorEffect="non-scaling-stroke"
+            />
+            <circle
+              ref={blackDotRef}
+              cx="42"
+              cy="448"
+              r="14"
+              fill="#000000"
+              stroke="#D4DFEA"
+              strokeWidth="4"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+
+          <h2
+            ref={panel3TitleRef}
+            className="absolute bottom-[clamp(5.25rem,14svh,9.5rem)] left-6 max-w-[9ch] font-sans text-[clamp(2.45rem,9vw,10.5rem)] font-black uppercase leading-[0.85] tracking-[-0.075em] opacity-0 will-change-transform md:left-10 lg:left-14"
+          >
+            1 THE BASICS
+          </h2>
+          <p
+            ref={panel3CopyRef}
+            className="absolute bottom-[clamp(11.5rem,25svh,15rem)] right-6 max-w-sm text-sm font-medium leading-relaxed text-black/70 opacity-0 will-change-transform md:bottom-[clamp(5.75rem,14svh,9.5rem)] md:right-10 md:text-base lg:right-14"
+          >
+            Lock the frame, resolve one transition at a time, and reveal each new
+            layer only after it can be read cleanly against the previous canvas.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

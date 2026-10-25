@@ -38,7 +38,7 @@ function CloudSvgEdge() {
           fillRule="evenodd"
           clipRule="evenodd"
           d={CLOUD_FILL_PATH}
-          fill="#000000"
+          fill="currentColor"
         />
         <path d={CLOUD_OUTLINE_PATH} fill="var(--foreground)" />
       </g>
@@ -49,7 +49,7 @@ function CloudSvgEdge() {
 export function Showcase() {
   return (
     <>
-      <div className="relative z-40 w-full min-h-screen border-t border-white/10 bg-black text-foreground flex flex-col items-center justify-center">
+      <div className="relative z-40 w-full min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
         <div className="flex flex-col items-center justify-center">
           {SHOWCASE_PILLS.map((pill) => (
             <div
@@ -63,7 +63,7 @@ export function Showcase() {
       </div>
 
       <div
-        className="pointer-events-none relative z-[44] w-full overflow-hidden bg-transparent leading-none"
+        className="pointer-events-none relative z-[44] w-full overflow-hidden bg-transparent text-background leading-none"
         aria-hidden="true"
       >
         <div className="h-[clamp(16rem,40vw,36rem)] w-full overflow-hidden bg-transparent">
@@ -71,7 +71,7 @@ export function Showcase() {
         </div>
       </div>
 
-      <div className="relative w-full min-h-screen border-b border-white/10 bg-black flex flex-col items-center justify-center p-10">
+      <div className="relative w-full min-h-screen bg-background flex flex-col items-center justify-center p-10">
         <p className="text-muted font-sans text-center text-lg md:text-2xl max-w-3xl leading-relaxed">
           Every interface animation draws from the same repertoire of techniques
           to make sites and apps more engaging. Many of these have their roots in

@@ -37,7 +37,7 @@ function CloudSvgEdge() {
           d={CLOUD_FILL_PATH}
           fill="#000000"
         />
-        <path d={CLOUD_OUTLINE_PATH} fill="#000000" />
+        <path d={CLOUD_OUTLINE_PATH} fill="#FDFCFA" />
         <rect
           x="-16.5469"
           y="518.831"

@@ -29,10 +29,11 @@ function CloudSvgEdge() {
       viewBox="0 0 1440 1272"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="block h-auto w-full"
+      className="block h-auto w-full bg-transparent"
+      style={{ backgroundColor: "transparent" }}
       aria-hidden="true"
     >
-      <g clipPath="url(#clip0_784_49853)">
+      <g>
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -40,19 +41,7 @@ function CloudSvgEdge() {
           fill="#000000"
         />
         <path d={CLOUD_OUTLINE_PATH} fill="#FDFCFA" />
-        <rect
-          x="-16.5469"
-          y="518.831"
-          width="1476.53"
-          height="769.027"
-          fill="#000000"
-        />
       </g>
-      <defs>
-        <clipPath id="clip0_784_49853">
-          <rect width="1440" height="1272" fill="white" />
-        </clipPath>
-      </defs>
     </svg>
   );
 }
@@ -73,8 +62,11 @@ export function Showcase() {
         </div>
       </div>
 
-      <div className="relative w-full overflow-hidden bg-black leading-none" aria-hidden="true">
-        <div className="h-[clamp(16rem,40vw,36rem)] w-full overflow-hidden">
+      <div
+        className="pointer-events-none relative w-full overflow-hidden bg-transparent leading-none"
+        aria-hidden="true"
+      >
+        <div className="h-[clamp(16rem,40vw,36rem)] w-full overflow-hidden bg-transparent">
           <CloudSvgEdge />
         </div>
       </div>

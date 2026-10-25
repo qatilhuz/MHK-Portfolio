@@ -7,17 +7,18 @@ const CLOUD_OUTLINE_PATH =
 const SHOWCASE_PILLS = [
   {
     label: "INTERFACE",
-    positionClass: "relative z-[41] mt-[40px] -rotate-6 -translate-x-10",
+    positionClass:
+      "absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 -translate-x-8 -rotate-6 z-[41] bg-white text-black rounded-full px-12 py-4 text-[5rem] md:text-[9rem] font-bold uppercase w-max border-[3px] border-black",
   },
   {
     label: "ANIMATION",
     positionClass:
-      "relative z-[42] mt-[40px] rotate-6 translate-x-10 md:translate-x-24",
+      "absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 translate-x-8 rotate-6 z-[42] bg-white text-black rounded-full px-12 py-4 text-[5rem] md:text-[9rem] font-bold uppercase w-max border-[3px] border-black",
   },
   {
     label: "TECHNIQUES",
     positionClass:
-      "relative z-[43] mt-[40px] -rotate-6 -translate-x-10 md:-translate-x-24",
+      "absolute top-[65%] left-1/2 -translate-x-1/2 -translate-y-1/2 -translate-x-8 -rotate-6 z-[43] bg-white text-black rounded-full px-12 py-4 text-[5rem] md:text-[9rem] font-bold uppercase w-max border-[3px] border-black",
   },
 ] as const;
 
@@ -49,17 +50,12 @@ function CloudSvgEdge() {
 export function Showcase() {
   return (
     <>
-      <div className="relative z-40 w-full min-h-screen bg-black py-20 md:py-40 flex flex-col items-center justify-center">
-        <div className="flex flex-col items-center justify-center">
-          {SHOWCASE_PILLS.map((pill) => (
-            <div
-              key={pill.label}
-              className={`bg-white text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-bold uppercase tracking-tighter w-max border-[3px] border-black leading-none ${pill.positionClass}`}
-            >
-              {pill.label}
-            </div>
-          ))}
-        </div>
+      <div className="h-screen w-full relative overflow-hidden bg-black z-40">
+        {SHOWCASE_PILLS.map((pill) => (
+          <div key={pill.label} className={pill.positionClass}>
+            {pill.label}
+          </div>
+        ))}
       </div>
 
       <div

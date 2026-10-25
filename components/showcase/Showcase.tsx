@@ -49,7 +49,7 @@ function CloudSvgEdge() {
 export function Showcase() {
   return (
     <>
-      <div className="relative z-40 w-full min-h-screen bg-black py-20 md:py-40 flex flex-col items-center justify-center">
+      <div className="relative z-40 w-full min-h-screen bg-black flex flex-col items-center justify-center">
         <div className="flex flex-col items-center justify-center">
           {SHOWCASE_PILLS.map((pill) => (
             <div

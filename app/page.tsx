@@ -5,7 +5,7 @@ import { ExperiencePreview } from "@/components/experience/ExperiencePreview";
 import { Hero } from "@/components/hero/Hero";
 import { ProjectsPreview } from "@/components/projects/ProjectsPreview";
 import { ResumePreview } from "@/components/resume/ResumePreview";
-import { GSAPShowcase } from "@/components/showcase/GSAPShowcase";
+import { Showcase } from "@/components/showcase/Showcase";
 import { SkillsPreview } from "@/components/skills/SkillsPreview";
 import { CyberpunkRain } from "@/components/three/CyberpunkRain";
 import { EvolvingJourney } from "@/components/three/EvolvingJourney";
@@ -34,7 +34,7 @@ export default function Home() {
         </div>
       </div>
       <ExperiencePreview />
-      <GSAPShowcase />
+      <Showcase />
       <ProjectsPreview />
       <QaSection />
       <ArcadeSection />

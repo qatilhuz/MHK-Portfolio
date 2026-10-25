@@ -11,11 +11,11 @@ const SHOWCASE_PILLS = [
   },
   {
     label: "ANIMATION",
-    positionClass: "-rotate-[30deg] translate-x-16 md:translate-x-40 -mt-28 md:-mt-40",
+    positionClass: "rotate-6 translate-x-10 md:translate-x-24 mt-0",
   },
   {
     label: "TECHNIQUES",
-    positionClass: "-rotate-[15deg] -translate-x-12 md:-translate-x-32 -mt-28 md:-mt-40",
+    positionClass: "-rotate-6 -translate-x-10 md:-translate-x-24 -mt-6 md:-mt-12",
   },
 ] as const;
 

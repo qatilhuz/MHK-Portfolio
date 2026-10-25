@@ -7,15 +7,15 @@ const CLOUD_OUTLINE_PATH =
 const SHOWCASE_PILLS = [
   {
     label: "INTERFACE",
-    positionClass: "-translate-x-10",
+    positionClass: "-rotate-6 -translate-x-10",
   },
   {
     label: "ANIMATION",
-    positionClass: "translate-x-12 md:translate-x-32 -mt-16 md:-mt-24",
+    positionClass: "-rotate-[30deg] translate-x-16 md:translate-x-40 -mt-28 md:-mt-40",
   },
   {
     label: "TECHNIQUES",
-    positionClass: "-translate-x-8 md:-translate-x-20 -mt-16 md:-mt-24",
+    positionClass: "-rotate-[15deg] -translate-x-12 md:-translate-x-32 -mt-28 md:-mt-40",
   },
 ] as const;
 
@@ -63,7 +63,7 @@ export function Showcase() {
           {SHOWCASE_PILLS.map((pill) => (
             <div
               key={pill.label}
-              className={`-rotate-6 bg-white text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-bold uppercase tracking-tighter w-max border-[3px] border-black leading-none ${pill.positionClass}`}
+              className={`bg-white text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-bold uppercase tracking-tighter w-max border-[3px] border-black leading-none ${pill.positionClass}`}
             >
               {pill.label}
             </div>

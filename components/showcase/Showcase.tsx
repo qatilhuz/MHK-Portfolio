@@ -40,7 +40,7 @@ function CloudSvgEdge() {
           d={CLOUD_FILL_PATH}
           fill="#000000"
         />
-        <path d={CLOUD_OUTLINE_PATH} fill="#FDFCFA" />
+        <path d={CLOUD_OUTLINE_PATH} fill="var(--foreground)" />
       </g>
     </svg>
   );
@@ -49,12 +49,12 @@ function CloudSvgEdge() {
 export function Showcase() {
   return (
     <>
-      <div className="relative z-40 w-full min-h-screen bg-black flex flex-col items-center justify-center">
+      <div className="relative z-40 w-full min-h-screen border-t border-white/10 bg-black text-foreground flex flex-col items-center justify-center">
         <div className="flex flex-col items-center justify-center">
           {SHOWCASE_PILLS.map((pill) => (
             <div
               key={pill.label}
-              className={`bg-white text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-bold uppercase tracking-tighter w-max border-[3px] border-black leading-none ${pill.positionClass}`}
+              className={`bg-foreground text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-sans font-semibold uppercase tracking-[-0.04em] w-max border border-cyan-200/20 leading-none shadow-[0_0_34px_rgba(34,211,238,0.16),0_0_90px_rgba(59,130,246,0.10)] ${pill.positionClass}`}
             >
               {pill.label}
             </div>
@@ -71,8 +71,8 @@ export function Showcase() {
         </div>
       </div>
 
-      <div className="relative w-full min-h-screen bg-black flex flex-col items-center justify-center p-10">
-        <p className="text-white text-center text-lg md:text-2xl max-w-3xl leading-relaxed">
+      <div className="relative w-full min-h-screen border-b border-white/10 bg-black flex flex-col items-center justify-center p-10">
+        <p className="text-muted font-sans text-center text-lg md:text-2xl max-w-3xl leading-relaxed">
           Every interface animation draws from the same repertoire of techniques
           to make sites and apps more engaging. Many of these have their roots in
           the golden age of hand-drawn cartoons — but have been adapted for the

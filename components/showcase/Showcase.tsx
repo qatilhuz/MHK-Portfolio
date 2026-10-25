@@ -7,17 +7,17 @@ const CLOUD_OUTLINE_PATH =
 const SHOWCASE_PILLS = [
   {
     label: "INTERFACE",
-    positionClass: "relative z-10 mt-[40px] -rotate-6 -translate-x-10",
+    positionClass: "relative z-[41] mt-[40px] -rotate-6 -translate-x-10",
   },
   {
     label: "ANIMATION",
     positionClass:
-      "relative z-[11] mt-[40px] rotate-6 translate-x-10 md:translate-x-24",
+      "relative z-[42] mt-[40px] rotate-6 translate-x-10 md:translate-x-24",
   },
   {
     label: "TECHNIQUES",
     positionClass:
-      "relative z-[12] mt-[40px] -rotate-6 -translate-x-10 md:-translate-x-24",
+      "relative z-[43] mt-[40px] -rotate-6 -translate-x-10 md:-translate-x-24",
   },
 ] as const;
 
@@ -49,7 +49,7 @@ function CloudSvgEdge() {
 export function Showcase() {
   return (
     <>
-      <div className="relative w-full min-h-screen bg-black overflow-hidden flex flex-col items-center justify-center">
+      <div className="relative z-40 w-full min-h-screen bg-black py-20 md:py-40 flex flex-col items-center justify-center">
         <div className="flex flex-col items-center justify-center">
           {SHOWCASE_PILLS.map((pill) => (
             <div
@@ -63,7 +63,7 @@ export function Showcase() {
       </div>
 
       <div
-        className="pointer-events-none relative w-full overflow-hidden bg-transparent leading-none"
+        className="pointer-events-none relative z-[44] w-full overflow-hidden bg-transparent leading-none"
         aria-hidden="true"
       >
         <div className="h-[clamp(16rem,40vw,36rem)] w-full overflow-hidden bg-transparent">

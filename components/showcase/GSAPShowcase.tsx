@@ -2,14 +2,7 @@
 
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
-import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { motionEngine } from "@/lib/motion/engine";
-
-const PILL_LABELS = ["INTERFACE", "ANIMATION", "TECHNIQUES"] as const;
-const PILL_ROTATIONS = [-5, -7, -4] as const;
-const PILL_OFFSETS_X = [-28, 34, -18] as const;
-const CURVED_PATH =
-  "M 72 424 C 198 226 348 528 506 322 C 664 116 782 410 934 152";
 
 const CLOUD_FILL_PATH =
   "M1680.34 213.625C1689.72 192.662 1694.94 169.427 1694.94 144.972C1694.94 52.0827 1619.64 -23.2194 1526.75 -23.2194C1461 -23.2194 1404.06 14.5082 1376.4 69.4959C1261.44 46.6955 1167.26 64.7229 1139.78 123.426C1133.24 137.403 1130.89 152.806 1132.34 169.159C1110.5 173.48 1093.9 192.358 1093.07 215.259C1092.46 215.252 1091.85 215.249 1091.23 215.249C1004.17 215.249 932.551 281.408 923.916 366.197C906.134 359.8 886.963 356.315 866.978 356.315C820.864 356.315 779.085 374.873 748.701 404.928C734.586 394.979 717.369 389.135 698.787 389.135C674.32 389.135 652.219 399.266 636.45 415.562C623.951 387.428 595.764 367.807 562.994 367.807C518.835 367.807 482.997 403.435 482.658 447.514C468.994 451.07 456.172 456.712 444.551 464.079C441.448 463.776 438.302 463.62 435.12 463.62C432.535 463.62 429.974 463.723 427.44 463.924C429.165 445.963 426.227 429.188 418.041 414.525C386.983 358.896 290.384 351.616 188.23 392.027C189.928 374.116 186.984 357.387 178.818 342.76C168.7 324.635 151.623 311.643 129.664 303.761C119.906 299.609 109.317 297.032 98.2156 296.347C62.9095 291.678 20.1791 296.534 -24.6801 310.857C-36.4426 286.183 -58.4607 267.338 -85.2206 259.836C-83.8891 252.211 -83.1949 244.366 -83.1949 236.359C-83.1949 182.939 -114.094 136.736 -158.995 114.649C-214.602 85.6152 -313.342 97.7415 -407.854 150.508C-528.018 217.596 -595.845 324.974 -559.349 390.343C-543.577 418.593 -510.902 434.375 -469.18 437.773C-472.258 447.161 -473.923 457.189 -473.923 467.606C-473.923 494.09 -463.164 518.06 -445.778 535.386C-463.164 552.711 -473.923 576.682 -473.923 603.165C-473.923 656.013 -431.081 698.854 -378.234 698.854C-369.903 698.854 -361.82 697.789 -354.115 695.789C-351.619 726.523 -325.885 750.687 -294.508 750.687C-269.177 750.687 -247.524 734.938 -238.807 712.699C-232.34 714.078 -225.631 714.803 -218.753 714.803C-197.264 714.803 -177.43 707.72 -161.457 695.76C-153.5 740.577 -114.347 774.608 -67.2455 774.608C-19.7396 774.608 19.6808 739.99 27.1642 694.604C84.0541 717.809 177.19 704.248 266.546 654.36C297.042 637.334 324.168 617.713 347.072 596.842C357.323 620.859 377.114 639.83 401.683 648.994C425.461 687.597 468.115 713.331 516.781 713.331C552.644 713.331 585.243 699.355 609.428 676.553C630.951 695.046 658.942 706.221 689.544 706.221C724.715 706.221 756.438 691.459 778.855 667.792C804.482 683.586 834.666 692.698 866.978 692.698C923.467 692.698 973.452 664.85 1003.95 622.133C1034.53 664.111 1084.07 691.394 1139.99 691.394C1179.19 691.394 1215.26 677.979 1243.86 655.49C1263.02 675.075 1284.06 694.286 1306.79 712.722C1459.61 836.674 1630.93 878.675 1689.44 806.534C1743.54 739.835 1682.28 598.922 1551.96 480.078C1665.36 501.845 1757.95 483.596 1785.15 425.478C1812.08 367.938 1767.94 286.219 1680.34 213.625Z";
@@ -25,7 +18,7 @@ function CloudSvgEdge() {
       viewBox="0 0 1440 1272"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="absolute top-0 left-0 w-full -translate-y-[99%]"
+      className="absolute left-0 top-0 w-full -translate-y-[99%]"
       aria-hidden="true"
     >
       <g clipPath="url(#clip0_784_49853)">
@@ -53,48 +46,40 @@ function CloudSvgEdge() {
   );
 }
 
+const PILL_CLASS =
+  "w-max rounded-full bg-white px-[clamp(2.5rem,7vw,5rem)] py-[clamp(1.1rem,3.2vw,2rem)] font-sans text-[clamp(2.5rem,8vw,8.5rem)] font-black uppercase leading-none tracking-[-0.065em] text-black shadow-[0_0_80px_rgba(212,223,234,0.14)] will-change-transform";
+
 export function GSAPShowcase() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const pillsWrapperRef = useRef<HTMLDivElement>(null);
-  const cloudLayerRef = useRef<HTMLDivElement>(null);
-  const cloudTextRef = useRef<HTMLParagraphElement>(null);
-  const blueLayerRef = useRef<HTMLDivElement>(null);
-  const basicsTextRef = useRef<HTMLHeadingElement>(null);
-  const bottomParaRef = useRef<HTMLParagraphElement>(null);
-  const pathRef = useRef<SVGPathElement>(null);
-  const dotRef = useRef<SVGCircleElement>(null);
+  const pill2Ref = useRef<HTMLDivElement>(null);
+  const pill3Ref = useRef<HTMLDivElement>(null);
+  const cloudRef = useRef<HTMLDivElement>(null);
+  const blueRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
       if (
         !containerRef.current ||
-        !pillsWrapperRef.current ||
-        !cloudLayerRef.current ||
-        !cloudTextRef.current ||
-        !blueLayerRef.current ||
-        !basicsTextRef.current ||
-        !bottomParaRef.current ||
-        !pathRef.current ||
-        !dotRef.current
+        !pill2Ref.current ||
+        !pill3Ref.current ||
+        !cloudRef.current ||
+        !blueRef.current
       ) {
         return;
       }
 
       const gsap = motionEngine();
-      gsap.registerPlugin(useGSAP, MotionPathPlugin);
+      gsap.registerPlugin(useGSAP);
 
-      const length = pathRef.current.getTotalLength();
-
-      gsap.set(cloudLayerRef.current, { y: "100%" });
-      gsap.set(blueLayerRef.current, { y: "100%" });
-      gsap.set(cloudTextRef.current, { opacity: 0, y: 24 });
-      gsap.set([basicsTextRef.current, bottomParaRef.current], {
-        opacity: 0,
-        y: 28,
+      gsap.set([pill2Ref.current, pill3Ref.current], {
+        y: "150vh",
+      });
+      gsap.set([cloudRef.current, blueRef.current], {
+        y: "150vh",
       });
 
       const tl = gsap.timeline({
-        defaults: { ease: "none" },
+        defaults: { ease: "power2.out" },
         scrollTrigger: {
           trigger: containerRef.current,
           pin: true,
@@ -106,46 +91,26 @@ export function GSAPShowcase() {
         },
       });
 
-      tl.to(
-        pillsWrapperRef.current,
-        { yPercent: -30, duration: 2 },
-        0,
-      );
-      tl.to(
-        cloudLayerRef.current,
-        { y: "0%", duration: 2, ease: "power2.inOut" },
-        0.5,
-      );
-      tl.to(cloudTextRef.current, { opacity: 1, y: 0, duration: 1 });
-      tl.to(
-        blueLayerRef.current,
-        { y: "0%", duration: 2, ease: "power2.inOut" },
-        "+=0.5",
-      );
-      tl.fromTo(
-        pathRef.current,
-        { strokeDasharray: length, strokeDashoffset: length },
-        { strokeDashoffset: 0, duration: 2 },
-        "+=0.2",
-      );
-      tl.to(
-        dotRef.current,
-        {
-          motionPath: {
-            path: pathRef.current,
-            align: pathRef.current,
-            alignOrigin: [0.5, 0.5],
-          },
-          duration: 2,
-          ease: "none",
-        },
-        "<",
-      );
-      tl.to(
-        [basicsTextRef.current, bottomParaRef.current],
-        { opacity: 1, y: 0, duration: 1 },
-        "<",
-      );
+      tl.to(pill2Ref.current, {
+        yPercent: -100,
+        y: "15vh",
+        duration: 1,
+      });
+      tl.to(pill3Ref.current, {
+        yPercent: -100,
+        y: "30vh",
+        duration: 1,
+      });
+      tl.to(cloudRef.current, {
+        y: "0%",
+        duration: 1.5,
+        ease: "power2.inOut",
+      });
+      tl.to(blueRef.current, {
+        y: "0%",
+        duration: 1.5,
+        ease: "power2.inOut",
+      });
     },
     { scope: containerRef },
   );
@@ -153,87 +118,47 @@ export function GSAPShowcase() {
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-screen overflow-hidden bg-black"
-      aria-label="GSAP scroll-linked showcase"
+      className="relative w-full h-screen bg-black overflow-hidden flex items-center justify-center"
+      aria-label="GSAP overlapping scroll showcase"
     >
-      <div className="absolute inset-0 z-0 flex flex-col items-center justify-center bg-black">
-        <div
-          ref={pillsWrapperRef}
-          className="flex flex-col items-center justify-center will-change-transform"
-        >
-          {PILL_LABELS.map((label, index) => (
-            <div
-              key={label}
-              className="flex h-[clamp(5.4rem,16vw,12.5rem)] w-[clamp(22rem,88vw,82rem)] items-center justify-center rounded-full bg-white px-[clamp(2rem,5vw,5rem)] text-black shadow-[0_0_80px_rgba(212,223,234,0.14)] will-change-transform"
-              style={{
-                marginTop: index === 0 ? 0 : "-2.4rem",
-                transform: `translateX(${PILL_OFFSETS_X[index] ?? 0}px) rotate(${PILL_ROTATIONS[index] ?? -5}deg)`,
-              }}
-            >
-              <span className="select-none whitespace-nowrap font-sans text-[clamp(2.7rem,9vw,9rem)] font-black uppercase leading-none tracking-[-0.075em]">
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
+      <div
+        className={`absolute left-1/2 top-[38%] z-10 -translate-x-1/2 -translate-y-1/2 -rotate-6 ${PILL_CLASS}`}
+        aria-hidden="true"
+      >
+        INTERFACE
       </div>
 
       <div
-        ref={cloudLayerRef}
-        className="absolute inset-0 z-10 bg-black flex items-center justify-center translate-y-full"
+        ref={pill2Ref}
+        className={`absolute left-1/2 top-[38%] z-20 -translate-x-1/2 translate-y-[150vh] -rotate-6 ${PILL_CLASS}`}
+        aria-hidden="true"
+      >
+        ANIMATION
+      </div>
+
+      <div
+        ref={pill3Ref}
+        className={`absolute left-1/2 top-[38%] z-30 -translate-x-1/2 translate-y-[150vh] -rotate-6 ${PILL_CLASS}`}
+        aria-hidden="true"
+      >
+        TECHNIQUES
+      </div>
+
+      <div
+        ref={cloudRef}
+        className="absolute inset-0 z-40 bg-black translate-y-[150vh] flex flex-col justify-start items-center"
       >
         <CloudSvgEdge />
-        <p
-          ref={cloudTextRef}
-          className="relative z-10 max-w-xl px-6 text-center text-balance font-mono text-sm font-medium uppercase leading-relaxed tracking-[0.28em] text-white opacity-0 will-change-transform md:text-base"
-        >
-          Interfaces become memorable when structure, timing, and motion are
-          resolved as one system.
-        </p>
       </div>
 
       <div
-        ref={blueLayerRef}
-        className="absolute inset-0 z-20 bg-[#D4DFEA] translate-y-full overflow-hidden"
+        ref={blueRef}
+        className="absolute inset-0 z-50 bg-[#D4DFEA] translate-y-[150vh] flex items-center justify-center overflow-hidden"
       >
-        <svg
-          viewBox="0 0 1000 600"
-          preserveAspectRatio="xMidYMid meet"
-          className="absolute inset-0 h-full w-full"
-          aria-hidden="true"
-        >
-          <path
-            ref={pathRef}
-            d={CURVED_PATH}
-            fill="none"
-            stroke="#000000"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="4"
-            vectorEffect="non-scaling-stroke"
-          />
-          <circle
-            ref={dotRef}
-            cx="72"
-            cy="424"
-            r="12"
-            fill="#000000"
-            stroke="#D4DFEA"
-            strokeWidth="4"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-
-        <h2
-          ref={basicsTextRef}
-          className="absolute bottom-10 left-10 max-w-[9ch] font-sans text-[clamp(3rem,9vw,10rem)] font-black uppercase leading-[0.86] tracking-[-0.075em] text-black opacity-0 will-change-transform"
-        >
+        <h2 className="absolute bottom-10 left-6 max-w-[9ch] font-sans text-[clamp(3rem,10vw,11rem)] font-black uppercase leading-[0.86] tracking-[-0.075em] text-black md:left-10">
           1 THE BASICS
         </h2>
-        <p
-          ref={bottomParaRef}
-          className="absolute bottom-10 right-10 max-w-xs text-right font-mono text-xs font-medium uppercase leading-relaxed tracking-[0.18em] text-black/68 opacity-0 will-change-transform md:text-sm"
-        >
+        <p className="absolute bottom-10 right-6 max-w-xs text-right font-mono text-xs font-medium uppercase leading-relaxed tracking-[0.18em] text-black/68 md:right-10 md:text-sm">
           Resolve each transition while the frame stays pinned and readable.
         </p>
       </div>

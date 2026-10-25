@@ -7,15 +7,17 @@ const CLOUD_OUTLINE_PATH =
 const SHOWCASE_PILLS = [
   {
     label: "INTERFACE",
-    positionClass: "-rotate-6 -translate-x-10",
+    positionClass: "relative z-10 mt-[40px] -rotate-6 -translate-x-10",
   },
   {
     label: "ANIMATION",
-    positionClass: "rotate-6 translate-x-10 md:translate-x-24 mt-0",
+    positionClass:
+      "relative z-[11] mt-[40px] rotate-6 translate-x-10 md:translate-x-24",
   },
   {
     label: "TECHNIQUES",
-    positionClass: "-rotate-6 -translate-x-10 md:-translate-x-24 -mt-6 md:-mt-12",
+    positionClass:
+      "relative z-[12] mt-[40px] -rotate-6 -translate-x-10 md:-translate-x-24",
   },
 ] as const;
 

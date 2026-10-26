@@ -54,7 +54,8 @@ function CloudSvgEdge() {
 }
 
 export function Showcase() {
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement>(null);
+  const pinRef = useRef<HTMLDivElement>(null);
   const pill1Ref = useRef<HTMLDivElement>(null);
   const pill2Ref = useRef<HTMLDivElement>(null);
   const pill3Ref = useRef<HTMLDivElement>(null);
@@ -63,15 +64,13 @@ export function Showcase() {
     () => {
       gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-      // Ensure ScrollTrigger refreshes in case of dynamic Next.js loading
-      ScrollTrigger.refresh();
-
+      // Separate the scroll trigger from the rigidly sized pinned container.
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: sectionRef.current,
+          trigger: triggerRef.current,
+          pin: pinRef.current,
           start: "top top",
-          end: "+=2000",
-          pin: true,
+          end: "+=2500",
           scrub: 1,
           pinSpacing: true,
         },
@@ -95,29 +94,31 @@ export function Showcase() {
         ease: "power2.out",
       });
     },
-    { scope: sectionRef },
+    { scope: triggerRef },
   );
 
   const pillRefs = [pill1Ref, pill2Ref, pill3Ref];
 
   return (
     <>
-      <div
-        ref={sectionRef}
-        className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center"
-      >
-        <div className="flex flex-col items-center justify-center">
-          {SHOWCASE_PILLS.map((pill, index) => (
-            <div
-              key={pill.label}
-              ref={pillRefs[index]}
-              className={`bg-foreground text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-sans font-semibold uppercase tracking-[-0.04em] w-max border border-cyan-200/20 leading-none shadow-[0_0_34px_rgba(34,211,238,0.16),0_0_90px_rgba(59,130,246,0.10)] ${pill.positionClass}`}
-            >
-              {pill.label}
-            </div>
-          ))}
+      <section ref={triggerRef} className="relative w-full bg-background">
+        <div
+          ref={pinRef}
+          className="h-screen w-full relative overflow-hidden flex flex-col items-center justify-center"
+        >
+          <div className="flex flex-col items-center justify-center">
+            {SHOWCASE_PILLS.map((pill, index) => (
+              <div
+                key={pill.label}
+                ref={pillRefs[index]}
+                className={`bg-foreground text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-sans font-semibold uppercase tracking-[-0.04em] w-max border border-cyan-200/20 leading-none shadow-[0_0_34px_rgba(34,211,238,0.16),0_0_90px_rgba(59,130,246,0.10)] ${pill.positionClass}`}
+              >
+                {pill.label}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
       <div
         className="pointer-events-none relative z-[44] w-full overflow-hidden bg-transparent text-background leading-none"

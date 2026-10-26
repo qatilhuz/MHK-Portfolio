@@ -1,3 +1,10 @@
+"use client";
+
+import { useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
 const CLOUD_FILL_PATH =
   "M1680.34 213.625C1689.72 192.662 1694.94 169.427 1694.94 144.972C1694.94 52.0827 1619.64 -23.2194 1526.75 -23.2194C1461 -23.2194 1404.06 14.5082 1376.4 69.4959C1261.44 46.6955 1167.26 64.7229 1139.78 123.426C1133.24 137.403 1130.89 152.806 1132.34 169.159C1110.5 173.48 1093.9 192.358 1093.07 215.259C1092.46 215.252 1091.85 215.249 1091.23 215.249C1004.17 215.249 932.551 281.408 923.916 366.197C906.134 359.8 886.963 356.315 866.978 356.315C820.864 356.315 779.085 374.873 748.701 404.928C734.586 394.979 717.369 389.135 698.787 389.135C674.32 389.135 652.219 399.266 636.45 415.562C623.951 387.428 595.764 367.807 562.994 367.807C518.835 367.807 482.997 403.435 482.658 447.514C468.994 451.07 456.172 456.712 444.551 464.079C441.448 463.776 438.302 463.62 435.12 463.62C432.535 463.62 429.974 463.723 427.44 463.924C429.165 445.963 426.227 429.188 418.041 414.525C386.983 358.896 290.384 351.616 188.23 392.027C189.928 374.116 186.984 357.387 178.818 342.76C168.7 324.635 151.623 311.643 129.664 303.761C119.906 299.609 109.317 297.032 98.2156 296.347C62.9095 291.678 20.1791 296.534 -24.6801 310.857C-36.4426 286.183 -58.4607 267.338 -85.2206 259.836C-83.8891 252.211 -83.1949 244.366 -83.1949 236.359C-83.1949 182.939 -114.094 136.736 -158.995 114.649C-214.602 85.6152 -313.342 97.7415 -407.854 150.508C-528.018 217.596 -595.845 324.974 -559.349 390.343C-543.577 418.593 -510.902 434.375 -469.18 437.773C-472.258 447.161 -473.923 457.189 -473.923 467.606C-473.923 494.09 -463.164 518.06 -445.778 535.386C-463.164 552.711 -473.923 576.682 -473.923 603.165C-473.923 656.013 -431.081 698.854 -378.234 698.854C-369.903 698.854 -361.82 697.789 -354.115 695.789C-351.619 726.523 -325.885 750.687 -294.508 750.687C-269.177 750.687 -247.524 734.938 -238.807 712.699C-232.34 714.078 -225.631 714.803 -218.753 714.803C-197.264 714.803 -177.43 707.72 -161.457 695.76C-153.5 740.577 -114.347 774.608 -67.2455 774.608C-19.7396 774.608 19.6808 739.99 27.1642 694.604C84.0541 717.809 177.19 704.248 266.546 654.36C297.042 637.334 324.168 617.713 347.072 596.842C357.323 620.859 377.114 639.83 401.683 648.994C425.461 687.597 468.115 713.331 516.781 713.331C552.644 713.331 585.243 699.355 609.428 676.553C630.951 695.046 658.942 706.221 689.544 706.221C724.715 706.221 756.438 691.459 778.855 667.792C804.482 683.586 834.666 692.698 866.978 692.698C923.467 692.698 973.452 664.85 1003.95 622.133C1034.53 664.111 1084.07 691.394 1139.99 691.394C1179.19 691.394 1215.26 677.979 1243.86 655.49C1263.02 675.075 1284.06 694.286 1306.79 712.722C1459.61 836.674 1630.93 878.675 1689.44 806.534C1743.54 739.835 1682.28 598.922 1551.96 480.078C1665.36 501.845 1757.95 483.596 1785.15 425.478C1812.08 367.938 1767.94 286.219 1680.34 213.625Z";
 
@@ -47,13 +54,59 @@ function CloudSvgEdge() {
 }
 
 export function Showcase() {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const pill1Ref = useRef<HTMLDivElement>(null);
+  const pill2Ref = useRef<HTMLDivElement>(null);
+  const pill3Ref = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+      // Create a timeline with pinning and scrubbing
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "+=2500",
+          pin: true,
+          scrub: 1,
+          pinSpacing: true,
+        },
+      });
+
+      // Pill 1 is already in place.
+
+      // Pill 2 comes up from the bottom of the viewport
+      tl.from(pill2Ref.current, {
+        y: "100vh",
+        duration: 1,
+        ease: "power1.inOut",
+      });
+
+      // Pill 3 comes up from the bottom of the viewport
+      tl.from(pill3Ref.current, {
+        y: "100vh",
+        duration: 1,
+        ease: "power1.inOut",
+      });
+    },
+    { scope: sectionRef },
+  );
+
+  const pillRefs = [pill1Ref, pill2Ref, pill3Ref];
+
   return (
     <>
-      <div className="relative z-40 w-full min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
+      <div
+        ref={sectionRef}
+        className="relative z-40 w-full min-h-screen bg-background text-foreground flex flex-col items-center justify-center"
+      >
         <div className="flex flex-col items-center justify-center">
-          {SHOWCASE_PILLS.map((pill) => (
+          {SHOWCASE_PILLS.map((pill, index) => (
             <div
               key={pill.label}
+              ref={pillRefs[index]}
               className={`bg-foreground text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-sans font-semibold uppercase tracking-[-0.04em] w-max border border-cyan-200/20 leading-none shadow-[0_0_34px_rgba(34,211,238,0.16),0_0_90px_rgba(59,130,246,0.10)] ${pill.positionClass}`}
             >
               {pill.label}

@@ -55,7 +55,6 @@ function CloudSvgEdge() {
 
 export function Showcase() {
   const triggerRef = useRef<HTMLElement>(null);
-  const pinRef = useRef<HTMLDivElement>(null);
   const pill1Ref = useRef<HTMLDivElement>(null);
   const pill2Ref = useRef<HTMLDivElement>(null);
   const pill3Ref = useRef<HTMLDivElement>(null);
@@ -64,34 +63,29 @@ export function Showcase() {
     () => {
       gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-      // Separate the scroll trigger from the rigidly sized pinned container.
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: triggerRef.current,
-          pin: pinRef.current,
           start: "top top",
-          end: "+=2500",
+          end: "bottom bottom",
           scrub: 1,
-          pinSpacing: true,
         },
       });
 
       // Pill 1 stays where it is.
 
-      // Pill 2 slides in from below the visible screen bounds
+      // Pill 2 slides up from outside the visible sticky container
       tl.from(pill2Ref.current, {
-        y: "150vh",
-        opacity: 1,
+        y: "100vh",
         duration: 1,
-        ease: "power2.out",
+        ease: "none",
       });
 
-      // Pill 3 slides in from below the visible screen bounds
+      // Pill 3 slides up from outside
       tl.from(pill3Ref.current, {
-        y: "150vh",
-        opacity: 1,
+        y: "100vh",
         duration: 1,
-        ease: "power2.out",
+        ease: "none",
       });
     },
     { scope: triggerRef },
@@ -101,11 +95,8 @@ export function Showcase() {
 
   return (
     <>
-      <section ref={triggerRef} className="relative w-full bg-background">
-        <div
-          ref={pinRef}
-          className="h-screen w-full relative overflow-hidden flex flex-col items-center justify-center"
-        >
+      <section ref={triggerRef} className="relative w-full h-[300vh] bg-background">
+        <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center">
             {SHOWCASE_PILLS.map((pill, index) => (
               <div

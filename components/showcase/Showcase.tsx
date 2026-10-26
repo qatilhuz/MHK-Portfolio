@@ -76,9 +76,7 @@ export function Showcase() {
           trigger: triggerRef.current,
           start: "top top",
           end: "bottom bottom",
-          scrub: 2.5,
-          anticipatePin: 1,
-          fastScrollEnd: true,
+          scrub: 1.5,
         },
       });
 
@@ -88,7 +86,6 @@ export function Showcase() {
         duration: 1,
         ease: "none",
         force3D: true,
-        overwrite: "auto",
       });
 
       // 2. Move Pill 2 up shortly after Pill 1 starts (stacking on Pill 1)
@@ -97,7 +94,6 @@ export function Showcase() {
         duration: 1,
         ease: "none",
         force3D: true,
-        overwrite: "auto",
       }, "<0.3");
 
       // 3. Move Pill 3 up shortly after Pill 2 starts (stacking on Pill 2)
@@ -106,7 +102,6 @@ export function Showcase() {
         duration: 1,
         ease: "none",
         force3D: true,
-        overwrite: "auto",
       }, "<0.3");
 
       // 4. Cloud SVG starts shortly after Pill 3 and cascades over it
@@ -115,7 +110,6 @@ export function Showcase() {
         duration: 1.5,
         ease: "none",
         force3D: true,
-        overwrite: "auto",
       }, "<0.3");
     },
     { scope: triggerRef },
@@ -125,14 +119,14 @@ export function Showcase() {
 
   return (
     <>
-      <section ref={triggerRef} className="relative w-full h-[600vh] bg-background">
+      <section ref={triggerRef} className="relative w-full h-[400vh] bg-background">
         <div className="sticky top-30 w-full h-screen py-20 md:py-32 flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center">
             {SHOWCASE_PILLS.map((pill, index) => (
               <div
                 key={pill.label}
                 ref={pillRefs[index]}
-                className={`bg-foreground text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-sans font-semibold uppercase tracking-[-0.04em] w-max border border-cyan-200/20 leading-none shadow-[0_0_34px_rgba(34,211,238,0.16),0_0_90px_rgba(59,130,246,0.10)] transform-gpu will-change-transform [backface-visibility:hidden] ${pill.positionClass}`}
+                className={`bg-foreground text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-sans font-semibold uppercase tracking-[-0.04em] w-max border border-cyan-200/20 leading-none shadow-[0_0_34px_rgba(34,211,238,0.16),0_0_90px_rgba(59,130,246,0.10)] will-change-transform ${pill.positionClass}`}
               >
                 {pill.label}
               </div>
@@ -141,7 +135,7 @@ export function Showcase() {
 
           <div
             ref={cloudRef}
-            className="absolute top-[100%] left-0 w-full z-[44] transform-gpu will-change-transform [backface-visibility:hidden] flex flex-col justify-start pointer-events-none"
+            className="absolute top-[100%] left-0 w-full z-[44] will-change-transform flex flex-col justify-start pointer-events-none"
             aria-hidden="true"
           >
             <div className="w-full bg-transparent">

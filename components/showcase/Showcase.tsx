@@ -58,6 +58,7 @@ export function Showcase() {
   const pill1Ref = useRef<HTMLDivElement>(null);
   const pill2Ref = useRef<HTMLDivElement>(null);
   const pill3Ref = useRef<HTMLDivElement>(null);
+  const cloudRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
@@ -95,6 +96,14 @@ export function Showcase() {
         ease: "none",
         force3D: true,
       });
+
+      // 4. Move Cloud SVG up to the top edge of the screen (stacking on Pill 3)
+      tl.to(cloudRef.current, {
+        y: () => -(cloudRef.current?.offsetTop ?? 0),
+        duration: 1,
+        ease: "none",
+        force3D: true,
+      });
     },
     { scope: triggerRef },
   );
@@ -103,7 +112,7 @@ export function Showcase() {
 
   return (
     <>
-      <section ref={triggerRef} className="relative w-full h-[300vh] bg-background">
+      <section ref={triggerRef} className="relative w-full h-[400vh] bg-background">
         <div className="sticky top-0 w-full h-screen py-20 md:py-32 flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center">
             {SHOWCASE_PILLS.map((pill, index) => (
@@ -116,17 +125,18 @@ export function Showcase() {
               </div>
             ))}
           </div>
+
+          <div
+            ref={cloudRef}
+            className="pointer-events-none relative z-[44] w-full overflow-hidden bg-transparent text-background leading-none will-change-transform"
+            aria-hidden="true"
+          >
+            <div className="h-[clamp(16rem,40vw,36rem)] w-full overflow-hidden bg-transparent">
+              <CloudSvgEdge />
+            </div>
+          </div>
         </div>
       </section>
-
-      <div
-        className="pointer-events-none relative z-[44] w-full overflow-hidden bg-transparent text-background leading-none"
-        aria-hidden="true"
-      >
-        <div className="h-[clamp(16rem,40vw,36rem)] w-full overflow-hidden bg-transparent">
-          <CloudSvgEdge />
-        </div>
-      </div>
 
       <div className="relative w-full min-h-screen bg-background flex flex-col items-center justify-center p-10">
         <p className="text-muted font-sans text-center text-lg md:text-2xl max-w-3xl leading-relaxed">

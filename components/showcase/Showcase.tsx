@@ -36,7 +36,7 @@ function CloudSvgEdge() {
       viewBox="0 0 1440 1272"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="block h-auto w-full bg-transparent"
+      className="block h-auto w-full bg-transparent text-background"
       style={{ backgroundColor: "transparent" }}
       aria-hidden="true"
     >
@@ -97,10 +97,10 @@ export function Showcase() {
         force3D: true,
       });
 
-      // 4. Move Cloud SVG up to the top edge of the screen (stacking on Pill 3)
+      // 4. Cloud SVG container moves up to cover the screen
       tl.to(cloudRef.current, {
-        y: () => -(cloudRef.current?.offsetTop ?? 0),
-        duration: 1,
+        y: () => -window.innerHeight,
+        duration: 1.5,
         ease: "none",
         force3D: true,
       });
@@ -128,7 +128,7 @@ export function Showcase() {
 
           <div
             ref={cloudRef}
-            className="pointer-events-none relative z-[44] w-full overflow-hidden bg-transparent text-background leading-none will-change-transform"
+            className="absolute top-[100%] left-0 w-full z-[44] will-change-transform flex flex-col justify-start pointer-events-none"
             aria-hidden="true"
           >
             <div className="h-[clamp(16rem,40vw,36rem)] w-full overflow-hidden bg-transparent">

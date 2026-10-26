@@ -72,18 +72,23 @@ export function Showcase() {
         },
       });
 
-      // Pill 1 stays where it is.
-
-      // Pill 2 slides up from outside the visible sticky container
-      tl.from(pill2Ref.current, {
-        y: "100vh",
+      // 1. Move Pill 1 up to the top edge of the screen
+      tl.to(pill1Ref.current, {
+        y: () => -(pill1Ref.current?.offsetTop ?? 0),
         duration: 1,
         ease: "none",
       });
 
-      // Pill 3 slides up from outside
-      tl.from(pill3Ref.current, {
-        y: "100vh",
+      // 2. Move Pill 2 up to the top edge of the screen (stacking on Pill 1)
+      tl.to(pill2Ref.current, {
+        y: () => -(pill2Ref.current?.offsetTop ?? 0),
+        duration: 1,
+        ease: "none",
+      });
+
+      // 3. Move Pill 3 up to the top edge of the screen (stacking on Pill 2)
+      tl.to(pill3Ref.current, {
+        y: () => -(pill3Ref.current?.offsetTop ?? 0),
         duration: 1,
         ease: "none",
       });

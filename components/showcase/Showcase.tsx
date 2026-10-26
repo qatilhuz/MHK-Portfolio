@@ -88,29 +88,29 @@ export function Showcase() {
         force3D: true,
       });
 
-      // 2. Move Pill 2 up to the top edge of the screen (stacking on Pill 1)
+      // 2. Move Pill 2 up shortly after Pill 1 starts (stacking on Pill 1)
       tl.to(pill2Ref.current, {
         y: () => -(pill2Ref.current?.offsetTop ?? 0),
         duration: 1,
         ease: "none",
         force3D: true,
-      });
+      }, "<0.3");
 
-      // 3. Move Pill 3 up to the top edge of the screen (stacking on Pill 2)
+      // 3. Move Pill 3 up shortly after Pill 2 starts (stacking on Pill 2)
       tl.to(pill3Ref.current, {
         y: () => -(pill3Ref.current?.offsetTop ?? 0),
         duration: 1,
         ease: "none",
         force3D: true,
-      });
+      }, "<0.3");
 
-      // 4. Cloud SVG container moves up and completely exits the screen at the top
+      // 4. Cloud SVG starts shortly after Pill 3 and cascades over it
       tl.to(cloudRef.current, {
         y: "-250vh",
         duration: 1.5,
         ease: "none",
         force3D: true,
-      });
+      }, "<0.3");
     },
     { scope: triggerRef },
   );

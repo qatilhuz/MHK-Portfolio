@@ -48,6 +48,13 @@ function CloudSvgEdge() {
           fill="currentColor"
         />
         <path d={CLOUD_OUTLINE_PATH} fill="var(--foreground)" />
+        <rect
+          x="-16.5469"
+          y="518.831"
+          width="1476.53"
+          height="769.027"
+          fill="currentColor"
+        />
       </g>
     </svg>
   );
@@ -131,8 +138,12 @@ export function Showcase() {
             className="absolute top-[100%] left-0 w-full z-[44] will-change-transform flex flex-col justify-start pointer-events-none"
             aria-hidden="true"
           >
-            <div className="h-[clamp(16rem,40vw,36rem)] w-full overflow-hidden bg-transparent">
+            <div className="w-full bg-transparent">
               <CloudSvgEdge />
+              <div
+                className="-mt-[1px] h-[500px] w-full bg-background md:h-[150vh]"
+                aria-hidden="true"
+              />
             </div>
           </div>
         </div>

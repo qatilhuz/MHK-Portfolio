@@ -97,9 +97,9 @@ export function Showcase() {
         force3D: true,
       });
 
-      // 4. Cloud SVG container moves up to cover the screen
+      // 4. Cloud SVG container moves up and completely exits the screen at the top
       tl.to(cloudRef.current, {
-        y: () => -window.innerHeight,
+        y: "-250vh",
         duration: 1.5,
         ease: "none",
         force3D: true,

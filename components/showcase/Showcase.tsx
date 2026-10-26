@@ -68,7 +68,7 @@ export function Showcase() {
           trigger: triggerRef.current,
           start: "top top",
           end: "bottom bottom",
-          scrub: 1,
+          scrub: 1.5,
         },
       });
 
@@ -77,6 +77,7 @@ export function Showcase() {
         y: () => -(pill1Ref.current?.offsetTop ?? 0),
         duration: 1,
         ease: "none",
+        force3D: true,
       });
 
       // 2. Move Pill 2 up to the top edge of the screen (stacking on Pill 1)
@@ -84,6 +85,7 @@ export function Showcase() {
         y: () => -(pill2Ref.current?.offsetTop ?? 0),
         duration: 1,
         ease: "none",
+        force3D: true,
       });
 
       // 3. Move Pill 3 up to the top edge of the screen (stacking on Pill 2)
@@ -91,6 +93,7 @@ export function Showcase() {
         y: () => -(pill3Ref.current?.offsetTop ?? 0),
         duration: 1,
         ease: "none",
+        force3D: true,
       });
     },
     { scope: triggerRef },
@@ -107,7 +110,7 @@ export function Showcase() {
               <div
                 key={pill.label}
                 ref={pillRefs[index]}
-                className={`bg-foreground text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-sans font-semibold uppercase tracking-[-0.04em] w-max border border-cyan-200/20 leading-none shadow-[0_0_34px_rgba(34,211,238,0.16),0_0_90px_rgba(59,130,246,0.10)] ${pill.positionClass}`}
+                className={`bg-foreground text-black rounded-full px-16 py-4 text-[5rem] md:text-[9rem] lg:text-[11rem] font-sans font-semibold uppercase tracking-[-0.04em] w-max border border-cyan-200/20 leading-none shadow-[0_0_34px_rgba(34,211,238,0.16),0_0_90px_rgba(59,130,246,0.10)] will-change-transform ${pill.positionClass}`}
               >
                 {pill.label}
               </div>

@@ -63,32 +63,36 @@ export function Showcase() {
     () => {
       gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-      // Create a timeline with pinning and scrubbing
+      // Ensure ScrollTrigger refreshes in case of dynamic Next.js loading
+      ScrollTrigger.refresh();
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "+=2500",
+          end: "+=2000",
           pin: true,
           scrub: 1,
           pinSpacing: true,
         },
       });
 
-      // Pill 1 is already in place.
+      // Pill 1 stays where it is.
 
-      // Pill 2 comes up from the bottom of the viewport
+      // Pill 2 slides in from below the visible screen bounds
       tl.from(pill2Ref.current, {
-        y: "100vh",
+        y: "150vh",
+        opacity: 1,
         duration: 1,
-        ease: "power1.inOut",
+        ease: "power2.out",
       });
 
-      // Pill 3 comes up from the bottom of the viewport
+      // Pill 3 slides in from below the visible screen bounds
       tl.from(pill3Ref.current, {
-        y: "100vh",
+        y: "150vh",
+        opacity: 1,
         duration: 1,
-        ease: "power1.inOut",
+        ease: "power2.out",
       });
     },
     { scope: sectionRef },
@@ -100,7 +104,7 @@ export function Showcase() {
     <>
       <div
         ref={sectionRef}
-        className="relative z-40 w-full min-h-screen bg-background text-foreground flex flex-col items-center justify-center"
+        className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center"
       >
         <div className="flex flex-col items-center justify-center">
           {SHOWCASE_PILLS.map((pill, index) => (

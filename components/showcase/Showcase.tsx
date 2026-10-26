@@ -14,7 +14,7 @@ const CLOUD_OUTLINE_PATH =
 const SHOWCASE_PILLS = [
   {
     label: "INTERFACE",
-    positionClass: "relative z-[41] mt-[40px] -rotate-6 -translate-x-10",
+    positionClass: "relative z-[41] mt-[40px] -rotate-6 -translate-x-10 translate-y-10",
   },
   {
     label: "ANIMATION",
@@ -96,7 +96,7 @@ export function Showcase() {
   return (
     <>
       <section ref={triggerRef} className="relative w-full h-[300vh] bg-background">
-        <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col items-center justify-center">
+        <div className="sticky top-0 w-full h-screen py-20 md:py-32 flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center">
             {SHOWCASE_PILLS.map((pill, index) => (
               <div

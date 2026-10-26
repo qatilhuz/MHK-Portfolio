@@ -34,10 +34,9 @@ function CloudSvgEdge() {
       width="1440"
       height="1272"
       viewBox="0 0 1440 1272"
-      preserveAspectRatio="none"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="block h-[90vh] w-full bg-transparent text-background md:h-[140vh] lg:h-[180vh]"
+      className="block h-auto w-full bg-transparent text-background"
       style={{ backgroundColor: "transparent" }}
       aria-hidden="true"
     >
@@ -100,7 +99,7 @@ export function Showcase() {
 
       // 4. Cloud SVG container moves up and completely exits the screen at the top
       tl.to(cloudRef.current, {
-        y: "-400vh",
+        y: "-250vh",
         duration: 1.5,
         ease: "none",
         force3D: true,
@@ -113,7 +112,7 @@ export function Showcase() {
 
   return (
     <>
-      <section ref={triggerRef} className="relative w-full h-[500vh] bg-background">
+      <section ref={triggerRef} className="relative w-full h-[400vh] bg-background">
         <div className="sticky top-0 w-full h-screen py-20 md:py-32 flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center">
             {SHOWCASE_PILLS.map((pill, index) => (
@@ -132,7 +131,7 @@ export function Showcase() {
             className="absolute top-[100%] left-0 w-full z-[44] will-change-transform flex flex-col justify-start pointer-events-none"
             aria-hidden="true"
           >
-            <div className="h-[90vh] w-full overflow-hidden bg-transparent md:h-[140vh] lg:h-[180vh]">
+            <div className="h-[clamp(16rem,40vw,36rem)] w-full overflow-hidden bg-transparent">
               <CloudSvgEdge />
             </div>
           </div>

@@ -19,12 +19,12 @@ const SHOWCASE_PILLS = [
   {
     label: "ANIMATION",
     positionClass:
-      "relative z-[42] mt-[40px] rotate-6 translate-x-10 md:translate-x-24",
+      "relative z-[42] mt-[80px] rotate-6 translate-x-10 md:translate-x-24",
   },
   {
     label: "TECHNIQUES",
     positionClass:
-      "relative z-[43] mt-[40px] -rotate-6 -translate-x-10 md:-translate-x-24",
+      "relative z-[43] mt-[50px] -rotate-6 -translate-x-10 md:-translate-x-24",
   },
 ] as const;
 
@@ -120,7 +120,7 @@ export function Showcase() {
   return (
     <>
       <section ref={triggerRef} className="relative w-full h-[400vh] bg-background">
-        <div className="sticky top-0 w-full h-screen py-20 md:py-32 flex flex-col items-center justify-center">
+        <div className="sticky top-30 w-full h-screen py-20 md:py-32 flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center">
             {SHOWCASE_PILLS.map((pill, index) => (
               <div

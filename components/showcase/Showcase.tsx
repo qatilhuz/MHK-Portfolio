@@ -125,7 +125,7 @@ export function Showcase() {
 
   return (
     <>
-      <section ref={triggerRef} className="relative w-full h-[600vh] bg-background">
+      <section ref={triggerRef} className="relative w-full h-[450vh] bg-background">
         <div className="sticky top-30 w-full h-screen py-20 md:py-32 flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center">
             {SHOWCASE_PILLS.map((pill, index) => (

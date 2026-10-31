@@ -3,6 +3,7 @@ import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { LoadingGate } from "@/components/boot/LoadingGate";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { siteConfig } from "@/data/site";
 import { getSiteUrl, personJsonLd, websiteJsonLd } from "@/lib/seo";
 import { charmonman } from "@/app/fonts";
@@ -61,10 +62,12 @@ export default function RootLayout({
           Skip to content
         </a>
         <LoadingGate />
-        <SiteShell>
-          <AnalyticsProvider />
-          {children}
-        </SiteShell>
+        <SmoothScroll>
+          <SiteShell>
+            <AnalyticsProvider />
+            {children}
+          </SiteShell>
+        </SmoothScroll>
       </body>
     </html>
   );

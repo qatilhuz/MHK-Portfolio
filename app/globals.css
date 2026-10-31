@@ -66,6 +66,14 @@ html {
   overflow-x: clip;
 }
 
+/* Lenis owns the scroll position while it is active, so native CSS smoothing
+   must step aside. Falls back to the original smooth scroll when Lenis is off
+   (reduced motion, /arcade). */
+html.lenis,
+html.lenis body {
+  scroll-behavior: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

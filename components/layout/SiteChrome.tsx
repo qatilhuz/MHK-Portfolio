@@ -3,7 +3,6 @@
 import { useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { CharacterWorldLazy } from "@/components/character/CharacterWorldLazy";
-import { GlobalScrollSpeed } from "@/components/motion/GlobalScrollSpeed";
 import { GuideProvider } from "@/lib/guide/context";
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
@@ -44,7 +43,6 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     <GuideProvider>
       {/* Humne isko ek fragment <> mein wrap kar diya hai taake koi error na aaye */}
       <>
-        <GlobalScrollSpeed />
         {/* Is div par aapki zoom animation chalegi */}
         <div ref={spatialRootRef} data-arcade-spatial-root className="relative isolate min-h-screen">
           <AmbientBackground variant="page" />

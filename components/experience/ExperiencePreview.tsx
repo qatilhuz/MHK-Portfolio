@@ -48,8 +48,8 @@ function ExperienceCard({
     const rect = card.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    const rotateX = ((y - rect.height / 2) / (rect.height / 2)) * -15;
-    const rotateY = ((x - rect.width / 2) / (rect.width / 2)) * 15;
+    const rotateX = ((y - rect.height / 2) / (rect.height / 2)) * -4;
+    const rotateY = ((x - rect.width / 2) / (rect.width / 2)) * 4;
 
     gsap.to(card, {
       rotateX,
@@ -210,7 +210,7 @@ export function ExperiencePreview({
 
       const getScrollAmount = () => {
         const trackWidth = track.scrollWidth;
-        return -(trackWidth - window.innerWidth);
+        return -(trackWidth - window.innerWidth + 100);
       };
 
       const tl = gsap.timeline({
@@ -268,11 +268,11 @@ export function ExperiencePreview({
     >
       <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(59,130,246,0.20),transparent_34%),radial-gradient(circle_at_80%_82%,rgba(34,211,238,0.15),transparent_34%),linear-gradient(180deg,rgba(9,9,11,0)_0%,rgba(9,9,11,0.76)_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_65%_at_18%_22%,rgba(59,130,246,0.14),rgba(9,9,11,0)_72%),radial-gradient(ellipse_70%_60%_at_82%_78%,rgba(34,211,238,0.10),rgba(9,9,11,0)_70%)]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:72px_72px]"
+          className="pointer-events-none absolute inset-0 opacity-[0.10] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:96px_96px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,rgba(0,0,0,0.9),rgba(0,0,0,0)_75%)] [-webkit-mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,rgba(0,0,0,0.9),rgba(0,0,0,0)_75%)]"
           aria-hidden="true"
         />
 
@@ -282,12 +282,20 @@ export function ExperiencePreview({
         >
           <section className="relative flex h-full w-[90vw] shrink-0 items-center overflow-hidden px-5 py-24 md:px-10 lg:px-16">
             <div
-              data-depth-back
-              className="absolute -left-[10vw] top-1/2 h-[54vw] w-[54vw] -translate-y-1/2 rounded-full bg-accent/10 blur-3xl will-change-transform"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(30,58,138,0.16),rgba(9,9,11,0)_68%)]"
               aria-hidden="true"
             />
             <div
-              className="absolute right-[-12vw] top-8 h-[28vw] w-[55vw] rotate-[-14deg] rounded-full bg-[conic-gradient(from_180deg,transparent,rgba(34,211,238,0.20),transparent,rgba(59,130,246,0.22),transparent)] blur-3xl"
+              data-depth-back
+              className="pointer-events-none absolute -left-[16vw] top-1/2 h-[64vw] w-[64vw] -translate-y-1/2 rounded-full bg-blue-500/20 opacity-30 blur-[140px] will-change-transform"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute right-[-18vw] top-[6%] h-[48vw] w-[48vw] rounded-full bg-cyan-400/15 opacity-30 blur-[150px]"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute bottom-[-14vw] left-[26%] h-[34vw] w-[52vw] rounded-full bg-indigo-500/12 opacity-25 blur-[160px]"
               aria-hidden="true"
             />
 
@@ -371,6 +379,8 @@ export function ExperiencePreview({
               <ExperienceCard item={item} index={index} total={experience.length} />
             </section>
           ))}
+
+          <div className="w-[10vw] shrink-0 md:w-[20vw]" aria-hidden="true" />
         </div>
 
         <div

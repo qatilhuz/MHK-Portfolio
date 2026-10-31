@@ -33,44 +33,42 @@ export function ExperiencePreview({
 }: {
   headingLevel?: "h1" | "h2";
 }) {
-  const sectionRef = useRef<HTMLElement>(null);
+  const triggerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const HeadingTag = headingLevel;
-  const panelCount = experience.length + 1;
 
   useGSAP(
     () => {
-      const section = sectionRef.current;
+      const trigger = triggerRef.current;
       const track = trackRef.current;
 
-      if (!section || !track) return;
+      if (!trigger || !track) return;
 
       gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-      const getTravelDistance = () =>
-        Math.max(track.scrollWidth - window.innerWidth, 0);
+      const getScrollAmount = () => {
+        const trackWidth = track.scrollWidth;
+        return -(trackWidth - window.innerWidth);
+      };
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: section,
-          pin: true,
-          pinSpacing: true,
+          trigger,
           start: "top top",
-          end: () => `+=${getTravelDistance()}`,
+          end: "bottom bottom",
           scrub: 1.5,
-          anticipatePin: 1,
           invalidateOnRefresh: true,
         },
       });
 
       tl.to(track, {
-        x: () => -getTravelDistance(),
+        x: getScrollAmount,
         ease: "none",
         force3D: true,
       });
 
       tl.to(
-        section.querySelectorAll<HTMLElement>("[data-depth-back]"),
+        trigger.querySelectorAll<HTMLElement>("[data-depth-back]"),
         {
           xPercent: 8,
           yPercent: -3,
@@ -81,7 +79,7 @@ export function ExperiencePreview({
       );
 
       tl.to(
-        section.querySelectorAll<HTMLElement>("[data-depth-front]"),
+        trigger.querySelectorAll<HTMLElement>("[data-depth-front]"),
         {
           xPercent: -10,
           yPercent: 3,
@@ -90,17 +88,23 @@ export function ExperiencePreview({
         },
         0,
       );
+
+      const invalidateTimeline = () => tl.invalidate();
+      ScrollTrigger.addEventListener("refresh", invalidateTimeline);
+
+      return () => ScrollTrigger.removeEventListener("refresh", invalidateTimeline);
     },
-    { scope: sectionRef },
+    { scope: triggerRef },
   );
 
   return (
     <section
       id="experience"
-      ref={sectionRef}
-      className="relative h-screen w-full overflow-hidden bg-background"
+      ref={triggerRef}
+      className="relative w-full h-[400vh] bg-background"
       aria-label="Professional experience timeline"
     >
+      <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(59,130,246,0.20),transparent_34%),radial-gradient(circle_at_80%_82%,rgba(34,211,238,0.15),transparent_34%),linear-gradient(180deg,rgba(9,9,11,0)_0%,rgba(9,9,11,0.76)_100%)]"
         aria-hidden="true"
@@ -112,10 +116,9 @@ export function ExperiencePreview({
 
       <div
         ref={trackRef}
-        style={{ width: `${panelCount * 100}vw` }}
-        className="relative z-10 flex h-full will-change-transform"
+        className="relative z-10 flex h-full w-max items-center gap-10 px-[10vw] will-change-transform"
       >
-        <section className="relative flex h-full w-screen shrink-0 items-center overflow-hidden px-5 py-24 md:px-10 lg:px-16">
+        <section className="relative flex h-full w-[90vw] shrink-0 items-center overflow-hidden px-5 py-24 md:px-10 lg:px-16">
           <div
             data-depth-back
             className="absolute -left-[10vw] top-1/2 h-[54vw] w-[54vw] -translate-y-1/2 rounded-full bg-accent/10 blur-3xl will-change-transform"
@@ -163,7 +166,7 @@ export function ExperiencePreview({
           return (
             <section
               key={item.id}
-              className="relative flex h-full w-screen shrink-0 items-center justify-center overflow-hidden px-5 py-24 [perspective:1400px] md:px-10 lg:px-16"
+              className="relative flex h-full w-[80vw] shrink-0 items-center justify-center overflow-hidden px-5 py-24 [perspective:1400px] md:px-10 lg:px-16"
               aria-label={`${item.role} at ${item.company}`}
             >
               <div
@@ -283,6 +286,7 @@ export function ExperiencePreview({
       >
         <span className="h-px flex-1 bg-gradient-to-r from-accent/70 via-border to-transparent" />
         Scroll down to move laterally
+      </div>
       </div>
     </section>
   );

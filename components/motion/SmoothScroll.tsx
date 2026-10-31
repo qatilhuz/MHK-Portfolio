@@ -14,6 +14,10 @@ import "lenis/dist/lenis.css";
  * ScrollTrigger on the site (Showcase pills, Experience horizontal track,
  * TextReveal, InView) stays perfectly in sync with the smoothed position.
  *
+ * Pacing: a low `lerp` gives the scroll a heavier, lazier glide, and
+ * `wheelMultiplier` trims the distance of each wheel tick. Lenis ignores
+ * `duration`/`easing` whenever `lerp` is set, so only lerp is configured here.
+ *
  * Nothing about the existing animations changes: no scrub value, trigger,
  * sticky wrapper, or timeline is touched here.
  */
@@ -28,8 +32,8 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     gsap.registerPlugin(ScrollTrigger);
 
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      lerp: 0.07,
+      wheelMultiplier: 0.8,
       smoothWheel: true,
     });
 

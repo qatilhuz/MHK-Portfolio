@@ -96,7 +96,6 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
   const ramB = useRef<MeshStandardMaterial>(null);
   const pump = useRef<MeshStandardMaterial>(null);
   const sideGlow = useRef<PointLight>(null);
-  const frontGlow = useRef<PointLight>(null);
   const colorA = useMemo(() => new Color(), []);
   const colorB = useMemo(() => new Color(), []);
 
@@ -122,11 +121,7 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
     }
     if (sideGlow.current) {
       sideGlow.current.color.copy(colorA);
-      sideGlow.current.intensity = 0.75 + 0.18 * pulseA;
-    }
-    if (frontGlow.current) {
-      frontGlow.current.color.copy(colorB);
-      frontGlow.current.intensity = 0.62 + 0.18 * pulseB;
+      sideGlow.current.intensity = 1.2 + 0.3 * pulseA;
     }
   });
 
@@ -183,7 +178,6 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
           transparent
           opacity={0.23}
           ior={1.5}
-          envMapIntensity={1.4}
         />
       </mesh>
       <mesh position={[SIDE_X - 0.011, 0.315, 0]}>
@@ -336,9 +330,8 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
         <meshStandardMaterial ref={accentB} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.42} roughness={0.24} />
       </mesh>
 
-      <pointLight ref={sideGlow} position={[SIDE_X - 0.08, 0.32, 0.02]} intensity={0.9} distance={0.74} color="#c084fc" />
-      <pointLight ref={frontGlow} position={[0.15, 0.34, FRONT_Z + 0.12]} intensity={0.74} distance={0.65} color="#22d3ee" />
-      <pointLight position={[-0.12, 0.48, -0.12]} intensity={0.32} distance={0.42} color="#8b5cf6" />
+      {/* hero light — RGB bleed out of the glass side panel */}
+      <pointLight ref={sideGlow} position={[SIDE_X - 0.08, 0.32, 0.02]} intensity={1.35} distance={1.15} color="#c084fc" />
     </group>
   );
 }

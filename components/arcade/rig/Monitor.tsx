@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { OrthographicCamera, RenderTexture, RoundedBox, Text } from "@react-three/drei";
-import type { Group, Mesh, MeshStandardMaterial, PointLight, ShaderMaterial } from "three";
+import type { Group, Mesh, MeshStandardMaterial, ShaderMaterial } from "three";
 import { metalAlbedo } from "./textures";
 
 const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
@@ -301,7 +301,6 @@ function PortraitScreen({ side, reduced }: { side: -1 | 1; reduced?: boolean }) 
           metalness={0}
           clearcoat={1}
           clearcoatRoughness={0.045}
-          envMapIntensity={1.8}
         />
       </mesh>
       {[
@@ -321,7 +320,6 @@ function PortraitScreen({ side, reduced }: { side: -1 | 1; reduced?: boolean }) 
           />
         </mesh>
       ))}
-      <pointLight position={[0, 0.02, 0.11]} intensity={0.16} distance={0.44} color={accent} />
     </group>
   );
 }
@@ -340,7 +338,7 @@ function MountRod({
   return (
     <mesh position={position} rotation={rotation} castShadow receiveShadow>
       <cylinderGeometry args={[radius, radius, length, 32]} />
-      <meshStandardMaterial color="#05070b" metalness={0.86} roughness={0.2} envMapIntensity={1.2} />
+      <meshStandardMaterial color="#05070b" metalness={0.86} roughness={0.2} />
     </mesh>
   );
 }
@@ -373,7 +371,7 @@ function TripleMonitorMount() {
       <MountRod position={[0, 0.088, -0.112]} rotation={[0, 0, Math.PI / 2]} length={1.47} radius={0.0115} />
       <MountRod position={[0, 0.032, -0.118]} rotation={[0, 0, Math.PI / 2]} length={1.22} radius={0.0075} />
       <RoundedBox args={[0.19, 0.105, 0.04]} radius={0.016} smoothness={6} position={[0, 0.09, -0.106]} castShadow receiveShadow>
-        <meshStandardMaterial color="#06080d" metalness={0.86} roughness={0.21} envMapIntensity={1.25} />
+        <meshStandardMaterial color="#06080d" metalness={0.86} roughness={0.21} />
       </RoundedBox>
       <MountClamp position={[0, 0.09, -0.071]} scale={1.14} />
       <MountRod position={[0, 0.09, -0.089]} rotation={[Math.PI / 2, 0, 0]} length={0.044} radius={0.0105} />
@@ -397,7 +395,7 @@ function TripleMonitorMount() {
         </group>
       ))}
       <RoundedBox args={[0.25, 0.024, 0.15]} radius={0.014} smoothness={6} position={[0, -0.405, -0.104]} castShadow receiveShadow>
-        <meshStandardMaterial color="#05070b" metalness={0.84} roughness={0.24} envMapIntensity={1.05} />
+        <meshStandardMaterial color="#05070b" metalness={0.84} roughness={0.24} />
       </RoundedBox>
       <mesh position={[0, -0.383, -0.104]}>
         <boxGeometry args={[0.13, 0.026, 0.088]} />
@@ -420,7 +418,6 @@ function MonitorEnterButton({
   const faceMat = useRef<MeshStandardMaterial>(null);
   const topRailMat = useRef<MeshStandardMaterial>(null);
   const bottomRailMat = useRef<MeshStandardMaterial>(null);
-  const glowLight = useRef<PointLight>(null);
   const hovered = useRef(false);
 
   const applyHover = (nextHovered: boolean) => {
@@ -451,10 +448,6 @@ function MonitorEnterButton({
       bottomRailMat.current.color.set(secondary);
       bottomRailMat.current.emissive.set(secondary);
       bottomRailMat.current.emissiveIntensity = emissive;
-    }
-    if (glowLight.current) {
-      glowLight.current.color.set(accent);
-      glowLight.current.intensity = hot ? 0.62 : 0.32;
     }
   };
 
@@ -569,7 +562,6 @@ function MonitorEnterButton({
           PRESS START
         </Text>
       </Suspense>
-      <pointLight ref={glowLight} position={[0, 0, 0.08]} intensity={0.32} distance={0.5} color="#22d3ee" />
     </group>
   );
 }
@@ -624,9 +616,8 @@ export function Monitor({
       {transitionLite ? null : <PortraitScreen side={-1} reduced={reduced} />}
       {transitionLite ? null : <PortraitScreen side={1} reduced={reduced} />}
 
-      <pointLight position={[0, 0.04, 0.32]} intensity={0.82} distance={1.9} color="#c026d3" />
-      <pointLight position={[-0.5, 0.03, 0.24]} intensity={0.35} distance={0.7} color="#22d3ee" />
-      <pointLight position={[0.5, 0.03, 0.24]} intensity={0.28} distance={0.7} color="#c084fc" />
+      {/* hero light — screen bounce onto the desk, replaces five small points */}
+      <pointLight position={[0, 0.04, 0.3]} intensity={1.45} distance={2.3} decay={1.8} color="#b45cf0" />
     </group>
   );
 }

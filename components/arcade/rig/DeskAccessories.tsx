@@ -189,8 +189,8 @@ function premiumMugSurfaceMaps() {
   return cachedPremiumMugMaps;
 }
 
-const MATTE = { color: "#1c1e24", metalness: 0.28, roughness: 0.55, envMapIntensity: 0.85 };
-const BRASS = { color: "#d4b36a", metalness: 0.86, roughness: 0.26, envMapIntensity: 1.2 };
+const MATTE = { color: "#1c1e24", metalness: 0.28, roughness: 0.55 };
+const BRASS = { color: "#d4b36a", metalness: 0.86, roughness: 0.26 };
 
 function domeGeometry() {
   const pts = [
@@ -366,7 +366,6 @@ function PremiumDeskMug({ reduced = false }: { reduced?: boolean }) {
           clearcoat={0.42}
           clearcoatRoughness={0.34}
           ior={1.52}
-          envMapIntensity={1.28}
         />
       </mesh>
       <mesh geometry={innerWall} receiveShadow>
@@ -381,7 +380,6 @@ function PremiumDeskMug({ reduced = false }: { reduced?: boolean }) {
           clearcoatRoughness={0.12}
           ior={1.54}
           side={2}
-          envMapIntensity={1.55}
         />
       </mesh>
       <mesh geometry={handle} castShadow receiveShadow>
@@ -396,7 +394,6 @@ function PremiumDeskMug({ reduced = false }: { reduced?: boolean }) {
           clearcoat={0.45}
           clearcoatRoughness={0.31}
           ior={1.52}
-          envMapIntensity={1.32}
         />
       </mesh>
       {[
@@ -415,17 +412,16 @@ function PremiumDeskMug({ reduced = false }: { reduced?: boolean }) {
             roughness={0.48}
             clearcoat={0.42}
             clearcoatRoughness={0.32}
-            envMapIntensity={1.32}
           />
         </mesh>
       ))}
       <mesh position={[0, 0.1374, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
         <torusGeometry args={[0.0428, 0.0046, 30, 192]} />
-        <meshPhysicalMaterial color="#30333b" roughness={0.42} metalness={0.02} clearcoat={0.5} clearcoatRoughness={0.26} envMapIntensity={1.45} />
+        <meshPhysicalMaterial color="#30333b" roughness={0.42} metalness={0.02} clearcoat={0.5} clearcoatRoughness={0.26} />
       </mesh>
       <mesh position={[0, 0.1332, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.0355, 160]} />
-        <meshPhysicalMaterial color="#2b1308" roughness={0.18} metalness={0} clearcoat={0.95} clearcoatRoughness={0.08} envMapIntensity={1.75} />
+        <meshPhysicalMaterial color="#2b1308" roughness={0.18} metalness={0} clearcoat={0.95} clearcoatRoughness={0.08} />
       </mesh>
       <mesh position={[0, 0.134, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.021, 0.00055, 8, 112]} />
@@ -437,7 +433,7 @@ function PremiumDeskMug({ reduced = false }: { reduced?: boolean }) {
       </mesh>
       <mesh position={[0, 0.0032, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
         <torusGeometry args={[0.031, 0.0032, 18, 144]} />
-        <meshPhysicalMaterial color="#1d2027" roughness={0.52} metalness={0.02} clearcoat={0.32} clearcoatRoughness={0.35} envMapIntensity={1.1} />
+        <meshPhysicalMaterial color="#1d2027" roughness={0.52} metalness={0.02} clearcoat={0.32} clearcoatRoughness={0.35} />
       </mesh>
       <mesh position={[0, 0.0014, 0]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
         <torusGeometry args={[0.0315, 0.0012, 10, 128]} />
@@ -561,17 +557,6 @@ export function DeskAccessories({ reduced = false }: { reduced?: boolean }) {
               roughness={0.18}
             />
           </mesh>
-          <spotLight
-            position={[0, 0.06, 0]}
-            angle={0.38}
-            penumbra={0.9}
-            intensity={2.15}
-            distance={1.65}
-            color="#ffdca8"
-            castShadow
-            shadow-mapSize={[1024, 1024]}
-            shadow-bias={-0.00018}
-          />
         </group>
       </group>
 
@@ -583,18 +568,18 @@ export function DeskAccessories({ reduced = false }: { reduced?: boolean }) {
         <circleGeometry args={[0.18, 64]} />
         <meshBasicMaterial color="#fff1c7" transparent opacity={0.13} depthWrite={false} />
       </mesh>
+      {/* hero light — the only practical: desk lamp, the scene's single shadow-casting spot */}
       <spotLight
         position={[-0.93, 0.36, 0.27]}
-        angle={0.44}
+        angle={0.46}
         penumbra={0.86}
-        intensity={1.9}
+        intensity={2.6}
         distance={1.25}
         color="#ffdca8"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.00016}
       />
-      <pointLight position={[-0.98, 0.16, 0.31]} intensity={0.34} distance={0.42} color="#ffedc2" />
 
       <group position={[-0.56, 0.05, 0.36]} rotation={[0, 0.12, 0]}>
         <mesh position={[0, 0.004, 0]} castShadow>

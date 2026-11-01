@@ -83,7 +83,7 @@ function ExperienceCard({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ transformStyle: "preserve-3d" }}
-      className="group relative flex h-fit min-h-[62vh] max-h-[calc(100svh-4rem)] w-[85vw] flex-col overflow-hidden whitespace-normal text-wrap rounded-3xl border border-cyan-200/20 bg-black/50 p-5 shadow-[0_0_34px_rgba(34,211,238,0.12),0_0_100px_rgba(59,130,246,0.14)] backdrop-blur-xl will-change-transform [backface-visibility:hidden] [transform-style:preserve-3d] transition-[border-color,box-shadow] duration-[var(--motion-normal)] ease-out hover:border-cyan-200/45 hover:shadow-[0_0_44px_rgba(34,211,238,0.20),0_0_130px_rgba(59,130,246,0.22)] md:h-[70vh] md:w-[700px] md:p-8 lg:w-[72vw] lg:p-10 xl:w-[72rem]"
+      className="group relative flex h-fit min-h-[62vh] max-h-[calc(100svh-4rem)] w-[85vw] flex-col overflow-hidden whitespace-normal text-wrap rounded-3xl border border-cyan-200/20 bg-[#0c0c12] p-5 shadow-[0_0_34px_rgba(34,211,238,0.12),0_0_100px_rgba(59,130,246,0.14)] [backface-visibility:hidden] [transform-style:preserve-3d] transition-[border-color,box-shadow] duration-[var(--motion-normal)] ease-out hover:border-cyan-200/45 hover:shadow-[0_0_44px_rgba(34,211,238,0.20),0_0_130px_rgba(59,130,246,0.22)] md:h-[70vh] md:w-[700px] md:p-8 lg:w-[72vw] lg:p-10 xl:w-[72rem]"
     >
       <div
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_28%,transparent_70%,rgba(59,130,246,0.10))]"
@@ -96,7 +96,7 @@ function ExperienceCard({
 
       <p
         data-depth-front
-        className="pointer-events-none absolute -right-2 -top-7 max-w-full select-none overflow-hidden text-[clamp(5rem,10vw,10rem)] font-semibold uppercase leading-none tracking-[-0.12em] text-white/[0.035] will-change-transform"
+        className="pointer-events-none absolute -right-2 -top-7 max-w-full select-none overflow-hidden text-[clamp(5rem,10vw,10rem)] font-semibold uppercase leading-none tracking-[-0.12em] text-white/[0.035]"
       >
         {String(index + 1).padStart(2, "0")}
       </p>
@@ -287,15 +287,15 @@ export function ExperiencePreview({
             />
             <div
               data-depth-back
-              className="pointer-events-none absolute -left-[16vw] top-1/2 h-[64vw] w-[64vw] -translate-y-1/2 rounded-full bg-blue-500/20 opacity-30 blur-[140px] will-change-transform"
+              className="pointer-events-none absolute -left-[16vw] top-1/2 h-[64vw] w-[64vw] -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(59,130,246,0.16),rgba(59,130,246,0.05)_55%,rgba(9,9,11,0)_80%)]"
               aria-hidden="true"
             />
             <div
-              className="pointer-events-none absolute right-[-18vw] top-[6%] h-[48vw] w-[48vw] rounded-full bg-cyan-400/15 opacity-30 blur-[150px]"
+              className="pointer-events-none absolute right-[-18vw] top-[6%] h-[48vw] w-[48vw] rounded-full bg-[radial-gradient(closest-side,rgba(34,211,238,0.12),rgba(34,211,238,0.04)_55%,rgba(9,9,11,0)_80%)]"
               aria-hidden="true"
             />
             <div
-              className="pointer-events-none absolute bottom-[-14vw] left-[26%] h-[34vw] w-[52vw] rounded-full bg-indigo-500/12 opacity-25 blur-[160px]"
+              className="pointer-events-none absolute bottom-[-14vw] left-[26%] h-[34vw] w-[52vw] rounded-full bg-[radial-gradient(closest-side,rgba(99,102,241,0.10),rgba(99,102,241,0.03)_55%,rgba(9,9,11,0)_80%)]"
               aria-hidden="true"
             />
 
@@ -323,19 +323,19 @@ export function ExperiencePreview({
                   immersive React experiences with measurable engineering quality.
                 </p>
                 <div className="mt-10 flex flex-wrap gap-3 font-mono text-[11px] uppercase tracking-[0.24em] text-muted">
-                  <span className="border border-border bg-surface-secondary/40 px-3 py-2 backdrop-blur-md">
+                  <span className="border border-border bg-surface-secondary px-3 py-2">
                     React Systems
                   </span>
-                  <span className="border border-border bg-surface-secondary/40 px-3 py-2 backdrop-blur-md">
+                  <span className="border border-border bg-surface-secondary px-3 py-2">
                     API Platforms
                   </span>
-                  <span className="border border-cyan-200/25 bg-cyan-400/10 px-3 py-2 text-cyan-100 backdrop-blur-md">
+                  <span className="border border-cyan-200/25 bg-[#0e1620] px-3 py-2 text-cyan-100">
                     Performance UX
                   </span>
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-3xl border border-cyan-200/20 bg-black/40 p-6 shadow-[0_0_50px_rgba(59,130,246,0.14)] backdrop-blur-xl">
+              <div className="relative overflow-hidden rounded-3xl border border-cyan-200/20 bg-[#0c0c12] p-6 shadow-[0_0_50px_rgba(59,130,246,0.14)]">
                 <div
                   className="absolute inset-0 bg-[linear-gradient(135deg,rgba(59,130,246,0.12),transparent,rgba(34,211,238,0.10))]"
                   aria-hidden="true"
@@ -359,7 +359,7 @@ export function ExperiencePreview({
 
             <p
               data-depth-front
-              className="pointer-events-none absolute -right-6 bottom-8 select-none text-[clamp(7rem,22vw,24rem)] font-semibold uppercase leading-none tracking-[-0.12em] text-transparent opacity-60 [-webkit-text-stroke:1px_rgba(59,130,246,0.14)] will-change-transform"
+              className="pointer-events-none absolute -right-6 bottom-8 select-none text-[clamp(7rem,22vw,24rem)] font-semibold uppercase leading-none tracking-[-0.12em] text-transparent opacity-60 [-webkit-text-stroke:1px_rgba(59,130,246,0.14)]"
             >
               PROVEN
             </p>
@@ -373,7 +373,7 @@ export function ExperiencePreview({
             >
               <div
                 data-depth-back
-                className="absolute inset-x-[8%] top-1/2 h-[72%] -translate-y-1/2 rounded-full bg-gradient-to-r from-accent/12 via-cyan-400/7 to-transparent blur-3xl will-change-transform"
+                className="pointer-events-none absolute inset-x-[8%] top-1/2 h-[72%] -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(59,130,246,0.14),rgba(34,211,238,0.05)_60%,rgba(9,9,11,0)_85%)]"
                 aria-hidden="true"
               />
               <ExperienceCard item={item} index={index} total={experience.length} />

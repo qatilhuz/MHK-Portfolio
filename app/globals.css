@@ -74,6 +74,13 @@ html.lenis body {
   scroll-behavior: auto;
 }
 
+/* While Lenis is actively scrolling, stop hover/pointer work inside the page
+   content (3D tilt cards, card hovers) so no expensive JS or repaint runs
+   mid-scroll. Lenis clears the class as soon as the scroll settles. */
+html.lenis-scrolling main {
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

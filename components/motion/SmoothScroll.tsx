@@ -6,6 +6,7 @@ import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "lenis/dist/lenis.css";
+import { registerSmoothScroller } from "@/lib/motion/scrollTo";
 
 /**
  * Global smooth scrolling.
@@ -40,6 +41,11 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     const updateScrollTrigger = () => ScrollTrigger.update();
     lenis.on("scroll", updateScrollTrigger);
 
+    // Lenis owns the scroll position while it runs, so anything that wants to
+    // jump the page (the Projects skip button, anchor links) has to go through
+    // the instance rather than window.scrollTo.
+    registerSmoothScroller(lenis);
+
     const raf = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
@@ -47,6 +53,7 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     ScrollTrigger.refresh();
 
     return () => {
+      registerSmoothScroller(null);
       lenis.off("scroll", updateScrollTrigger);
       gsap.ticker.remove(raf);
       gsap.ticker.lagSmoothing(500, 33);

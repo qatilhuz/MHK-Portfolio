@@ -14,6 +14,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { CinemaCategoryId } from "@/types";
 import { CinemaTabs } from "./CinemaTabs";
 import { ProjectCard } from "./ProjectCard";
+import { SkipProjectsButton } from "./SkipProjectsButton";
 
 /* ------------------------------------------------------------------ *
  * Shot timing, in abstract timeline units (1 unit ~= one card's turn).
@@ -147,6 +148,27 @@ export function CinemaReel({
 
       const cards = gsap.utils.toArray<HTMLElement>("[data-reel-card]", stage);
       if (cards.length === 0) return;
+
+      // The skip control belongs to the reel, not the page: it appears once
+      // the stage owns the screen and is gone before the section lets go.
+      const skip = section.querySelector<HTMLElement>("[data-reel-skip]");
+      if (skip) {
+        gsap.set(skip, { autoAlpha: 0, y: 12 });
+        ScrollTrigger.create({
+          trigger: section,
+          start: "top 55%",
+          end: "bottom bottom",
+          onToggle: (self) => {
+            gsap.to(skip, {
+              autoAlpha: self.isActive ? 1 : 0,
+              y: self.isActive ? 0 : 12,
+              duration: 0.4,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+          },
+        });
+      }
 
       // Arm lazy loading slightly before the section is actually on screen.
       ScrollTrigger.create({
@@ -422,6 +444,8 @@ export function CinemaReel({
             </p>
           </div>
         </footer>
+
+        <SkipProjectsButton targetSelector="#qa" fallbackRef={sectionRef} />
       </div>
     </section>
   );

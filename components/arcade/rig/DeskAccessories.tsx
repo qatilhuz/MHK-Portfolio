@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import {
   CanvasTexture,
@@ -25,6 +25,10 @@ export function disposeDeskAccessoryTextures() {
   cachedPaperAlbedo?.dispose();
   cachedBrassAlbedo = null;
   cachedPaperAlbedo = null;
+  if (cachedPremiumMugMaps) {
+    for (const map of Object.values(cachedPremiumMugMaps)) map.dispose();
+    cachedPremiumMugMaps = null;
+  }
 }
 let cachedPremiumMugMaps: ReturnType<typeof buildPremiumMugSurfaceMaps> | null = null;
 
@@ -356,6 +360,19 @@ function PremiumDeskMug({ reduced = false }: { reduced?: boolean }) {
   const shell = useMemo(() => premiumMugOuterShellGeometry(), []);
   const innerWall = useMemo(() => premiumMugInnerWallGeometry(), []);
   const handle = useMemo(() => premiumMugHandleGeometry(), []);
+
+  // Built imperatively, so R3F never owns them: a `geometry={...}` prop is an
+  // attached object, not a child, and attached objects are not disposed on
+  // unmount. Without this the lathes/tube (224 + 192 + 150 segments) keep
+  // their vertex buffers alive forever.
+  useEffect(
+    () => () => {
+      shell.dispose();
+      innerWall.dispose();
+      handle.dispose();
+    },
+    [shell, innerWall, handle],
+  );
   return (
     <group position={[0.88, 0.05, 0.44]} rotation={[0, -0.22, 0]} scale={1.1}>
       <mesh position={[0, 0.0022, 0]} receiveShadow>
@@ -502,6 +519,13 @@ function TwinRods({ length, radius = 0.0048 }: { length: number; radius?: number
 export function DeskAccessories({ reduced = false }: { reduced?: boolean }) {
   const dome = useMemo(() => domeGeometry(), []);
   const liner = useMemo(() => linerGeometry(), []);
+  useEffect(
+    () => () => {
+      dome.dispose();
+      liner.dispose();
+    },
+    [dome, liner],
+  );
   const brassMap = useMemo(() => brassAlbedo(), []);
   const graphite = useMemo(() => metalAlbedo(), []);
   const paper = useMemo(() => paperAlbedo(), []);

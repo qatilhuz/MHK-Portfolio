@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox, Text } from "@react-three/drei";
 import {
@@ -98,6 +98,18 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
   const sideGlow = useRef<PointLight>(null);
   const colorA = useMemo(() => new Color(), []);
   const colorB = useMemo(() => new Color(), []);
+
+  // The coolant/GPU cables are module-level TubeGeometries shared by every
+  // mount, so R3F never disposes them. Releasing the GPU buffers on unmount is
+  // safe: the CPU-side attributes survive, so a later mount re-uploads them.
+  useEffect(
+    () => () => {
+      COOLANT_TUBE_A.dispose();
+      COOLANT_TUBE_B.dispose();
+      GPU_CABLE.dispose();
+    },
+    [],
+  );
 
   useFrame((state) => {
     if (reduced) return;

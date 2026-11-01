@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import {
@@ -166,6 +166,27 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
   const cupShell = useMemo(() => cupShellGeometry(), []);
   const baseGeo = useMemo(() => standBaseGeometry(), []);
   const cableGeo = useMemo(() => headsetCableGeometry(), []);
+
+  // Imperative geometries and materials are passed as attached objects, which
+  // R3F does not dispose on unmount — release them by hand. (Their shared maps
+  // belong to the texture cache and are freed by disposeArcadeTextures.)
+  useEffect(
+    () => () => {
+      cupShell.dispose();
+      baseGeo.dispose();
+      cableGeo.dispose();
+    },
+    [cupShell, baseGeo, cableGeo],
+  );
+  useEffect(
+    () => () => {
+      steel.dispose();
+      darkMetal.dispose();
+      leather.dispose();
+      cupShellMat.dispose();
+    },
+    [steel, darkMetal, leather, cupShellMat],
+  );
 
   const BAND_R = 0.088;
   const CROWN_Y = 0.2225; // top of saddle, where band outer surface rests

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Color, ExtrudeGeometry, Shape, type MeshBasicMaterial } from "three";
 import { hexPadAlbedo } from "./textures";
@@ -127,6 +127,17 @@ export function Mouse({ reduced }: { reduced?: boolean }) {
   const palm = useMemo(() => extrudeY(palmShape(), 0.02, 0.008), []);
   const left = useMemo(() => extrudeY(clickShape(-1), 0.0025, 0.01), []);
   const right = useMemo(() => extrudeY(clickShape(1), 0.0025, 0.01), []);
+
+  // Extruded shells are attached objects, which R3F leaves alone on unmount.
+  useEffect(
+    () => () => {
+      base.dispose();
+      palm.dispose();
+      left.dispose();
+      right.dispose();
+    },
+    [base, palm, left, right],
+  );
 
   useFrame((state) => {
     if (reduced) return;

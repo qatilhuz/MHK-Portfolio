@@ -578,7 +578,7 @@ function ReferenceWall({ reduced = false }: { reduced?: boolean }) {
 
       <NeonWallTitle reduced={reduced} />
 
-      {/* hero light 1/3 — one wall wash replaces four accent points */}
+      {/* hero light — one wall wash replaces four accent points */}
       <pointLight position={[0.02, 0.96, -0.74]} intensity={3.1} distance={2.4} decay={1.7} color="#38bdf8" />
     </group>
   );
@@ -628,7 +628,7 @@ function DeskAmbientLoops({ reduced = false }: { reduced?: boolean }) {
           <meshBasicMaterial ref={runnerMat} color="#c084fc" transparent opacity={0.82} toneMapped={false} />
         </mesh>
       </group>
-      {/* hero light 2/3 — desk wash */}
+      {/* hero light — desk wash */}
       <pointLight ref={cyanLight} position={[0, 0.08, 0.68]} intensity={1.25} distance={2.5} color="#22d3ee" />
     </>
   );

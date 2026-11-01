@@ -31,6 +31,12 @@ export const cinemaCategories: CinemaCategory[] = [
  * live <iframe>, `mediaType: "video"` renders a <video>. Rows still waiting on
  * a capture carry `pending: true` plus the path the file is expected at, so
  * filling them in later is a two-token edit.
+ *
+ * If one of the live sites turns out to refuse framing (X-Frame-Options or a
+ * CSP `frame-ancestors` rule), set `embedBlocked: true` on that row and give it
+ * a `poster` screenshot — the card swaps the iframe for the still and keeps the
+ * outbound link. A refused frame cannot be detected from script, so it has to
+ * be a manual flag.
  */
 export const cinemaProjects: CinemaProject[] = [
   /* ---------------------------------------------------------------- *

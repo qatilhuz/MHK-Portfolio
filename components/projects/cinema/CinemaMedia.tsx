@@ -80,6 +80,40 @@ function PendingSlate({ project }: { project: CinemaProject }) {
 }
 
 /* ------------------------------------------------------------------ *
+ * Blocked embed — the site refuses to be framed, so show the still
+ * ------------------------------------------------------------------ */
+
+function BlockedSlate({ project }: { project: CinemaProject }) {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-[#06070b]">
+      {project.poster ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={project.poster}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-top"
+        />
+      ) : (
+        <div
+          className="absolute inset-0 bg-[linear-gradient(145deg,#0b0f17,#0a0a0e_45%,#0d0a14)]"
+          aria-hidden="true"
+        >
+          <div className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.07)_1px,transparent_1px)] [background-size:56px_56px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_42%,rgba(59,130,246,0.18),rgba(9,9,11,0)_70%)]" />
+        </div>
+      )}
+      <p className="absolute left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 px-6 text-center font-mono text-[10px] uppercase leading-5 tracking-[0.26em] text-cyan-100/70">
+        Live site blocks embedding
+        <span className="mt-2 block text-[9px] tracking-[0.22em] text-muted">
+          Open it in a new tab instead
+        </span>
+      </p>
+      <Scanlines />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
  * Embed — a live site, rendered at desktop width and scaled to fit
  * ------------------------------------------------------------------ */
 
@@ -212,7 +246,11 @@ export function CinemaMedia({ project, load, active }: MediaProps) {
       {project.pending ? (
         <PendingSlate project={project} />
       ) : project.mediaType === "embed" ? (
-        <EmbedFrame project={project} load={load} />
+        project.embedBlocked ? (
+          <BlockedSlate project={project} />
+        ) : (
+          <EmbedFrame project={project} load={load} />
+        )
       ) : (
         <VideoFrame project={project} load={load} active={active} />
       )}

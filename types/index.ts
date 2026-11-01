@@ -77,6 +77,13 @@ export interface CinemaProject {
   caseStudyHref?: string;
   /** Poster frame for video cards, also used as fallback art. */
   poster?: string;
+  /**
+   * Set when a site refuses to be framed (X-Frame-Options / CSP
+   * frame-ancestors). The card then shows `poster` — or a branded slate — in
+   * place of the iframe, and keeps the outbound link. There is no reliable
+   * way to detect a refused frame from script, so this stays a manual flag.
+   */
+  embedBlocked?: boolean;
   /** Delivery year or range, printed in the card slate. */
   year?: string;
   /** One-line role credit, printed in the card slate. */

@@ -144,8 +144,13 @@ export function CinemaReel({
         ? gsap.quickSetter(progressRef.current, "scaleX")
         : null;
 
-      const reportActive = (progress: number, duration: number) => {
-        const time = progress * duration;
+      // Deterministic, so onUpdate never has to reach back into the timeline
+      // it is attached to (ScrollTrigger can fire onUpdate during its own init
+      // refresh, while `timeline` is still in its temporal dead zone).
+      const totalDuration = (cards.length - 1) * STEP + ENTER + TAIL;
+
+      const reportActive = (progress: number) => {
+        const time = progress * totalDuration;
         const index = Math.min(
           cards.length - 1,
           Math.max(0, Math.floor(time / STEP)),
@@ -175,7 +180,7 @@ export function CinemaReel({
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             setProgress?.(self.progress);
-            reportActive(self.progress, timeline.duration());
+            reportActive(self.progress);
           },
         },
       });
@@ -249,7 +254,7 @@ export function CinemaReel({
         // Slow dolly on the backdrop: the room keeps moving even while a card
         // is parked on its mark, which is what sells the depth.
         gsap.fromTo(
-          stage.parentElement?.querySelectorAll<HTMLElement>("[data-reel-bg]") ?? [],
+          gsap.utils.toArray<HTMLElement>("[data-reel-bg]", section),
           { scale: 1, yPercent: 0 },
           {
             scale: 1.28,

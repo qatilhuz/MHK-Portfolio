@@ -10,12 +10,11 @@ import { SkillsPreview } from "@/components/skills/SkillsPreview";
 import { CyberpunkRain } from "@/components/three/CyberpunkRain";
 import { EvolvingJourney } from "@/components/three/EvolvingJourney";
 
-const QaSection = dynamic(() => import("@/components/qa/QaSection").then((mod) => mod.QaSection));
-const ArcadeSection = dynamic(() =>
-  import("@/components/arcade/ArcadeSection").then((mod) => mod.ArcadeSection),
-);
 const TerminalSection = dynamic(() =>
   import("@/components/terminal/TerminalSection").then((mod) => mod.TerminalSection),
+);
+const ArcadeSection = dynamic(() =>
+  import("@/components/arcade/ArcadeSection").then((mod) => mod.ArcadeSection),
 );
 const AvatarSection = dynamic(() =>
   import("@/components/avatar/AvatarSection").then((mod) => mod.AvatarSection),
@@ -36,9 +35,8 @@ export default function Home() {
       <ExperiencePreview />
       <Showcase />
       <ProjectsPreview />
-      <QaSection />
-      <ArcadeSection />
       <TerminalSection />
+      <ArcadeSection />
       <AvatarSection />
       <ResumePreview />
       <ContactPreview />

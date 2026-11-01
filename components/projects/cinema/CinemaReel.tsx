@@ -526,7 +526,7 @@ export function CinemaReel({
             <p className="hidden shrink-0 font-mono text-[10px] uppercase tracking-[0.28em] text-muted lg:block">
               Scroll to run the reel
             </p>
-            <SkipProjectsButton targetSelector="#qa" fallbackRef={sectionRef} />
+            <SkipProjectsButton targetSelector="#terminal" fallbackRef={sectionRef} />
           </div>
         </footer>
       </div>

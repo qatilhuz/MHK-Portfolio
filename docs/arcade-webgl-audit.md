@@ -440,7 +440,7 @@ Every commit was gated on `npx tsc --noEmit`, `npx eslint components/arcade/rig/
 | `meshStandard` / `meshPhysical` JSX sites | 183 | **156** |
 | `meshBasicMaterial` JSX sites | 26 | **53** |
 | Draw calls removed by instancing *(est.)* | — | **≈ 354** |
-| `.dispose()` call sites in arcade code | 0 | **20** |
+| `.dispose()` call sites in arcade code | 0 | **26** |
 
 ### 1 — lights: 42 → 8
 

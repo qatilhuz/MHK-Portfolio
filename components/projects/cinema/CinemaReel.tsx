@@ -421,7 +421,7 @@ export function CinemaReel({
         </div>
 
         {/* ---------- transport HUD ---------- */}
-        <footer className="relative z-30 shrink-0 px-[var(--page-gutter)] pb-[max(1.25rem,3vh)]">
+        <footer className="relative z-30 shrink-0 px-[var(--page-gutter)] pb-[max(1rem,2.5vh)] pt-2">
           <div className="mx-auto flex w-full max-w-[90rem] items-center gap-4">
             <p className="shrink-0 font-mono text-[10px] uppercase tracking-[0.28em] text-cyan-100/70 tabular-nums">
               {String(activeIndex + 1).padStart(2, "0")}
@@ -439,13 +439,12 @@ export function CinemaReel({
                 className="absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-accent via-cyan-200 to-transparent"
               />
             </span>
-            <p className="hidden shrink-0 font-mono text-[10px] uppercase tracking-[0.28em] text-muted sm:block">
+            <p className="hidden shrink-0 font-mono text-[10px] uppercase tracking-[0.28em] text-muted lg:block">
               Scroll to run the reel
             </p>
+            <SkipProjectsButton targetSelector="#qa" fallbackRef={sectionRef} />
           </div>
         </footer>
-
-        <SkipProjectsButton targetSelector="#qa" fallbackRef={sectionRef} />
       </div>
     </section>
   );

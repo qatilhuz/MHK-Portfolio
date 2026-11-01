@@ -17,6 +17,12 @@ interface SkipProjectsButtonProps {
  * it cannot outlive it the way a `fixed` element would. CinemaReel fades the
  * wrapper in once the reel actually owns the screen and back out at the end.
  *
+ * It sits in the transport HUD rather than floating free over the stage. The
+ * card fills the stage edge to edge, so an absolutely-placed bottom-right
+ * control lands exactly on top of each card's "Open live site" CTA; letting
+ * flexbox reserve the space keeps both reachable at every breakpoint while
+ * the control still reads as pinned to the bottom-right of the screen.
+ *
  * Deliberately no backdrop-blur: a backdrop-filter sitting over a scrubbing
  * 3D scene forces the compositor to re-read the layers beneath it every
  * frame, which is exactly the stutter this section was just tuned to remove.
@@ -43,16 +49,14 @@ export function SkipProjectsButton({
   }, [targetSelector, fallbackRef]);
 
   return (
-    <div
-      data-reel-skip
-      className="pointer-events-none absolute bottom-16 right-[var(--page-gutter)] z-50 sm:bottom-20 md:bottom-24"
-    >
+    <div data-reel-skip className="pointer-events-none relative z-50 shrink-0">
       <button
         type="button"
         onClick={handleSkip}
-        className="group/skip pointer-events-auto inline-flex min-h-11 items-center gap-3 rounded-full border border-cyan-200/25 bg-[#0b0d13]/90 px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-100 shadow-[0_8px_30px_rgba(3,5,10,0.85),0_0_22px_rgba(34,211,238,0.14)] transition-[background-color,border-color,color,box-shadow,transform] duration-[var(--motion-micro)] ease-out hover:-translate-y-0.5 hover:border-cyan-100/70 hover:bg-accent hover:text-accent-foreground hover:shadow-[0_8px_30px_rgba(3,5,10,0.85),0_0_30px_rgba(59,130,246,0.5)] focus-visible:-translate-y-0.5 md:text-[11px]"
+        className="group/skip pointer-events-auto inline-flex min-h-10 items-center gap-2 rounded-full border border-cyan-200/25 bg-[#0b0d13]/90 px-4 py-2.5 sm:min-h-11 sm:gap-3 sm:px-5 sm:py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-100 shadow-[0_8px_30px_rgba(3,5,10,0.85),0_0_22px_rgba(34,211,238,0.14)] transition-[background-color,border-color,color,box-shadow,transform] duration-[var(--motion-micro)] ease-out hover:-translate-y-0.5 hover:border-cyan-100/70 hover:bg-accent hover:text-accent-foreground hover:shadow-[0_8px_30px_rgba(3,5,10,0.85),0_0_30px_rgba(59,130,246,0.5)] focus-visible:-translate-y-0.5 md:text-[11px]"
       >
-        <span>Skip Projects</span>
+        <span className="hidden sm:inline">Skip Projects</span>
+        <span className="sm:hidden">Skip</span>
         <span
           className="text-sm leading-none transition-transform duration-[var(--motion-micro)] ease-out group-hover/skip:translate-x-0.5 group-hover/skip:translate-y-0.5"
           aria-hidden="true"

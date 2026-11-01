@@ -38,15 +38,32 @@ const TAIL = 0.5; // the last frame holds instead of flying out
 const SCRUB = 1.5;
 
 /**
+ * A hundredth of a degree of Z rotation, held constant across every pose.
+ *
+ * It is invisible — 0.01deg across a 1248px card is a tenth of a pixel at the
+ * corners — but it keeps the computed transform a true matrix3d at all times,
+ * including on the mark where every other value is zero. Without it the card
+ * crosses between the browser's integer-translation fast path and its
+ * resampling path as it settles, and that switch is visible as a one-frame
+ * snap in the text.
+ */
+const GPU_NUDGE = 0.01;
+
+/**
  * Poses carry motion only. Opacity rides its own shorter tween so a card is
  * solid for the middle of its travel and only dissolves at the hand-off,
  * instead of spending its whole approach translucent.
+ *
+ * Everything in here is a transform channel. Nothing in this section animates
+ * width, height, top, left, margin or a filter — those would hit layout or
+ * paint on every tick instead of staying on the compositor.
  */
 const BACK_MOTION = {
   z: -560,
   scale: 0.86,
   rotateX: 6,
   rotateY: -4,
+  rotationZ: GPU_NUDGE,
   yPercent: 5,
 } as const;
 
@@ -56,6 +73,7 @@ const MARK_MOTION = {
   scale: 1,
   rotateX: 0,
   rotateY: 0,
+  rotationZ: GPU_NUDGE,
   yPercent: 0,
 } as const;
 
@@ -65,6 +83,7 @@ const PAST_MOTION = {
   scale: 1.12,
   rotateX: -4,
   rotateY: 3,
+  rotationZ: GPU_NUDGE,
   yPercent: -5,
 } as const;
 
@@ -85,7 +104,9 @@ export function CinemaReel({
 
   const HeadingTag = headingLevel;
   const reduced = useReducedMotion();
-  const [category, setCategory] = useState<CinemaCategoryId>(DEFAULT_CINEMA_CATEGORY);
+  const [category, setCategory] = useState<CinemaCategoryId>(
+    DEFAULT_CINEMA_CATEGORY,
+  );
   const [activeIndex, setActiveIndex] = useState(0);
   const [armed, setArmed] = useState(false);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
@@ -105,14 +126,18 @@ export function CinemaReel({
 
   const items = groups[category];
   const activeCategory =
-    cinemaCategories.find((item) => item.id === category) ?? cinemaCategories[0];
+    cinemaCategories.find((item) => item.id === category) ??
+    cinemaCategories[0];
 
   /**
    * The track is sized from the longest reel, never the active one, so
    * switching tabs cannot change document height. No layout jump, no
    * ScrollTrigger re-measure, nothing for Lenis to fight.
    */
-  const trackHeight = useMemo(() => `${(maxCinemaReelLength() + 1) * 100}vh`, []);
+  const trackHeight = useMemo(
+    () => `${(maxCinemaReelLength() + 1) * 100}vh`,
+    [],
+  );
 
   const handleCategory = useCallback((id: CinemaCategoryId) => {
     setCategory(id);
@@ -149,6 +174,18 @@ export function CinemaReel({
       const cards = gsap.utils.toArray<HTMLElement>("[data-reel-card]", stage);
       if (cards.length === 0) return;
 
+      const bgLayers = gsap.utils.toArray<HTMLElement>(
+        "[data-reel-bg]",
+        section,
+      );
+      const dolly = section.querySelector<HTMLElement>(
+        '[data-reel-bg="dolly"]',
+      );
+      const drift = section.querySelector<HTMLElement>(
+        '[data-reel-bg="drift"]',
+      );
+      const progressBar = progressRef.current;
+
       // The skip control belongs to the reel, not the page: it appears once
       // the stage owns the screen and is gone before the section lets go.
       const skip = section.querySelector<HTMLElement>("[data-reel-skip]");
@@ -178,8 +215,12 @@ export function CinemaReel({
         onEnter: () => setArmed(true),
       });
 
-      const setProgress = progressRef.current
-        ? gsap.quickSetter(progressRef.current, "scaleX")
+      // force3D is written into the element's transform cache first, so the
+      // quickSetter below keeps emitting matrix3d on every tick instead of
+      // dropping the bar back to a 2D transform that repaints its row.
+      if (progressBar) gsap.set(progressBar, { force3D: true, scaleX: 0 });
+      const setProgress = progressBar
+        ? gsap.quickSetter(progressBar, "scaleX")
         : null;
 
       // Deterministic, so onUpdate never has to reach back into the timeline
@@ -205,8 +246,24 @@ export function CinemaReel({
       gsap.set(cards, {
         transformPerspective: 1400,
         transformOrigin: "50% 50%",
-        willChange: "transform, opacity",
         force3D: true,
+      });
+
+      // Promotion hints are scoped in time as well as in space: only the nodes
+      // GSAP actually drives get one, and only while the reel is on screen.
+      // Left on permanently, seven promoted layers — four card-sized, two
+      // full-bleed — sit in GPU memory for the whole page and cost every
+      // other section frames.
+      const accelerated = [...cards, ...bgLayers];
+      if (progressBar) accelerated.push(progressBar);
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top bottom",
+        end: "bottom top",
+        onToggle: (self) =>
+          gsap.set(accelerated, {
+            willChange: self.isActive ? "transform, opacity" : "auto",
+          }),
       });
 
       const timeline = gsap.timeline({
@@ -311,24 +368,51 @@ export function CinemaReel({
 
       if (!reduced) {
         // Slow dolly on the backdrop: the room keeps moving even while a card
-        // is parked on its mark, which is what sells the depth.
-        gsap.fromTo(
-          gsap.utils.toArray<HTMLElement>("[data-reel-bg]", section),
-          { scale: 1, yPercent: 0 },
-          {
-            scale: 1.18,
-            yPercent: -5,
-            ease: "none",
-            force3D: true,
-            scrollTrigger: {
-              trigger: section,
-              start: "top top",
-              end: "bottom bottom",
-              scrub: SCRUB,
-              invalidateOnRefresh: true,
+        // is parked on its mark, which is what sells the depth. The two layers
+        // are driven separately because they do not cost the same to redraw.
+        const backdropTrigger = () =>
+          ({
+            trigger: section,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: SCRUB,
+            invalidateOnRefresh: true,
+          }) as const;
+
+        // The glow is a plain gradient with no detail to resample, so it can
+        // afford to change size.
+        if (dolly) {
+          gsap.fromTo(
+            dolly,
+            { scale: 1, yPercent: 0 },
+            {
+              scale: 1.12,
+              yPercent: -4,
+              ease: "none",
+              force3D: true,
+              scrollTrigger: backdropTrigger(),
             },
-          },
-        );
+          );
+        }
+
+        // The grid is a masked full-bleed layer, which is about the most
+        // expensive thing on the page to re-rasterise. So it never changes
+        // size: the scale is baked in once and only the translation animates,
+        // and pure translation is served by moving a texture that already
+        // exists. The oversize is what gives the drift room to run.
+        if (drift) {
+          gsap.set(drift, { scale: 1.2, force3D: true });
+          gsap.fromTo(
+            drift,
+            { yPercent: 0 },
+            {
+              yPercent: -6,
+              ease: "none",
+              force3D: true,
+              scrollTrigger: backdropTrigger(),
+            },
+          );
+        }
       }
     },
     {
@@ -349,13 +433,13 @@ export function CinemaReel({
       <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden">
         {/* ---------- backdrop ---------- */}
         <div
-          data-reel-bg
-          className="pointer-events-none absolute inset-0 origin-center will-change-transform bg-[radial-gradient(ellipse_70%_60%_at_20%_18%,rgba(59,130,246,0.16),rgba(9,9,11,0)_70%),radial-gradient(ellipse_65%_55%_at_82%_82%,rgba(168,85,247,0.13),rgba(9,9,11,0)_70%)]"
+          data-reel-bg="dolly"
+          className="pointer-events-none absolute inset-0 origin-center bg-[radial-gradient(ellipse_70%_60%_at_20%_18%,rgba(59,130,246,0.16),rgba(9,9,11,0)_70%),radial-gradient(ellipse_65%_55%_at_82%_82%,rgba(168,85,247,0.13),rgba(9,9,11,0)_70%)]"
           aria-hidden="true"
         />
         <div
-          data-reel-bg
-          className="pointer-events-none absolute inset-0 origin-center will-change-transform opacity-[0.09] [background-image:linear-gradient(rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.07)_1px,transparent_1px)] [background-size:110px_110px] [mask-image:radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(0,0,0,0.95),rgba(0,0,0,0)_78%)] [-webkit-mask-image:radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(0,0,0,0.95),rgba(0,0,0,0)_78%)]"
+          data-reel-bg="drift"
+          className="pointer-events-none absolute inset-0 origin-center opacity-[0.09] [background-image:linear-gradient(rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.07)_1px,transparent_1px)] [background-size:110px_110px] [mask-image:radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(0,0,0,0.95),rgba(0,0,0,0)_78%)] [-webkit-mask-image:radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(0,0,0,0.95),rgba(0,0,0,0)_78%)]"
           aria-hidden="true"
         />
         <div

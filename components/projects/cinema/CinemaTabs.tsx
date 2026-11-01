@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { cinemaCategories } from "@/data/cinemaProjects";
 import { cn } from "@/lib/utils";
 import type { CinemaCategoryId } from "@/types";
@@ -18,7 +25,7 @@ interface CinemaTabsProps {
  * geometry of the selected tab, rather than a per-button background: it keeps
  * a single compositor layer moving and reads as one continuous object.
  */
-export function CinemaTabs({ active, counts, onChange }: CinemaTabsProps) {
+function CinemaTabsImpl({ active, counts, onChange }: CinemaTabsProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef(new Map<CinemaCategoryId, HTMLButtonElement>());
   const [marker, setMarker] = useState({ left: 0, width: 0, ready: false });
@@ -110,9 +117,7 @@ export function CinemaTabs({ active, counts, onChange }: CinemaTabsProps) {
             onClick={() => onChange(category.id)}
             className={cn(
               "relative z-10 inline-flex items-center gap-2 rounded-full px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] transition-colors duration-[var(--motion-micro)] md:px-5 md:text-[11px]",
-              selected
-                ? "text-cyan-50"
-                : "text-muted hover:text-foreground/85",
+              selected ? "text-cyan-50" : "text-muted hover:text-foreground/85",
             )}
           >
             {category.label}
@@ -130,3 +135,10 @@ export function CinemaTabs({ active, counts, onChange }: CinemaTabsProps) {
     </div>
   );
 }
+
+/**
+ * Memoised. The reel re-renders on every card hand-off while you scroll, and
+ * all three of these props are stable across those renders, so React can skip
+ * the whole switcher instead of reconciling it four times a pass.
+ */
+export const CinemaTabs = memo(CinemaTabsImpl);

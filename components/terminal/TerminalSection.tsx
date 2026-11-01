@@ -10,11 +10,13 @@ export function TerminalSection() {
         id="terminal"
         eyebrow="INTERACTIVE PORTFOLIO"
         title="Developer Terminal"
-        description="Explore the portfolio through a simulated command-line experience powered by HuzaifaOS."
+        description="HuzaifaOS boots on arrival, prints the stack it is running on, and then hands you the prompt. Type help for the command list."
         className="relative"
       >
         <TerminalWindow />
-        <p className="mt-6 text-sm text-muted">Less clicking. More exploring.</p>
+        <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.22em] text-muted">
+          Less clicking. More exploring.
+        </p>
       </Section>
     </div>
   );

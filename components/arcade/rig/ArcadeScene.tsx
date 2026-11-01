@@ -742,6 +742,31 @@ function Room({ lite = false, reduced = false }: { lite?: boolean; reduced?: boo
 }
 
 
+/**
+ * Shadow maps are frozen (`gl.shadowMap.autoUpdate = false`) because the rig is
+ * static: desk, walls, monitor, case and peripherals never move, so re-rendering
+ * three depth passes every frame is pure waste. The maps are re-baked for a few
+ * frames whenever the scene graph actually changes (progressive mount).
+ */
+function ShadowBaker({ rebuildKey }: { rebuildKey: unknown }) {
+  const gl = useThree((state) => state.gl);
+  const pending = useRef(0);
+
+  useLayoutEffect(() => {
+    gl.shadowMap.autoUpdate = false;
+    gl.shadowMap.needsUpdate = true;
+    pending.current = 4;
+  }, [gl, rebuildKey]);
+
+  useFrame(() => {
+    if (pending.current <= 0) return;
+    pending.current -= 1;
+    gl.shadowMap.needsUpdate = pending.current > 0;
+  });
+
+  return null;
+}
+
 function ArcadeWarmupGate({ enabled, onReady }: { enabled: boolean; onReady?: () => void }) {
   const { active: assetsLoading, progress, total } = useProgress();
   const ready = useRef(false);
@@ -803,8 +828,13 @@ export function ArcadeScene({
   const transitionApiRef = useRef<ArcadeTransitionRequest | null>(null);
   const transitionLocked = useRef(initialMode === "exit");
   const [fullRigReady, setFullRigReady] = useState(false);
+  const [warmedUp, setWarmedUp] = useState(initialMode === "exit");
   const transitionLite = !fullRigReady;
   const animationReduced = reduced || transitionLite || !active;
+  // Zero GPU work while the section is off-screen or the tab is hidden. The loop
+  // stays on until the boot warmup has handed off, otherwise the terminal loader
+  // could never release if the visitor scrolls past mid-boot.
+  const frameloop: "always" | "never" = active || !warmedUp ? "always" : "never";
 
   useEffect(() => {
     if (initialMode === "exit") return;
@@ -868,14 +898,22 @@ export function ArcadeScene({
     setFullRigReady(true);
   }, []);
 
+  const handleWarmupReady = useCallback(() => {
+    setWarmedUp(true);
+    onReady?.();
+  }, [onReady]);
+
   return (
     <Canvas
       shadows
+      frameloop={frameloop}
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       camera={{ fov: 40, near: 0.05, far: 16, position: DEFAULT_CAMERA_POSITION }}
       style={{ width: "100%", height: "100%", display: "block" }}
-      onCreated={({ camera }) => {
+      onCreated={({ camera, gl }) => {
+        gl.shadowMap.autoUpdate = false;
+        gl.shadowMap.needsUpdate = true;
         camera.lookAt(PORTAL_START_LOOK.x, PORTAL_START_LOOK.y, PORTAL_START_LOOK.z);
       }}
     >
@@ -899,7 +937,7 @@ export function ArcadeScene({
         {fullRigReady ? <Mouse reduced={animationReduced} /> : null}
         {fullRigReady ? <DeskAccessories reduced={animationReduced} /> : null}
         {fullRigReady ? <HeadsetStand reduced={animationReduced} /> : null}
-        {fullRigReady ? <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} /> : null}
+        {fullRigReady ? <ContactShadows position={[0, 0.052, 0.12]} opacity={0.42} scale={2.75} blur={2.75} far={1.35} frames={1} /> : null}
         <CameraRig
           initialMode={initialMode}
           controlsRef={controlsRef}
@@ -907,7 +945,8 @@ export function ArcadeScene({
           onEnterComplete={onEnter}
           onExitComplete={handleExitComplete}
         />
-        <ArcadeWarmupGate enabled={fullRigReady} onReady={onReady} />
+        <ShadowBaker rebuildKey={fullRigReady} />
+        <ArcadeWarmupGate enabled={fullRigReady} onReady={handleWarmupReady} />
         <StrictOrbitControls controlsRef={controlsRef} />
       </Suspense>
     </Canvas>

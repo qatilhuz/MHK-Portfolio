@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { OrthographicCamera, RenderTexture, RoundedBox, Text } from "@react-three/drei";
-import type { Group, Mesh, MeshStandardMaterial, ShaderMaterial } from "three";
+import { StaticInstances, type InstanceSpec } from "./StaticInstances";
+import { Color, type Group, type Mesh, type MeshStandardMaterial, type ShaderMaterial } from "three";
 import { metalAlbedo } from "./textures";
 
 const ARCADE_TEXT_FONT = "/fonts/ArcadeText-Bold.ttf";
@@ -93,7 +94,38 @@ function TerminalRenderTexture({ reduced }: { reduced?: boolean }) {
       })),
     [],
   );
-  const scanLines = useMemo(() => Array.from({ length: 25 }, (_, i) => -1.7 + i * 0.145), []);
+  const scanLines = useMemo<InstanceSpec[]>(
+    () =>
+      Array.from({ length: 25 }, (_, i) => ({
+        position: [0, -1.7 + i * 0.145, 0.01] as [number, number, number],
+      })),
+    [],
+  );
+  // 34 rows x 4 bars collapsed into one instanced batch; the per-bar opacity the
+  // old meshes used is baked into the instance colour instead.
+  const rowSpecs = useMemo<InstanceSpec[]>(() => {
+    const specs: InstanceSpec[] = [];
+    const shade = (hex: string, mul: number) => new Color(hex).multiplyScalar(mul);
+    lineSpecs.forEach((line, i) => {
+      specs.push({
+        position: [-0.78, line.y, 0],
+        scale: [0.038, 0.014 / 0.012, 1],
+        color: shade(i % 4 === 0 ? "#c084fc" : "#22d3ee", 1),
+      });
+      specs.push({ position: [line.x, line.y, 0], scale: [line.a, 1, 1], color: shade(line.tint, 0.82) });
+      specs.push({
+        position: [line.x + line.a * 0.5 + 0.08, line.y, 0],
+        scale: [line.b, 1, 1],
+        color: shade("#e0f2fe", 0.66),
+      });
+      specs.push({
+        position: [line.x + line.a * 0.5 + line.b + 0.18, line.y, 0],
+        scale: [line.c, 1, 1],
+        color: shade(i % 3 === 0 ? "#f0abfc" : "#38bdf8", 0.58),
+      });
+    });
+    return specs;
+  }, [lineSpecs]);
 
   useFrame((state) => {
     if (reduced) return;
@@ -122,37 +154,19 @@ function TerminalRenderTexture({ reduced }: { reduced?: boolean }) {
         <meshBasicMaterial color="#c084fc" transparent opacity={0.48} toneMapped={false} />
       </mesh>
       <group ref={stream}>
-        {lineSpecs.map((line, i) => (
-          <group key={`terminal-line-${i}`} position={[0, line.y, 0]}>
-            <mesh position={[-0.78, 0, 0]}>
-              <boxGeometry args={[0.038, 0.014, 0.001]} />
-              <meshBasicMaterial color={i % 4 === 0 ? "#c084fc" : "#22d3ee"} toneMapped={false} />
-            </mesh>
-            <mesh position={[line.x, 0, 0]}>
-              <boxGeometry args={[line.a, 0.012, 0.001]} />
-              <meshBasicMaterial color={line.tint} transparent opacity={0.82} toneMapped={false} />
-            </mesh>
-            <mesh position={[line.x + line.a * 0.5 + 0.08, 0, 0]}>
-              <boxGeometry args={[line.b, 0.012, 0.001]} />
-              <meshBasicMaterial color="#e0f2fe" transparent opacity={0.66} toneMapped={false} />
-            </mesh>
-            <mesh position={[line.x + line.a * 0.5 + line.b + 0.18, 0, 0]}>
-              <boxGeometry args={[line.c, 0.012, 0.001]} />
-              <meshBasicMaterial color={i % 3 === 0 ? "#f0abfc" : "#38bdf8"} transparent opacity={0.58} toneMapped={false} />
-            </mesh>
-          </group>
-        ))}
+        <StaticInstances specs={rowSpecs}>
+          <boxGeometry args={[1, 0.012, 0.001]} />
+          <meshBasicMaterial toneMapped={false} />
+        </StaticInstances>
       </group>
       <mesh ref={cursor} position={[-0.28, -1.48, 0]}>
         <boxGeometry args={[0.16, 0.02, 0.001]} />
         <meshBasicMaterial color="#67e8f9" toneMapped={false} />
       </mesh>
-      {scanLines.map((y) => (
-        <mesh key={`terminal-scan-${y}`} position={[0, y, 0.01]}>
-          <boxGeometry args={[1.9, 0.003, 0.001]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.035} toneMapped={false} />
-        </mesh>
-      ))}
+      <StaticInstances specs={scanLines}>
+        <boxGeometry args={[1.9, 0.003, 0.001]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.035} toneMapped={false} />
+      </StaticInstances>
     </RenderTexture>
   );
 }
@@ -162,6 +176,13 @@ function DeveloperHudRenderTexture({ reduced }: { reduced?: boolean }) {
   const graphBars = useRef<Array<Mesh | null>>([]);
   const pulse = useRef<Group>(null);
   const bars = useMemo(() => Array.from({ length: 12 }, (_, i) => ({ x: -0.75 + i * 0.135, phase: i * 0.51 })), []);
+  const hudScanLines = useMemo<InstanceSpec[]>(
+    () =>
+      [-1.56, -1.22, -0.88, -0.54, -0.2, 0.14, 0.48, 0.82, 1.16, 1.5].map((y) => ({
+        position: [0, y, 0.02] as [number, number, number],
+      })),
+    [],
+  );
   const nodes = useMemo(
     () => [
       [-0.62, 0.92, 0.34],
@@ -242,12 +263,10 @@ function DeveloperHudRenderTexture({ reduced }: { reduced?: boolean }) {
           </mesh>
         ))}
       </group>
-      {[-1.56, -1.22, -0.88, -0.54, -0.2, 0.14, 0.48, 0.82, 1.16, 1.5].map((y) => (
-        <mesh key={`hud-scan-${y}`} position={[0, y, 0.02]}>
-          <boxGeometry args={[1.84, 0.003, 0.001]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.03} toneMapped={false} />
-        </mesh>
-      ))}
+      <StaticInstances specs={hudScanLines}>
+        <boxGeometry args={[1.84, 0.003, 0.001]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.03} toneMapped={false} />
+      </StaticInstances>
     </RenderTexture>
   );
 }

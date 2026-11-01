@@ -29,6 +29,7 @@ import { PcCase } from "./PcCase";
 import { DeskAccessories } from "./DeskAccessories";
 import { HeadsetStand } from "./HeadsetStand";
 import { Speaker } from "./Speakers";
+import { StaticInstances, type InstanceSpec } from "./StaticInstances";
 import { concreteAlbedo, woodAlbedo } from "./textures";
 
 type Vec3 = [number, number, number];
@@ -297,126 +298,106 @@ function StrictOrbitControls({
   );
 }
 
-function AcousticTile({
-  position,
-  accent,
-  reduced = false,
-}: {
-  position: Vec3;
-  accent: "cyan" | "magenta";
-  reduced?: boolean;
-}) {
-  const glow = accent === "cyan" ? "#22d3ee" : "#c084fc";
-  const dimGlow = accent === "cyan" ? "#155e75" : "#581c87";
-  const alternate = accent === "cyan" ? "#a855f7" : "#22d3ee";
-  const panel = useRef<MeshStandardMaterial>(null);
-  const edgeMats = useRef<Array<MeshStandardMaterial | null>>([]);
-  const crossMats = useRef<Array<MeshStandardMaterial | null>>([]);
-  const baseColor = useMemo(() => new Color(glow), [glow]);
-  const altColor = useMemo(() => new Color(alternate), [alternate]);
-  const liveColor = useMemo(() => new Color(), []);
-  const phase = position[0] * 1.7 + position[1] * 2.3;
+type TileSpec = { position: Vec3; accent: "cyan" | "magenta" };
+
+const TILE_ACCENT = { cyan: "#22d3ee", magenta: "#c084fc" } as const;
+
+/**
+ * Twelve acoustic wall panels used to be 12 components x 13 meshes = 156 draw
+ * calls (plus 12 punctual lights). They are static scenery, so the whole wall is
+ * now six InstancedMesh batches whose matrices are written once on mount; the
+ * RGB life comes from three shared-material writes per frame instead of ~84
+ * per-material writes.
+ */
+function AcousticTileField({ tiles, reduced = false }: { tiles: TileSpec[]; reduced?: boolean }) {
+  const backMat = useRef<MeshBasicMaterial>(null);
+  const edgeMat = useRef<MeshBasicMaterial>(null);
+  const crossMat = useRef<MeshBasicMaterial>(null);
+
+  const batches = useMemo(() => {
+    const shell: InstanceSpec[] = [];
+    const inner: InstanceSpec[] = [];
+    const back: InstanceSpec[] = [];
+    const folds: InstanceSpec[] = [];
+    const edges: InstanceSpec[] = [];
+    const cross: InstanceSpec[] = [];
+
+    const edgeOffsets: Array<[number, number, number, number]> = [
+      [0, 0.113, 0.225, 0.006],
+      [0, -0.113, 0.225, 0.006],
+      [-0.113, 0, 0.006, 0.225],
+      [0.113, 0, 0.006, 0.225],
+    ];
+    const foldOffsets: Array<[number, number, number, number]> = [
+      [-0.046, 0.046, 0.018, Math.PI / 4],
+      [0.046, -0.046, 0.018, Math.PI / 4],
+      [0.046, 0.046, 0.019, -Math.PI / 4],
+      [-0.046, -0.046, 0.019, -Math.PI / 4],
+    ];
+
+    tiles.forEach(({ position, accent }) => {
+      const [x, y, z] = position;
+      const glow = TILE_ACCENT[accent];
+
+      back.push({ position: [x, y, z - 0.014], color: glow });
+      shell.push({ position: [x, y, z] });
+      inner.push({ position: [x, y, z + 0.0175] });
+
+      edgeOffsets.forEach(([ox, oy, w, h]) => {
+        edges.push({ position: [x + ox, y + oy, z + 0.026], scale: [w, h, 1], color: glow });
+      });
+      foldOffsets.forEach(([ox, oy, oz, rot], index) => {
+        folds.push({
+          position: [x + ox, y + oy, z + oz],
+          rotation: [0, 0, rot],
+          color: index % 2 ? "#0f1118" : "#1a1d29",
+        });
+      });
+      cross.push({ position: [x, y, z + 0.031], rotation: [0, 0, Math.PI / 4], color: glow });
+      cross.push({ position: [x, y, z + 0.032], rotation: [0, 0, -Math.PI / 4], color: glow });
+    });
+
+    return { shell, inner, back, folds, edges, cross };
+  }, [tiles]);
 
   useFrame((state) => {
     if (reduced) return;
     const t = state.clock.elapsedTime;
-    const wave = 0.5 + 0.5 * Math.sin(t * 1.05 + phase);
-    const runner = 0.5 + 0.5 * Math.sin(t * 2.15 + phase * 1.4);
-    liveColor.lerpColors(baseColor, altColor, 0.18 + runner * 0.28);
+    const wave = 0.5 + 0.5 * Math.sin(t * 1.05);
+    const chase = 0.5 + 0.5 * Math.sin(t * 2.6);
+    const flicker = 0.5 + 0.5 * Math.sin(t * 1.65);
 
-    if (panel.current) {
-      panel.current.color.copy(liveColor);
-      panel.current.emissive.copy(liveColor);
-      panel.current.emissiveIntensity = 0.26 + wave * 0.34;
-      panel.current.opacity = 0.36 + wave * 0.26;
-    }
-    edgeMats.current.forEach((mat, index) => {
-      if (!mat) return;
-      const chase = 0.5 + 0.5 * Math.sin(t * 2.6 + phase + index * 1.18);
-      mat.color.copy(liveColor);
-      mat.emissive.copy(liveColor);
-      mat.emissiveIntensity = 0.68 + chase * 1.02;
-    });
-    crossMats.current.forEach((mat, index) => {
-      if (!mat) return;
-      const flicker = 0.5 + 0.5 * Math.sin(t * 1.65 + phase + index * 0.85);
-      mat.color.copy(liveColor);
-      mat.emissive.copy(liveColor);
-      mat.emissiveIntensity = 0.38 + flicker * 0.66;
-    });
+    if (backMat.current) backMat.current.opacity = 0.3 + wave * 0.26;
+    if (edgeMat.current) edgeMat.current.color.setScalar(0.62 + chase * 0.38);
+    if (crossMat.current) crossMat.current.color.setScalar(0.48 + flicker * 0.46);
   });
 
   return (
-    <group position={position}>
-      <mesh position={[0, 0, -0.014]} receiveShadow>
+    <group>
+      <StaticInstances specs={batches.back}>
         <boxGeometry args={[0.248, 0.248, 0.01]} />
-        <meshStandardMaterial ref={panel} color={glow} emissive={glow} emissiveIntensity={0.25} transparent opacity={0.42} roughness={0.4} />
-      </mesh>
-      <mesh receiveShadow>
+        <meshBasicMaterial ref={backMat} transparent opacity={0.42} toneMapped={false} depthWrite={false} />
+      </StaticInstances>
+      <StaticInstances specs={batches.shell} receiveShadow>
         <boxGeometry args={[0.22, 0.22, 0.028]} />
         <meshStandardMaterial color="#0b0d14" roughness={0.94} metalness={0.03} />
-      </mesh>
-      <mesh position={[0, 0, 0.0175]}>
+      </StaticInstances>
+      <StaticInstances specs={batches.inner}>
         <boxGeometry args={[0.182, 0.182, 0.006]} />
         <meshStandardMaterial color="#11131b" roughness={0.96} metalness={0.02} />
-      </mesh>
-      {[
-        [0, 0.113, 0.026, 0.225, 0.006],
-        [0, -0.113, 0.026, 0.225, 0.006],
-        [-0.113, 0, 0.026, 0.006, 0.225],
-        [0.113, 0, 0.026, 0.006, 0.225],
-      ].map(([x, y, z, w, h], i) => (
-        <mesh key={`edge-${i}`} position={[x, y, z]}>
-          <boxGeometry args={[w, h, 0.006]} />
-          <meshStandardMaterial
-            ref={(material) => {
-              edgeMats.current[i] = material;
-            }}
-            color={glow}
-            emissive={glow}
-            emissiveIntensity={1.05}
-            roughness={0.22}
-            toneMapped={false}
-          />
-        </mesh>
-      ))}
-      {[
-        [-0.046, 0.046, 0.018, 0.082, 0.012, Math.PI / 4],
-        [0.046, -0.046, 0.018, 0.082, 0.012, Math.PI / 4],
-        [0.046, 0.046, 0.019, 0.082, 0.012, -Math.PI / 4],
-        [-0.046, -0.046, 0.019, 0.082, 0.012, -Math.PI / 4],
-      ].map(([x, y, z, w, h, r], i) => (
-        <mesh key={`fold-${i}`} position={[x, y, z]} rotation={[0, 0, r]}>
-          <boxGeometry args={[w, h, 0.01]} />
-          <meshStandardMaterial color={i % 2 ? "#0f1118" : "#1a1d29"} roughness={0.9} metalness={0.04} />
-        </mesh>
-      ))}
-      <mesh position={[0, 0, 0.031]} rotation={[0, 0, Math.PI / 4]}>
+      </StaticInstances>
+      <StaticInstances specs={batches.folds}>
+        <boxGeometry args={[0.082, 0.012, 0.01]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.9} metalness={0.04} />
+      </StaticInstances>
+      <StaticInstances specs={batches.edges}>
+        <boxGeometry args={[1, 1, 0.006]} />
+        <meshBasicMaterial ref={edgeMat} toneMapped={false} />
+      </StaticInstances>
+      <StaticInstances specs={batches.cross}>
         <boxGeometry args={[0.12, 0.006, 0.005]} />
-        <meshStandardMaterial
-          ref={(material) => {
-            crossMats.current[0] = material;
-          }}
-          color={dimGlow}
-          emissive={glow}
-          emissiveIntensity={0.36}
-          roughness={0.36}
-          toneMapped={false}
-        />
-      </mesh>
-      <mesh position={[0, 0, 0.032]} rotation={[0, 0, -Math.PI / 4]}>
-        <boxGeometry args={[0.12, 0.006, 0.005]} />
-        <meshStandardMaterial
-          ref={(material) => {
-            crossMats.current[1] = material;
-          }}
-          color={dimGlow}
-          emissive={glow}
-          emissiveIntensity={0.36}
-          roughness={0.36}
-          toneMapped={false}
-        />
-      </mesh>
+        <meshBasicMaterial ref={crossMat} toneMapped={false} />
+      </StaticInstances>
     </group>
   );
 }
@@ -529,22 +510,23 @@ function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
 }
 
 function ReferenceWall({ reduced = false }: { reduced?: boolean }) {
-  const leftTiles: { position: Vec3; accent: "cyan" | "magenta" }[] = [
+  const leftTiles: TileSpec[] = useMemo(() => [
     { position: [-1.18, 0.64, -1.108], accent: "cyan" },
     { position: [-0.93, 0.64, -1.108], accent: "cyan" },
     { position: [-1.18, 0.89, -1.108], accent: "cyan" },
     { position: [-0.93, 0.89, -1.108], accent: "magenta" },
     { position: [-0.93, 1.14, -1.108], accent: "magenta" },
     { position: [-0.68, 1.14, -1.108], accent: "magenta" },
-  ];
-  const rightTiles: { position: Vec3; accent: "cyan" | "magenta" }[] = [
+  ], []);
+  const rightTiles: TileSpec[] = useMemo(() => [
     { position: [0.83, 0.76, -1.108], accent: "cyan" },
     { position: [1.08, 0.76, -1.108], accent: "cyan" },
     { position: [0.83, 1.01, -1.108], accent: "cyan" },
     { position: [1.08, 1.01, -1.108], accent: "cyan" },
     { position: [0.83, 1.26, -1.108], accent: "cyan" },
     { position: [1.08, 1.26, -1.108], accent: "cyan" },
-  ];
+  ], []);
+  const wallTiles = useMemo(() => [...leftTiles, ...rightTiles], [leftTiles, rightTiles]);
   const shelfItems: { x: number; w: number; h: number; color: string; accent: string }[] = [
     { x: -0.3, w: 0.07, h: 0.17, color: "#8a5f2e", accent: "#22d3ee" },
     { x: -0.18, w: 0.075, h: 0.18, color: "#263248", accent: "#84cc16" },
@@ -556,12 +538,7 @@ function ReferenceWall({ reduced = false }: { reduced?: boolean }) {
 
   return (
     <group>
-      {leftTiles.map(({ position, accent }) => (
-        <AcousticTile key={`left-${position.join("-")}`} position={position} accent={accent} reduced={reduced} />
-      ))}
-      {rightTiles.map(({ position, accent }) => (
-        <AcousticTile key={`right-${position.join("-")}`} position={position} accent={accent} reduced={reduced} />
-      ))}
+      <AcousticTileField tiles={wallTiles} reduced={reduced} />
 
       {/* Black display shelf with collectible arcade boxes, cartridges, and a retro controller. */}
       <mesh position={[0.04, 1.075, -1.075]} castShadow>

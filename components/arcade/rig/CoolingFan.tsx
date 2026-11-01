@@ -1,9 +1,12 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Color, type Group, type MeshStandardMaterial } from "three";
+import { Color, InstancedMesh, Object3D, type Group, type MeshBasicMaterial, type MeshStandardMaterial } from "three";
 import { arcadeBreath, arcadeRgbAt } from "@/lib/arcade/rgb";
+import { StaticInstances, type InstanceSpec } from "./StaticInstances";
+
+const bladeDummy = new Object3D();
 
 /**
  * Fan axis is +Y (cylinder default). Blades live in XZ and spin around Y
@@ -27,7 +30,8 @@ export function CoolingFan({
   const spin = useRef<Group>(null);
   const ring = useRef<MeshStandardMaterial>(null);
   const hub = useRef<MeshStandardMaterial>(null);
-  const bladeMats = useRef<Array<MeshStandardMaterial | null>>([]);
+  const bladeMesh = useRef<InstancedMesh>(null);
+  const bladeMat = useRef<MeshBasicMaterial>(null);
   const color = useMemo(() => new Color(rgb), [rgb]);
   const bladeColor = useMemo(() => new Color(), []);
   const blades = 7;
@@ -47,20 +51,53 @@ export function CoolingFan({
       mat.emissiveIntensity = pulse;
     }
 
-    bladeMats.current.forEach((mat, index) => {
-      if (!mat) return;
-      arcadeRgbAt(t * 0.08, bladeColor, phase + index / blades);
-      mat.color.copy(bladeColor);
-      mat.emissive.copy(bladeColor);
-      mat.emissiveIntensity = 0.98 + 0.28 * Math.sin(t * 1.45 + index * 0.72 + phase * Math.PI * 2);
-      mat.opacity = 0.82 + 0.08 * Math.sin(t * 1.1 + index * 0.47);
-    });
+    const node = bladeMesh.current;
+    if (node) {
+      for (let index = 0; index < blades; index += 1) {
+        arcadeRgbAt(t * 0.08, bladeColor, phase + index / blades);
+        bladeColor.multiplyScalar(0.98 + 0.28 * Math.sin(t * 1.45 + index * 0.72 + phase * Math.PI * 2));
+        node.setColorAt(index, bladeColor);
+      }
+      if (node.instanceColor) node.instanceColor.needsUpdate = true;
+    }
+    if (bladeMat.current) bladeMat.current.opacity = 0.82 + 0.08 * Math.sin(t * 1.1);
   });
 
   const inner = radius * 0.9;
   const hubR = radius * 0.2;
   const bladeLen = inner - hubR - radius * 0.04;
   const housing = radius + 0.007;
+
+  const screws = useMemo<InstanceSpec[]>(
+    () =>
+      [0, 1, 2, 3].map((i) => ({
+        position: [
+          Math.cos((i * Math.PI) / 2) * housing * 0.82,
+          0,
+          -Math.sin((i * Math.PI) / 2) * housing * 0.82,
+        ] as [number, number, number],
+        rotation: [0, (i * Math.PI) / 2, 0] as [number, number, number],
+      })),
+    [housing],
+  );
+
+  // Blade matrices never change inside the spinning group: Ry(a) . T(x) . Rx(0.45)
+  // composes to a single YXZ euler, so they are written once instead of per frame.
+  useLayoutEffect(() => {
+    const node = bladeMesh.current;
+    if (!node) return;
+    const offset = hubR + bladeLen * 0.5;
+    for (let i = 0; i < blades; i += 1) {
+      const a = (i / blades) * Math.PI * 2;
+      bladeDummy.position.set(Math.cos(a) * offset, 0, -Math.sin(a) * offset);
+      bladeDummy.rotation.set(0.45, a, 0, "YXZ");
+      bladeDummy.scale.setScalar(1);
+      bladeDummy.updateMatrix();
+      node.setMatrixAt(i, bladeDummy.matrix);
+    }
+    node.instanceMatrix.needsUpdate = true;
+    node.computeBoundingSphere();
+  }, [bladeLen, hubR]);
 
   return (
     <group>
@@ -78,12 +115,10 @@ export function CoolingFan({
           <meshStandardMaterial color="#4b5060" metalness={0.55} roughness={0.32} />
         </mesh>
       ))}
-      {[0, 1, 2, 3].map((i) => (
-        <mesh key={i} rotation={[0, (i * Math.PI) / 2, 0]} position={[housing * 0.82, 0, 0]}>
-          <boxGeometry args={[0.0055, depth * 0.65, 0.007]} />
-          <meshStandardMaterial color="#4a4e58" metalness={0.45} roughness={0.4} />
-        </mesh>
-      ))}
+      <StaticInstances specs={screws}>
+        <boxGeometry args={[0.0055, depth * 0.65, 0.007]} />
+        <meshStandardMaterial color="#4a4e58" metalness={0.45} roughness={0.4} />
+      </StaticInstances>
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -depth * 0.12, 0]}>
         <torusGeometry args={[radius * 0.78, 0.0028, 10, 36]} />
         <meshStandardMaterial ref={ring} color={rgb} emissive={rgb} emissiveIntensity={1.05} roughness={0.22} metalness={0.15} />
@@ -97,29 +132,10 @@ export function CoolingFan({
         <meshStandardMaterial ref={hub} color={rgb} emissive={rgb} emissiveIntensity={0.65} roughness={0.28} />
       </mesh>
       <group ref={spin}>
-        {Array.from({ length: blades }, (_, i) => {
-          const a = (i / blades) * Math.PI * 2;
-          return (
-            <group key={i} rotation={[0, a, 0]}>
-              <mesh position={[hubR + bladeLen * 0.5, 0, 0]} rotation={[0.45, 0, 0]}>
-                <boxGeometry args={[bladeLen, 0.0014, radius * 0.16]} />
-                <meshStandardMaterial
-                  ref={(material) => {
-                    bladeMats.current[i] = material;
-                  }}
-                  color="#22d3ee"
-                  emissive="#22d3ee"
-                  emissiveIntensity={1.05}
-                  metalness={0.16}
-                  roughness={0.28}
-                  transparent
-                  opacity={0.86}
-                  toneMapped={false}
-                />
-              </mesh>
-            </group>
-          );
-        })}
+        <instancedMesh ref={bladeMesh} args={[undefined, undefined, blades]}>
+          <boxGeometry args={[bladeLen, 0.0014, radius * 0.16]} />
+          <meshBasicMaterial ref={bladeMat} transparent opacity={0.86} toneMapped={false} />
+        </instancedMesh>
       </group>
     </group>
   );

@@ -8,7 +8,7 @@ import {
   Color,
   TubeGeometry,
   Vector3,
-  type MeshStandardMaterial,
+  type MeshBasicMaterial,
   type PointLight,
 } from "three";
 import { arcadeBreath, arcadeRgbAt } from "@/lib/arcade/rgb";
@@ -90,11 +90,11 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
   const metal = useMemo(() => pcBrushedMetal(), []);
   const hex = useMemo(() => pcHexMesh(), []);
   const pcb = useMemo(() => pcPcbMaps(), []);
-  const accentA = useRef<MeshStandardMaterial>(null);
-  const accentB = useRef<MeshStandardMaterial>(null);
-  const ramA = useRef<MeshStandardMaterial>(null);
-  const ramB = useRef<MeshStandardMaterial>(null);
-  const pump = useRef<MeshStandardMaterial>(null);
+  const accentA = useRef<MeshBasicMaterial>(null);
+  const accentB = useRef<MeshBasicMaterial>(null);
+  const ramA = useRef<MeshBasicMaterial>(null);
+  const ramB = useRef<MeshBasicMaterial>(null);
+  const pump = useRef<MeshBasicMaterial>(null);
   const sideGlow = useRef<PointLight>(null);
   const colorA = useMemo(() => new Color(), []);
   const colorB = useMemo(() => new Color(), []);
@@ -109,15 +109,11 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
 
     for (const mat of [accentA.current, pump.current]) {
       if (!mat) continue;
-      mat.color.copy(colorA);
-      mat.emissive.copy(colorA);
-      mat.emissiveIntensity = pulseA;
+      mat.color.copy(colorA).multiplyScalar(pulseA);
     }
     for (const mat of [accentB.current, ramA.current, ramB.current]) {
       if (!mat) continue;
-      mat.color.copy(colorB);
-      mat.emissive.copy(colorB);
-      mat.emissiveIntensity = pulseB;
+      mat.color.copy(colorB).multiplyScalar(pulseB);
     }
     if (sideGlow.current) {
       sideGlow.current.color.copy(colorA);
@@ -201,11 +197,11 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
       </mesh>
       <mesh position={[0.185, 0.315, FRONT_Z + 0.017]}>
         <boxGeometry args={[0.012, 0.47, 0.006]} />
-        <meshStandardMaterial ref={accentA} color="#c084fc" emissive="#c084fc" emissiveIntensity={0.6} roughness={0.25} />
+        <meshBasicMaterial ref={accentA} color="#c084fc" toneMapped={false} />
       </mesh>
       <mesh position={[-0.105, 0.315, FRONT_Z + 0.016]}>
         <boxGeometry args={[0.006, 0.43, 0.005]} />
-        <meshStandardMaterial ref={accentB} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.54} roughness={0.25} />
+        <meshBasicMaterial ref={accentB} color="#22d3ee" toneMapped={false} />
       </mesh>
       <FrontFan y={0.46} phase={0.04} reduced={reduced} />
       <FrontFan y={0.315} phase={0.22} reduced={reduced} />
@@ -247,7 +243,7 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
       </mesh>
       <mesh position={[SIDE_X - 0.016, 0.38, -0.055]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.032, 0.0022, 12, 48]} />
-        <meshStandardMaterial ref={pump} color="#c084fc" emissive="#c084fc" emissiveIntensity={0.7} roughness={0.22} />
+        <meshBasicMaterial ref={pump} color="#c084fc" toneMapped={false} />
       </mesh>
 
       {/* RAM light bars */}
@@ -259,12 +255,10 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
           </mesh>
           <mesh position={[-0.006, 0.002, 0]}>
             <boxGeometry args={[0.004, 0.112, 0.018]} />
-            <meshStandardMaterial
+            <meshBasicMaterial
               ref={index === 0 ? ramA : ramB}
               color={index === 0 ? "#22d3ee" : "#c084fc"}
-              emissive={index === 0 ? "#22d3ee" : "#c084fc"}
-              emissiveIntensity={0.76}
-              roughness={0.22}
+              toneMapped={false}
             />
           </mesh>
         </group>
@@ -277,7 +271,7 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
       </mesh>
       <mesh position={[SIDE_X - 0.019, 0.226, 0.045]}>
         <boxGeometry args={[0.004, 0.006, 0.255]} />
-        <meshStandardMaterial ref={accentB} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.45} roughness={0.24} />
+        <meshBasicMaterial ref={accentB} color="#22d3ee" toneMapped={false} />
       </mesh>
       <mesh position={[-0.164, 0.102, 0.02]}>
         <boxGeometry args={[0.04, 0.09, 0.43]} />
@@ -323,11 +317,11 @@ export function PcCase({ reduced }: { reduced?: boolean }) {
       {/* bottom and top RGB edge glows */}
       <mesh position={[0, 0.036, FRONT_Z + 0.02]}>
         <boxGeometry args={[0.33, 0.006, 0.004]} />
-        <meshStandardMaterial ref={accentA} color="#c084fc" emissive="#c084fc" emissiveIntensity={0.5} roughness={0.24} />
+        <meshBasicMaterial ref={accentA} color="#c084fc" toneMapped={false} />
       </mesh>
       <mesh position={[-0.02, CASE_H - 0.026, FRONT_Z + 0.018]}>
         <boxGeometry args={[0.31, 0.004, 0.004]} />
-        <meshStandardMaterial ref={accentB} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.42} roughness={0.24} />
+        <meshBasicMaterial ref={accentB} color="#22d3ee" toneMapped={false} />
       </mesh>
 
       {/* hero light — RGB bleed out of the glass side panel */}

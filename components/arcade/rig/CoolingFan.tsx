@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Color, InstancedMesh, Object3D, type Group, type MeshBasicMaterial, type MeshStandardMaterial } from "three";
+import { Color, InstancedMesh, Object3D, type Group, type MeshBasicMaterial } from "three";
 import { arcadeBreath, arcadeRgbAt } from "@/lib/arcade/rgb";
 import { StaticInstances, type InstanceSpec } from "./StaticInstances";
 
@@ -28,8 +28,8 @@ export function CoolingFan({
   depth?: number;
 }) {
   const spin = useRef<Group>(null);
-  const ring = useRef<MeshStandardMaterial>(null);
-  const hub = useRef<MeshStandardMaterial>(null);
+  const ring = useRef<MeshBasicMaterial>(null);
+  const hub = useRef<MeshBasicMaterial>(null);
   const bladeMesh = useRef<InstancedMesh>(null);
   const bladeMat = useRef<MeshBasicMaterial>(null);
   const color = useMemo(() => new Color(rgb), [rgb]);
@@ -46,9 +46,7 @@ export function CoolingFan({
 
     for (const mat of [ring.current, hub.current]) {
       if (!mat) continue;
-      mat.color.copy(color);
-      mat.emissive.copy(color);
-      mat.emissiveIntensity = pulse;
+      mat.color.copy(color).multiplyScalar(pulse);
     }
 
     const node = bladeMesh.current;
@@ -121,7 +119,7 @@ export function CoolingFan({
       </StaticInstances>
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -depth * 0.12, 0]}>
         <torusGeometry args={[radius * 0.78, 0.0028, 10, 36]} />
-        <meshStandardMaterial ref={ring} color={rgb} emissive={rgb} emissiveIntensity={1.05} roughness={0.22} metalness={0.15} />
+        <meshBasicMaterial ref={ring} color={rgb} toneMapped={false} />
       </mesh>
       <mesh>
         <cylinderGeometry args={[hubR, hubR * 1.05, depth * 0.85, 20]} />
@@ -129,7 +127,7 @@ export function CoolingFan({
       </mesh>
       <mesh position={[0, depth * 0.32, 0]}>
         <cylinderGeometry args={[hubR * 0.55, hubR * 0.55, 0.0024, 16]} />
-        <meshStandardMaterial ref={hub} color={rgb} emissive={rgb} emissiveIntensity={0.65} roughness={0.28} />
+        <meshBasicMaterial ref={hub} color={rgb} toneMapped={false} />
       </mesh>
       <group ref={spin}>
         <instancedMesh ref={bladeMesh} args={[undefined, undefined, blades]}>

@@ -39,6 +39,57 @@ export interface Project {
   featured?: boolean;
 }
 
+/* ------------------------------------------------------------------ *
+ * Cinematic project reel (home page #projects)
+ *
+ * Deliberately separate from `Project` above: the reel is a presentation
+ * surface driven by media, while `Project` stays the canonical record that
+ * feeds /projects, /projects/[slug], the sitemap, the assistant and the
+ * terminal registry.
+ * ------------------------------------------------------------------ */
+
+/** Which renderer the card uses for its media slot. */
+export type CinemaMediaType = "embed" | "video";
+
+export type CinemaCategoryId = "personal" | "hudasoft" | "techcose";
+
+export interface CinemaCategory {
+  id: CinemaCategoryId;
+  /** Tab label. */
+  label: string;
+  /** Short line shown under the reel heading while the tab is active. */
+  tagline: string;
+}
+
+export interface CinemaProject {
+  id: string;
+  title: string;
+  description: string;
+  category: CinemaCategoryId;
+  /** `embed` renders an <iframe>, `video` renders a <video>. */
+  mediaType: CinemaMediaType;
+  /** Live site URL for `embed`, video file URL for `video`. */
+  mediaUrl: string;
+  techStack: string[];
+  /** Outbound "open live site" link. Falls back to `mediaUrl` for embeds. */
+  liveUrl?: string;
+  /** Internal case-study route, when the project has one. */
+  caseStudyHref?: string;
+  /** Poster frame for video cards, also used as fallback art. */
+  poster?: string;
+  /** Delivery year or range, printed in the card slate. */
+  year?: string;
+  /** One-line role credit, printed in the card slate. */
+  role?: string;
+  /**
+   * `true` while `mediaUrl` is still a placeholder. The card renders a branded
+   * "media pending" slate with the expected path instead of a broken element,
+   * so dropping the real file in and flipping this flag is the only edit
+   * needed later.
+   */
+  pending?: boolean;
+}
+
 export type SkillCategory =
   | "Frontend Development"
   | "Backend Development"

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { cinemaDisplayHost, cinemaLiveUrl } from "@/lib/cinema";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ interface ProjectCardProps {
  * and only the active card re-enables pointer events, so a buried card can
  * never intercept a click meant for the one on screen.
  */
-export function ProjectCard({
+function ProjectCardImpl({
   project,
   index,
   total,
@@ -50,7 +51,10 @@ export function ProjectCard({
         className={cn(
           "relative flex h-full w-full max-w-[min(94vw,78rem)] flex-col overflow-hidden rounded-[1.5rem] border border-cyan-200/20 bg-[#0a0a0e] md:rounded-[1.75rem]",
           "shadow-[0_0_40px_rgba(34,211,238,0.10),0_0_140px_rgba(59,130,246,0.16),inset_0_1px_0_rgba(255,255,255,0.06)]",
-          "[backface-visibility:hidden] [transform-style:preserve-3d]",
+          // No preserve-3d: nothing inside the card uses Z, and a 3D context
+          // stops the browser flattening the card (its 140px glow included)
+          // into one composited texture, so every scale step re-rasterises.
+          "[backface-visibility:hidden]",
           // Pre-hydration pose. GSAP writes inline styles that beat these the
           // moment the timeline is built, so this only governs the first paint.
           index === 0 ? null : "invisible opacity-0",
@@ -183,3 +187,10 @@ export function ProjectCard({
     </div>
   );
 }
+
+/**
+ * Memoised: the reel sets activeIndex mid-scrub, and without this every card
+ * re-renders on each hand-off. Only the two cards whose `active`/`load` flip
+ * actually need to.
+ */
+export const ProjectCard = memo(ProjectCardImpl);

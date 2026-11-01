@@ -20,41 +20,57 @@ import { ProjectCard } from "./ProjectCard";
  * ScrollTrigger maps the finished duration onto the track, so these are
  * pure ratios — changing the track height never desyncs them.
  * ------------------------------------------------------------------ */
-const ENTER = 0.55; // dolly in from the back of the room
-const HOLD = 0.3; // beat on the mark
-const EXIT = 0.45; // push past the camera
+const ENTER = 0.6; // dolly in from the back of the room
+const HOLD = 0.42; // beat on the mark
+const EXIT = 0.5; // push past the camera
 const STEP = ENTER + HOLD; // next card launches as this one starts leaving
 const TAIL = 0.5; // the last frame holds instead of flying out
 
-/** Pose a card holds while it waits at the back of the stage. */
-const BACK_POSE = {
-  z: -1500,
-  scale: 0.62,
-  autoAlpha: 0,
-  rotateX: 11,
-  rotateY: -7,
-  yPercent: 9,
+/**
+ * Catch-up smoothing on every trigger in the section.
+ *
+ * ScrollTrigger lerps the animation toward the scroll position over this many
+ * seconds, so a flick of the wheel resolves as a glide rather than a jump.
+ * All three triggers share the value — mismatched scrubs are what make a
+ * composed scene feel like separate animations sliding against each other.
+ */
+const SCRUB = 1.5;
+
+/**
+ * Poses carry motion only. Opacity rides its own shorter tween so a card is
+ * solid for the middle of its travel and only dissolves at the hand-off,
+ * instead of spending its whole approach translucent.
+ */
+const BACK_MOTION = {
+  z: -560,
+  scale: 0.86,
+  rotateX: 6,
+  rotateY: -4,
+  yPercent: 5,
 } as const;
 
-/** Pose on the mark, square to the camera. */
-const MARK_POSE = {
+/** On the mark, square to the camera. */
+const MARK_MOTION = {
   z: 0,
   scale: 1,
-  autoAlpha: 1,
   rotateX: 0,
   rotateY: 0,
   yPercent: 0,
 } as const;
 
-/** Pose as the card overshoots the lens. */
-const PAST_POSE = {
-  z: 640,
-  scale: 1.24,
-  autoAlpha: 0,
-  rotateX: -8,
-  rotateY: 5,
-  yPercent: -8,
+/** Overshooting the lens. */
+const PAST_MOTION = {
+  z: 300,
+  scale: 1.12,
+  rotateX: -4,
+  rotateY: 3,
+  yPercent: -5,
 } as const;
+
+/** Fraction of ENTER the fade-in takes. */
+const FADE_IN = 0.55;
+/** Fraction of EXIT the fade-out takes, and how late it starts. */
+const FADE_OUT = 0.7;
 
 export function CinemaReel({
   headingLevel = "h2",
@@ -176,7 +192,7 @@ export function CinemaReel({
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: 1.1,
+          scrub: SCRUB,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             setProgress?.(self.progress);
@@ -188,21 +204,26 @@ export function CinemaReel({
       // The opening frame rides in on the scroll that brings the section to
       // the top of the viewport, so the stage is never empty once it locks.
       if (!reduced) {
-        gsap.fromTo(
-          cards[0],
-          { ...BACK_POSE },
-          {
-            ...MARK_POSE,
-            ease: "power2.out",
-            force3D: true,
-            scrollTrigger: {
-              trigger: section,
-              start: "top bottom",
-              end: "top top",
-              scrub: 1.1,
-              invalidateOnRefresh: true,
-            },
+        const intro = gsap.timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: "top bottom",
+            end: "top top",
+            scrub: SCRUB,
+            invalidateOnRefresh: true,
           },
+        });
+        intro.fromTo(
+          cards[0],
+          { ...BACK_MOTION },
+          { ...MARK_MOTION, duration: 1, ease: "none", force3D: true },
+          0,
+        );
+        intro.fromTo(
+          cards[0],
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: FADE_IN, ease: "none" },
+          0,
         );
       }
 
@@ -229,20 +250,36 @@ export function CinemaReel({
           return;
         }
 
+        // Linear everywhere. A scrubbed tween is already being eased by the
+        // scrub itself, so an easing curve on top fights the scroll: the card
+        // decelerates hard into its mark, sits, then snaps away again. That
+        // double-easing is what reads as rigid.
         if (!first) {
           timeline.fromTo(
             card,
-            { ...BACK_POSE },
-            { ...MARK_POSE, duration: ENTER, ease: "power2.out", force3D: true },
+            { ...BACK_MOTION },
+            { ...MARK_MOTION, duration: ENTER, ease: "none", force3D: true },
+            at,
+          );
+          timeline.fromTo(
+            card,
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: ENTER * FADE_IN, ease: "none" },
             at,
           );
         }
 
         if (!last) {
+          const exitAt = at + ENTER + HOLD * 0.35;
           timeline.to(
             card,
-            { ...PAST_POSE, duration: EXIT, ease: "power2.in", force3D: true },
-            at + ENTER + HOLD * 0.35,
+            { ...PAST_MOTION, duration: EXIT, ease: "none", force3D: true },
+            exitAt,
+          );
+          timeline.to(
+            card,
+            { autoAlpha: 0, duration: EXIT * FADE_OUT, ease: "none" },
+            exitAt + EXIT * (1 - FADE_OUT),
           );
         }
       });
@@ -257,15 +294,15 @@ export function CinemaReel({
           gsap.utils.toArray<HTMLElement>("[data-reel-bg]", section),
           { scale: 1, yPercent: 0 },
           {
-            scale: 1.28,
-            yPercent: -7,
+            scale: 1.18,
+            yPercent: -5,
             ease: "none",
             force3D: true,
             scrollTrigger: {
               trigger: section,
               start: "top top",
               end: "bottom bottom",
-              scrub: 1.1,
+              scrub: SCRUB,
               invalidateOnRefresh: true,
             },
           },
@@ -291,12 +328,12 @@ export function CinemaReel({
         {/* ---------- backdrop ---------- */}
         <div
           data-reel-bg
-          className="pointer-events-none absolute inset-0 origin-center bg-[radial-gradient(ellipse_70%_60%_at_20%_18%,rgba(59,130,246,0.16),rgba(9,9,11,0)_70%),radial-gradient(ellipse_65%_55%_at_82%_82%,rgba(168,85,247,0.13),rgba(9,9,11,0)_70%)]"
+          className="pointer-events-none absolute inset-0 origin-center will-change-transform bg-[radial-gradient(ellipse_70%_60%_at_20%_18%,rgba(59,130,246,0.16),rgba(9,9,11,0)_70%),radial-gradient(ellipse_65%_55%_at_82%_82%,rgba(168,85,247,0.13),rgba(9,9,11,0)_70%)]"
           aria-hidden="true"
         />
         <div
           data-reel-bg
-          className="pointer-events-none absolute inset-0 origin-center opacity-[0.09] [background-image:linear-gradient(rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.07)_1px,transparent_1px)] [background-size:110px_110px] [mask-image:radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(0,0,0,0.95),rgba(0,0,0,0)_78%)] [-webkit-mask-image:radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(0,0,0,0.95),rgba(0,0,0,0)_78%)]"
+          className="pointer-events-none absolute inset-0 origin-center will-change-transform opacity-[0.09] [background-image:linear-gradient(rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.07)_1px,transparent_1px)] [background-size:110px_110px] [mask-image:radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(0,0,0,0.95),rgba(0,0,0,0)_78%)] [-webkit-mask-image:radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(0,0,0,0.95),rgba(0,0,0,0)_78%)]"
           aria-hidden="true"
         />
         <div

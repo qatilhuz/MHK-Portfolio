@@ -93,8 +93,8 @@ export function replyFromKnowledge(question: string): AssistantReply {
 
   if (q.includes("bug hunt") || (q.includes("qa") && q.includes("bug"))) {
     return {
-      text: "QA Bug Hunt is a teaching demo where visitors find deliberately introduced bugs and classify them. It is not a client defect log.",
-      links: [{ href: "/#qa", label: "QA Bug Hunt" }],
+      text: "Software testing is part of the day job rather than a section of this site — manual, functional and cross-browser testing, plus bug reporting. The skills list has the detail.",
+      links: [{ href: "/#skills", label: "Skills" }],
     };
   }
 

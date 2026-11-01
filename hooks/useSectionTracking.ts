@@ -9,7 +9,6 @@ const SECTIONS = [
   "skills",
   "experience",
   "projects",
-  "qa",
   "arcade",
   "terminal",
   "avatar",

@@ -55,12 +55,12 @@ export const guidedSections: GuidedSection[] = [
     readingMs: 5200,
   },
   {
-    id: "qa",
-    target: "qa",
+    id: "terminal",
+    target: "terminal",
     message:
-      "QA Bug Hunt is an interactive testing challenge — inspect the scenarios, report the bugs, and compare expected with actual behavior.",
+      "The Developer Terminal boots a simulated HuzaifaOS, types out the stack, and then hands you the prompt — type help to explore.",
     voiceText:
-      "QA Bug Hunt is an interactive testing challenge — inspect the scenarios, report the bugs, and compare expected with actual behavior.",
+      "The Developer Terminal boots a simulated HuzaifaOS, types out the stack, and then hands you the prompt — type help to explore.",
     pose: "talk",
     readingMs: 4500,
   },
@@ -72,16 +72,6 @@ export const guidedSections: GuidedSection[] = [
     voiceText:
       "The Dev Arcade offers quick interactive challenges built as part of the portfolio experience.",
     pose: "present",
-    readingMs: 3800,
-  },
-  {
-    id: "terminal",
-    target: "terminal",
-    message:
-      "The Developer Terminal is a simulated HuzaifaOS experience. Type help to explore available commands.",
-    voiceText:
-      "The Developer Terminal is a simulated HuzaifaOS experience. Type help to explore available commands.",
-    pose: "talk",
     readingMs: 3800,
   },
   {

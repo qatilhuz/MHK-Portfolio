@@ -143,14 +143,6 @@ export const faq: FAQ[] = [
     relatedSection: "/#arcade",
   },
   {
-    id: "qa-hunt",
-    question: "What is QA Bug Hunt?",
-    answer:
-      "An interactive software testing challenge where visitors inspect scenarios, report intentional bugs, and compare expected versus actual behavior.",
-    category: "qa",
-    relatedSection: "/#qa",
-  },
-  {
     id: "terminal",
     question: "Do you have a terminal?",
     answer:

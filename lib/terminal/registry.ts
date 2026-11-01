@@ -131,14 +131,14 @@ const extraCommands: TerminalCommand[] = [
   },
   {
     name: "qa",
-    description: "QA Bug Hunt",
+    description: "Software testing practice",
     hidden: true,
     run: () => ({
-      title: "QA Bug Hunt",
+      title: "Software Testing",
       body: [
-        "An interactive testing challenge with deliberate defects to identify, classify, and report.",
+        "Manual and functional testing, test case execution, cross-browser checks, and structured bug reporting — expected versus actual, every time.",
       ],
-      links: [{ href: "/#qa", label: "QA Bug Hunt" }],
+      links: [{ href: "/#skills", label: "Skills" }],
     }),
   },
   {

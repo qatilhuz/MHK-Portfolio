@@ -135,3 +135,21 @@ export function pcHexMesh() {
   if (cached) return cached;
   return setPcCached("pcHexMesh", createPcHexMesh());
 }
+
+/** Same contract as disposeArcadeTextures(), for the PC-case atlas cache. */
+export function disposePcTextures() {
+  const seen = new Set<CanvasTexture>();
+  for (const value of pcTextureCache.values()) {
+    if (value instanceof CanvasTexture) {
+      seen.add(value);
+      continue;
+    }
+    if (value && typeof value === "object") {
+      for (const entry of Object.values(value as Record<string, unknown>)) {
+        if (entry instanceof CanvasTexture) seen.add(entry);
+      }
+    }
+  }
+  for (const texture of seen) texture.dispose();
+  pcTextureCache.clear();
+}

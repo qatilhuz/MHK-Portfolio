@@ -26,11 +26,12 @@ import { Keyboard } from "./Keyboard";
 import { Monitor } from "./Monitor";
 import { Mouse, MousePad } from "./Mouse";
 import { PcCase } from "./PcCase";
-import { DeskAccessories } from "./DeskAccessories";
+import { DeskAccessories, disposeDeskAccessoryTextures } from "./DeskAccessories";
 import { HeadsetStand } from "./HeadsetStand";
-import { Speaker } from "./Speakers";
+import { Speaker, disposeSpeakerTextures } from "./Speakers";
 import { StaticInstances, type InstanceSpec } from "./StaticInstances";
-import { concreteAlbedo, woodAlbedo } from "./textures";
+import { concreteAlbedo, disposeArcadeTextures, woodAlbedo } from "./textures";
+import { disposePcTextures } from "./pcTextures";
 
 type Vec3 = [number, number, number];
 
@@ -840,6 +841,21 @@ export function ArcadeScene({
     setWarmedUp(true);
     onReady?.();
   }, [onReady]);
+
+  // The procedural atlases live in module-level caches, so they outlive the
+  // canvas: R3F disposes materials on unmount but Material.dispose() never
+  // touches its maps. Release them here, or the generated textures (and their
+  // GPU uploads) stay resident for the rest of the session. The generators are
+  // pure, so a later mount just rebuilds what it needs.
+  useEffect(
+    () => () => {
+      disposeArcadeTextures();
+      disposePcTextures();
+      disposeDeskAccessoryTextures();
+      disposeSpeakerTextures();
+    },
+    [],
+  );
 
   return (
     <Canvas

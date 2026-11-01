@@ -235,3 +235,28 @@ export function pcbAlbedo() {
   }
   return setCached("pcbAlbedo", wrap(new CanvasTexture(node), 1));
 }
+
+/**
+ * Release every CanvasTexture held by the module cache and empty it.
+ *
+ * The cache is module-level, so without this the generated atlases (and their
+ * GPU uploads, several MB each) stay resident for the lifetime of the tab even
+ * after the arcade canvas unmounts. The generators are pure, so a later mount
+ * simply rebuilds whatever it asks for.
+ */
+export function disposeArcadeTextures() {
+  const seen = new Set<CanvasTexture>();
+  for (const value of textureCache.values()) {
+    if (value instanceof CanvasTexture) {
+      seen.add(value);
+      continue;
+    }
+    if (value && typeof value === "object") {
+      for (const entry of Object.values(value as Record<string, unknown>)) {
+        if (entry instanceof CanvasTexture) seen.add(entry);
+      }
+    }
+  }
+  for (const texture of seen) texture.dispose();
+  textureCache.clear();
+}

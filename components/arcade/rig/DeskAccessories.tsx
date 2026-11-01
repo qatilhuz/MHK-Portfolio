@@ -18,6 +18,14 @@ import { metalAlbedo } from "./textures";
 
 let cachedBrassAlbedo: CanvasTexture | null = null;
 let cachedPaperAlbedo: CanvasTexture | null = null;
+
+/** Drop the module-level atlases when the rig unmounts (see ArcadeScene). */
+export function disposeDeskAccessoryTextures() {
+  cachedBrassAlbedo?.dispose();
+  cachedPaperAlbedo?.dispose();
+  cachedBrassAlbedo = null;
+  cachedPaperAlbedo = null;
+}
 let cachedPremiumMugMaps: ReturnType<typeof buildPremiumMugSurfaceMaps> | null = null;
 
 function brassAlbedo() {

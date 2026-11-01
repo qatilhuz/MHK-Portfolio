@@ -7,6 +7,12 @@ import { CanvasTexture, Color, RepeatWrapping, SRGBColorSpace, type MeshBasicMat
 
 let cachedSpeakerConeMap: CanvasTexture | null = null;
 
+/** Drop the module-level cone atlas when the rig unmounts (see ArcadeScene). */
+export function disposeSpeakerTextures() {
+  cachedSpeakerConeMap?.dispose();
+  cachedSpeakerConeMap = null;
+}
+
 const RGB_STOPS = [
   new Color("#22d3ee"),
   new Color("#3b82f6"),

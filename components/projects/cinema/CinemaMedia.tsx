@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { CinemaProject } from "@/types";
 
 /**
@@ -26,19 +26,37 @@ interface MediaProps {
  * Shared chrome
  * ------------------------------------------------------------------ */
 
-function Scanlines() {
+const Scanlines = memo(function Scanlines() {
   return (
     <div
       className="pointer-events-none absolute inset-0 z-20 opacity-[0.18] [background-image:repeating-linear-gradient(to_bottom,rgba(255,255,255,0.05)_0px,rgba(255,255,255,0.05)_1px,transparent_1px,transparent_3px)]"
       aria-hidden="true"
     />
   );
-}
+});
 
-function Skeleton({ label }: { label: string }) {
+/**
+ * Loading slate, and the only thing in the card that fades.
+ *
+ * It sits *over* the media as an opaque curtain and dissolves once the media
+ * reports ready, rather than the media fading up from zero underneath it.
+ * Same reveal to look at, very different cost: animating the opacity of an
+ * <iframe> or a <video> forces the compositor to blend an entire embedded
+ * document or video surface every frame, and that fade routinely lands in the
+ * middle of a scrub. A gradient-filled div blends for free.
+ */
+const Skeleton = memo(function Skeleton({
+  label,
+  done,
+}: {
+  label: string;
+  done: boolean;
+}) {
   return (
     <div
-      className="absolute inset-0 z-0 flex items-center justify-center bg-[radial-gradient(ellipse_70%_60%_at_50%_40%,rgba(59,130,246,0.14),rgba(9,9,11,0)_72%)]"
+      className={`pointer-events-none absolute inset-0 z-[25] flex items-center justify-center bg-[#06070b] [background-image:radial-gradient(ellipse_70%_60%_at_50%_40%,rgba(59,130,246,0.14),rgba(9,9,11,0)_72%)] transition-opacity duration-500 ease-out motion-reduce:transition-none ${
+        done ? "opacity-0" : "opacity-100"
+      }`}
       aria-hidden="true"
     >
       <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-muted">
@@ -47,13 +65,17 @@ function Skeleton({ label }: { label: string }) {
       </div>
     </div>
   );
-}
+});
 
 /* ------------------------------------------------------------------ *
  * Pending slate — stands in for media that has not been captured yet
  * ------------------------------------------------------------------ */
 
-function PendingSlate({ project }: { project: CinemaProject }) {
+const PendingSlate = memo(function PendingSlate({
+  project,
+}: {
+  project: CinemaProject;
+}) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[linear-gradient(145deg,#0b0f17,#0a0a0e_45%,#0d0a14)] px-6 text-center">
       <div
@@ -77,13 +99,17 @@ function PendingSlate({ project }: { project: CinemaProject }) {
       </code>
     </div>
   );
-}
+});
 
 /* ------------------------------------------------------------------ *
  * Blocked embed — the site refuses to be framed, so show the still
  * ------------------------------------------------------------------ */
 
-function BlockedSlate({ project }: { project: CinemaProject }) {
+const BlockedSlate = memo(function BlockedSlate({
+  project,
+}: {
+  project: CinemaProject;
+}) {
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#06070b]">
       {project.poster ? (
@@ -111,13 +137,19 @@ function BlockedSlate({ project }: { project: CinemaProject }) {
       <Scanlines />
     </div>
   );
-}
+});
 
 /* ------------------------------------------------------------------ *
  * Embed — a live site, rendered at desktop width and scaled to fit
  * ------------------------------------------------------------------ */
 
-function EmbedFrame({ project, load }: { project: CinemaProject; load: boolean }) {
+const EmbedFrame = memo(function EmbedFrame({
+  project,
+  load,
+}: {
+  project: CinemaProject;
+  load: boolean;
+}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -143,8 +175,10 @@ function EmbedFrame({ project, load }: { project: CinemaProject; load: boolean }
   }, []);
 
   return (
-    <div ref={hostRef} className="absolute inset-0 overflow-hidden bg-[#06070b]">
-      <Skeleton label="Establishing live preview" />
+    <div
+      ref={hostRef}
+      className="absolute inset-0 overflow-hidden bg-[#06070b]"
+    >
       {load && scale > 0 ? (
         <iframe
           title={`${project.title} live preview`}
@@ -160,24 +194,28 @@ function EmbedFrame({ project, load }: { project: CinemaProject; load: boolean }
           style={{
             width: VIRTUAL_WIDTH,
             height: VIRTUAL_HEIGHT,
-            transform: `translateX(-50%) scale(${scale})`,
+            // translate3d, not translateX: the 3D variant pins the framed
+            // document to its own compositor layer, so the card's scrub
+            // transform moves an existing texture instead of asking the
+            // browser to re-rasterise a whole live website every frame.
+            transform: `translate3d(-50%, 0, 0) scale(${scale})`,
             transformOrigin: "top center",
+            backfaceVisibility: "hidden",
           }}
-          className={`absolute left-1/2 top-0 z-10 border-0 bg-white transition-opacity duration-700 ease-out ${
-            loaded ? "opacity-100" : "opacity-0"
-          }`}
+          className="absolute left-1/2 top-0 z-10 border-0 bg-white"
         />
       ) : null}
       <Scanlines />
+      <Skeleton label="Establishing live preview" done={loaded} />
     </div>
   );
-}
+});
 
 /* ------------------------------------------------------------------ *
  * Video — plays only while its card owns the stage
  * ------------------------------------------------------------------ */
 
-function VideoFrame({
+const VideoFrame = memo(function VideoFrame({
   project,
   load,
   active,
@@ -202,7 +240,6 @@ function VideoFrame({
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#06070b]">
-      <Skeleton label="Cueing reel" />
       {load ? (
         <video
           ref={videoRef}
@@ -216,15 +253,14 @@ function VideoFrame({
           tabIndex={-1}
           aria-label={`${project.title} demo reel`}
           onLoadedData={() => setLoaded(true)}
-          className={`absolute inset-0 z-10 h-full w-full object-cover transition-opacity duration-700 ease-out ${
-            loaded ? "opacity-100" : "opacity-0"
-          }`}
+          className="absolute inset-0 z-10 h-full w-full object-cover [backface-visibility:hidden] [transform:translateZ(0)]"
         />
       ) : null}
       <Scanlines />
+      <Skeleton label="Cueing reel" done={loaded} />
     </div>
   );
-}
+});
 
 /* ------------------------------------------------------------------ *
  * Public switch

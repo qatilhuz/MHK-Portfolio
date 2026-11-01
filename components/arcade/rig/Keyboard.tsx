@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
-import { Color, InstancedMesh, MeshStandardMaterial, Object3D, type PointLight } from "three";
+import { Color, InstancedMesh, MeshStandardMaterial, Object3D } from "three";
 
 const dummy = new Object3D();
 const tint = new Color();
@@ -71,8 +71,6 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
   const mesh = useRef<InstancedMesh>(null);
   const under = useRef<MeshStandardMaterial>(null);
   const wideGlow = useRef<(MeshStandardMaterial | null)[]>([]);
-  const underLamp = useRef<PointLight>(null);
-  const lamp = useRef<PointLight>(null);
   const layout = useMemo(() => buildLayout(), []);
   const color = useMemo(() => new Color(), []);
   const rimMat = useMemo(
@@ -110,11 +108,7 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
     if (under.current) {
       under.current.color.copy(color);
       under.current.emissive.copy(color);
-      under.current.emissiveIntensity = 0.3 + 0.1 * Math.sin(t * 0.9);
-    }
-    if (underLamp.current) {
-      underLamp.current.color.copy(color);
-      underLamp.current.intensity = 0.22 + 0.05 * Math.sin(t * 0.9);
+      under.current.emissiveIntensity = 0.62 + 0.18 * Math.sin(t * 0.9);
     }
     wideGlow.current.forEach((mat, index) => {
       if (!mat) return;
@@ -126,17 +120,13 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
     });
     rimMat.emissive.copy(color);
     rimMat.color.copy(color);
-    rimMat.emissiveIntensity = 0.55 + 0.15 * Math.sin(t * 1.05);
-    if (lamp.current) {
-      lamp.current.color.copy(color);
-      lamp.current.intensity = 0.24 + 0.06 * Math.sin(t * 1.05);
-    }
+    rimMat.emissiveIntensity = 0.9 + 0.22 * Math.sin(t * 1.05);
   });
 
   return (
     <group position={[-0.02, 0.065, 0.33]} rotation={[0.085, 0, 0]} scale={1.18}>
       <RoundedBox args={[chassisW, 0.016, chassisD]} radius={0.006} smoothness={4} castShadow receiveShadow>
-        <meshStandardMaterial color="#3a3d46" metalness={0.42} roughness={0.44} envMapIntensity={0.9} />
+        <meshStandardMaterial color="#3a3d46" metalness={0.42} roughness={0.44} />
       </RoundedBox>
       <mesh position={[0, 0.009, 0]}>
         <boxGeometry args={[chassisW - 0.016, 0.002, chassisD - 0.016]} />
@@ -159,7 +149,6 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
       <mesh position={[-chassisW / 2, 0.001, 0]} material={rimMat}>
         <boxGeometry args={[0.006, 0.004, chassisD]} />
       </mesh>
-      <pointLight ref={underLamp} position={[0, -0.018, 0]} intensity={0.28} distance={0.42} color="#a78bfa" />
       {[-chassisW * 0.38, chassisW * 0.38].map((x) =>
         [-chassisD * 0.38, chassisD * 0.38].map((z) => (
           <mesh key={`${x}${z}`} position={[x, -0.01, z]}>
@@ -193,7 +182,6 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
         </group>
       ))}
 
-      <pointLight ref={lamp} position={[0, 0.024, 0]} intensity={0.26} distance={0.42} color="#a78bfa" />
     </group>
   );
 }

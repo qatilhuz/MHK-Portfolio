@@ -11,7 +11,6 @@ import {
   TubeGeometry,
   Vector2,
   Vector3,
-  type PointLight,
 } from "three";
 import { SPEAKER_Z } from "@/lib/arcade/layout";
 import { brushedMetalMaps, driverGrilleAlbedo, leatherMaps } from "./textures";
@@ -105,23 +104,18 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
   const rgbRingL = useRef<MeshStandardMaterial>(null);
   const rgbRingR = useRef<MeshStandardMaterial>(null);
   const rgbLed = useRef<MeshStandardMaterial>(null);
-  const glow = useRef<PointLight>(null);
   const color = useMemo(() => new Color(), []);
 
   useFrame((state) => {
     if (reduced) return;
     const t = state.clock.elapsedTime;
     rgbAt(t * 0.1, color);
-    const pulse = 0.55 + 0.18 * Math.sin(t * 0.85);
+    const pulse = 0.95 + 0.26 * Math.sin(t * 0.85);
     for (const mat of [rgbRingL.current, rgbRingR.current, rgbLed.current]) {
       if (!mat) continue;
       mat.emissive.copy(color);
       mat.color.copy(color);
       mat.emissiveIntensity = pulse;
-    }
-    if (glow.current) {
-      glow.current.color.copy(color);
-      glow.current.intensity = 0.12 + 0.04 * Math.sin(t * 0.85);
     }
   });
 
@@ -133,7 +127,6 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
         color: "#cfd4dd",
         metalness: 0.92,
         roughness: 0.42,
-        envMapIntensity: 1.1,
       }),
     [pbr],
   );
@@ -252,8 +245,6 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
           metalness={0.04}
         />
       </RoundedBox>
-
-      <pointLight ref={glow} position={[0, 0.13, 0.06]} distance={0.24} intensity={0.12} color="#22d3ee" />
 
       {/* ---------- headband: brushed-steel arc ---------- */}
       <mesh position={[0, BAND_Y, 0]} castShadow material={steel}>

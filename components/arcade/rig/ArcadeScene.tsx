@@ -312,7 +312,6 @@ function AcousticTile({
   const panel = useRef<MeshStandardMaterial>(null);
   const edgeMats = useRef<Array<MeshStandardMaterial | null>>([]);
   const crossMats = useRef<Array<MeshStandardMaterial | null>>([]);
-  const tileLight = useRef<PointLight>(null);
   const baseColor = useMemo(() => new Color(glow), [glow]);
   const altColor = useMemo(() => new Color(alternate), [alternate]);
   const liveColor = useMemo(() => new Color(), []);
@@ -328,27 +327,23 @@ function AcousticTile({
     if (panel.current) {
       panel.current.color.copy(liveColor);
       panel.current.emissive.copy(liveColor);
-      panel.current.emissiveIntensity = 0.14 + wave * 0.22;
-      panel.current.opacity = 0.30 + wave * 0.22;
+      panel.current.emissiveIntensity = 0.26 + wave * 0.34;
+      panel.current.opacity = 0.36 + wave * 0.26;
     }
     edgeMats.current.forEach((mat, index) => {
       if (!mat) return;
       const chase = 0.5 + 0.5 * Math.sin(t * 2.6 + phase + index * 1.18);
       mat.color.copy(liveColor);
       mat.emissive.copy(liveColor);
-      mat.emissiveIntensity = 0.42 + chase * 0.78;
+      mat.emissiveIntensity = 0.68 + chase * 1.02;
     });
     crossMats.current.forEach((mat, index) => {
       if (!mat) return;
       const flicker = 0.5 + 0.5 * Math.sin(t * 1.65 + phase + index * 0.85);
       mat.color.copy(liveColor);
       mat.emissive.copy(liveColor);
-      mat.emissiveIntensity = 0.22 + flicker * 0.48;
+      mat.emissiveIntensity = 0.38 + flicker * 0.66;
     });
-    if (tileLight.current) {
-      tileLight.current.color.copy(liveColor);
-      tileLight.current.intensity = 0.11 + wave * 0.18;
-    }
   });
 
   return (
@@ -379,7 +374,7 @@ function AcousticTile({
             }}
             color={glow}
             emissive={glow}
-            emissiveIntensity={0.72}
+            emissiveIntensity={1.05}
             roughness={0.22}
             toneMapped={false}
           />
@@ -422,7 +417,6 @@ function AcousticTile({
           toneMapped={false}
         />
       </mesh>
-      <pointLight ref={tileLight} position={[0, 0, 0.12]} intensity={0.18} distance={0.32} color={glow} />
     </group>
   );
 }
@@ -452,7 +446,6 @@ function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
   const titleMat = useRef<MeshStandardMaterial>(null);
   const plateMat = useRef<MeshBasicMaterial>(null);
   const barMats = useRef<Array<MeshStandardMaterial | null>>([]);
-  const titleLight = useRef<PointLight>(null);
 
   useFrame((state) => {
     if (reduced) return;
@@ -464,7 +457,7 @@ function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
       titleGroup.current.scale.set(s, s, 1);
     }
     if (titleMat.current) {
-      titleMat.current.emissiveIntensity = 1.85 + breath * 1.05;
+      titleMat.current.emissiveIntensity = 2.25 + breath * 1.25;
     }
     if (plateMat.current) {
       plateMat.current.opacity = 0.045 + breath * 0.07;
@@ -473,7 +466,6 @@ function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
       if (!mat) return;
       mat.emissiveIntensity = 0.55 + (index === 0 ? chase : 1 - chase) * 0.78;
     });
-    if (titleLight.current) titleLight.current.intensity = 0.42 + breath * 0.28;
   });
 
   return (
@@ -532,7 +524,6 @@ function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
           />
         </Text>
       </Suspense>
-      <pointLight ref={titleLight} position={[0.04, 0.84, -0.78]} intensity={0.5} distance={0.8} color="#22d3ee" />
     </group>
   );
 }
@@ -619,10 +610,8 @@ function ReferenceWall({ reduced = false }: { reduced?: boolean }) {
 
       <NeonWallTitle reduced={reduced} />
 
-      <pointLight position={[-1.15, 0.88, -0.78]} intensity={1.75} distance={1.05} color="#22d3ee" />
-      <pointLight position={[-0.72, 1.12, -0.8]} intensity={1.55} distance={0.95} color="#c084fc" />
-      <pointLight position={[0.96, 1.04, -0.78]} intensity={1.7} distance={1.08} color="#22d3ee" />
-      <pointLight position={[0.06, 0.72, -0.74]} intensity={1.15} distance={1.35} color="#a855f7" />
+      {/* hero light 1/3 — one wall wash replaces four accent points */}
+      <pointLight position={[0.02, 0.96, -0.74]} intensity={3.1} distance={2.4} decay={1.7} color="#38bdf8" />
     </group>
   );
 }
@@ -633,7 +622,6 @@ function DeskAmbientLoops({ reduced = false }: { reduced?: boolean }) {
   const runnerMat = useRef<MeshStandardMaterial>(null);
   const runner = useRef<Group>(null);
   const cyanLight = useRef<PointLight>(null);
-  const magentaLight = useRef<PointLight>(null);
   const cyan = useMemo(() => new Color("#22d3ee"), []);
   const magenta = useMemo(() => new Color("#c084fc"), []);
   const live = useMemo(() => new Color(), []);
@@ -662,10 +650,6 @@ function DeskAmbientLoops({ reduced = false }: { reduced?: boolean }) {
       cyanLight.current.color.copy(cyan);
       cyanLight.current.intensity = 0.7 + breath * 0.32;
     }
-    if (magentaLight.current) {
-      magentaLight.current.color.copy(magenta);
-      magentaLight.current.intensity = 0.42 + (1 - breath) * 0.26;
-    }
   });
 
   return (
@@ -689,8 +673,8 @@ function DeskAmbientLoops({ reduced = false }: { reduced?: boolean }) {
           />
         </mesh>
       </group>
-      <pointLight ref={cyanLight} position={[0, 0.08, 0.68]} intensity={0.9} distance={2.3} color="#22d3ee" />
-      <pointLight ref={magentaLight} position={[0.72, 0.12, 0.42]} intensity={0.55} distance={1.2} color="#c084fc" />
+      {/* hero light 2/3 — desk wash */}
+      <pointLight ref={cyanLight} position={[0, 0.08, 0.68]} intensity={1.25} distance={2.5} color="#22d3ee" />
     </>
   );
 }

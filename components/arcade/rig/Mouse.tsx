@@ -2,7 +2,7 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Color, ExtrudeGeometry, Shape, type MeshStandardMaterial, type PointLight } from "three";
+import { Color, ExtrudeGeometry, Shape, type MeshStandardMaterial } from "three";
 import { hexPadAlbedo } from "./textures";
 
 /**
@@ -124,7 +124,6 @@ export function Mouse({ reduced }: { reduced?: boolean }) {
   const rgbL = useRef<MeshStandardMaterial>(null);
   const rgbR = useRef<MeshStandardMaterial>(null);
   const wheelLed = useRef<MeshStandardMaterial>(null);
-  const glow = useRef<PointLight>(null);
   const color = useMemo(() => new Color(), []);
   const base = useMemo(() => extrudeY(baseShape(), 0.006, 0.001), []);
   const palm = useMemo(() => extrudeY(palmShape(), 0.02, 0.008), []);
@@ -134,26 +133,22 @@ export function Mouse({ reduced }: { reduced?: boolean }) {
   useFrame((state) => {
     if (reduced) return;
     rgbAt(state.clock.elapsedTime * 0.12, color);
-    const pulse = 0.7 + 0.2 * Math.sin(state.clock.elapsedTime * 1.05);
+    const pulse = 1.05 + 0.3 * Math.sin(state.clock.elapsedTime * 1.05);
     for (const mat of [rgbL.current, rgbR.current, wheelLed.current]) {
       if (!mat) continue;
       mat.emissive.copy(color);
       mat.color.copy(color);
       mat.emissiveIntensity = pulse;
     }
-    if (glow.current) {
-      glow.current.color.copy(color);
-      glow.current.intensity = 0.14 + 0.04 * Math.sin(state.clock.elapsedTime * 1.05);
-    }
   });
 
   return (
     <group position={[0.53, 0.067, 0.35]} rotation={[0.045, -0.2, 0]} scale={1.18}>
       <mesh geometry={base} castShadow>
-        <meshStandardMaterial color="#3a3d46" roughness={0.5} metalness={0.18} envMapIntensity={1.15} />
+        <meshStandardMaterial color="#3a3d46" roughness={0.5} metalness={0.18} />
       </mesh>
       <mesh geometry={palm} castShadow>
-        <meshStandardMaterial color="#32353e" roughness={0.58} metalness={0.1} envMapIntensity={0.85} />
+        <meshStandardMaterial color="#32353e" roughness={0.58} metalness={0.1} />
       </mesh>
       <mesh geometry={left} castShadow>
         <meshStandardMaterial color="#4a4e58" roughness={0.36} metalness={0.18} />
@@ -210,7 +205,6 @@ export function Mouse({ reduced }: { reduced?: boolean }) {
         <boxGeometry args={[0.0025, 0.0025, 0.08]} />
         <meshStandardMaterial ref={rgbR} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.7} roughness={0.22} />
       </mesh>
-      <pointLight ref={glow} position={[0, 0.02, 0.02]} distance={0.14} intensity={0.14} color="#22d3ee" />
       {[
         [-0.015, -0.002, -0.04],
         [0.015, -0.002, -0.04],

@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
-import { CanvasTexture, Color, RepeatWrapping, SRGBColorSpace, type MeshStandardMaterial, type PointLight } from "three";
+import { CanvasTexture, Color, RepeatWrapping, SRGBColorSpace, type MeshStandardMaterial } from "three";
 
 let cachedSpeakerConeMap: CanvasTexture | null = null;
 
@@ -66,8 +66,6 @@ export function Speaker({
   const cone = useMemo(() => speakerConeMap(), []);
   const ringMat = useRef<MeshStandardMaterial>(null);
   const stripMat = useRef<MeshStandardMaterial>(null);
-  const glowA = useRef<PointLight>(null);
-  const glowB = useRef<PointLight>(null);
   const color = useMemo(() => new Color(), []);
 
   useFrame((state) => {
@@ -78,20 +76,12 @@ export function Speaker({
     if (ringMat.current) {
       ringMat.current.emissive.copy(color);
       ringMat.current.color.copy(color);
-      ringMat.current.emissiveIntensity = 0.76 + 0.2 * pulse;
+      ringMat.current.emissiveIntensity = 1.15 + 0.3 * pulse;
     }
     if (stripMat.current) {
       stripMat.current.color.copy(color);
       stripMat.current.emissive.copy(color);
-      stripMat.current.emissiveIntensity = 0.48 + 0.14 * pulse;
-    }
-    if (glowA.current) {
-      glowA.current.color.copy(color);
-      glowA.current.intensity = 0.3 + 0.1 * pulse;
-    }
-    if (glowB.current) {
-      glowB.current.color.copy(color);
-      glowB.current.intensity = 0.12 + 0.04 * pulse;
+      stripMat.current.emissiveIntensity = 0.78 + 0.2 * pulse;
     }
   });
 
@@ -160,7 +150,6 @@ export function Speaker({
           <sphereGeometry args={[0.0062, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
           <meshStandardMaterial color="#4a4e58" roughness={0.38} metalness={0.28} />
         </mesh>
-        <pointLight ref={glowA} position={[0, 0, -0.018]} distance={0.2} intensity={0.32} color="#22d3ee" />
       </group>
 
       <group position={[0, -0.052, 0.051]}>
@@ -187,7 +176,6 @@ export function Speaker({
         <boxGeometry args={[0.062, 0.003, 0.006]} />
         <meshStandardMaterial ref={stripMat} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.6} roughness={0.25} />
       </mesh>
-      <pointLight ref={glowB} position={[0, -0.09, 0.02]} distance={0.2} intensity={0.16} color="#22d3ee" />
 
       <mesh position={[0, -0.09, 0]}>
         <boxGeometry args={[0.088, 0.012, 0.098]} />

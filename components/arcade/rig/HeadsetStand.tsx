@@ -7,6 +7,7 @@ import {
   Color,
   CatmullRomCurve3,
   LatheGeometry,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   TubeGeometry,
   Vector2,
@@ -101,9 +102,9 @@ function useRigPbr() {
  */
 export function HeadsetStand({ reduced }: { reduced?: boolean }) {
   const pbr = useRigPbr();
-  const rgbRingL = useRef<MeshStandardMaterial>(null);
-  const rgbRingR = useRef<MeshStandardMaterial>(null);
-  const rgbLed = useRef<MeshStandardMaterial>(null);
+  const rgbRingL = useRef<MeshBasicMaterial>(null);
+  const rgbRingR = useRef<MeshBasicMaterial>(null);
+  const rgbLed = useRef<MeshBasicMaterial>(null);
   const color = useMemo(() => new Color(), []);
 
   useFrame((state) => {
@@ -113,9 +114,7 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
     const pulse = 0.95 + 0.26 * Math.sin(t * 0.85);
     for (const mat of [rgbRingL.current, rgbRingR.current, rgbLed.current]) {
       if (!mat) continue;
-      mat.emissive.copy(color);
-      mat.color.copy(color);
-      mat.emissiveIntensity = pulse;
+      mat.color.copy(color).multiplyScalar(pulse);
     }
   });
 
@@ -217,13 +216,7 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
       {/* brand LED slot on mast */}
       <mesh position={[0, 0.155, 0.0124]}>
         <boxGeometry args={[0.004, 0.026, 0.0016]} />
-        <meshStandardMaterial
-          ref={rgbLed}
-          color="#22d3ee"
-          emissive="#22d3ee"
-          emissiveIntensity={0.55}
-          roughness={0.25}
-        />
+        <meshBasicMaterial ref={rgbLed} color="#22d3ee" toneMapped={false} />
       </mesh>
 
       {/* ---------- saddle crown (headband rests here) ---------- */}
@@ -299,14 +292,7 @@ export function HeadsetStand({ reduced }: { reduced?: boolean }) {
             {/* RGB rim channel on outer face */}
             <mesh position={[0, 0.0245, 0]} rotation={[Math.PI / 2, 0, 0]}>
               <torusGeometry args={[0.0415, 0.0018, 12, 72]} />
-              <meshStandardMaterial
-                ref={side === 1 ? rgbRingR : rgbRingL}
-                color="#22d3ee"
-                emissive="#22d3ee"
-                emissiveIntensity={0.75}
-                roughness={0.25}
-                metalness={0.1}
-              />
+              <meshBasicMaterial ref={side === 1 ? rgbRingR : rgbRingL} color="#22d3ee" toneMapped={false} />
             </mesh>
             {/* brushed logo puck */}
             <mesh position={[0, 0.0315, 0]}>

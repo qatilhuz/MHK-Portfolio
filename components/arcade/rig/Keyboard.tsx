@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
-import { Color, InstancedMesh, MeshStandardMaterial, Object3D } from "three";
+import { Color, InstancedMesh, MeshBasicMaterial, Object3D } from "three";
 
 const dummy = new Object3D();
 const tint = new Color();
@@ -69,23 +69,21 @@ function rgbWave(t: number, x: number, out: Color) {
 
 export function Keyboard({ reduced }: { reduced?: boolean }) {
   const mesh = useRef<InstancedMesh>(null);
-  const under = useRef<MeshStandardMaterial>(null);
-  const wideGlow = useRef<(MeshStandardMaterial | null)[]>([]);
+  const under = useRef<MeshBasicMaterial>(null);
+  const wideGlow = useRef<(MeshBasicMaterial | null)[]>([]);
   const layout = useMemo(() => buildLayout(), []);
   const color = useMemo(() => new Color(), []);
   const rimMat = useMemo(
     () =>
-      new MeshStandardMaterial({
+      new MeshBasicMaterial({
         color: "#22d3ee",
-        emissive: "#22d3ee",
-        emissiveIntensity: 0.65,
-        roughness: 0.22,
+        toneMapped: false,
       }),
     [],
   );
   const chassisW = layout.span + 0.04;
   const chassisD = layout.depth + 0.036;
-  const setWideGlow = (index: number) => (material: MeshStandardMaterial | null) => {
+  const setWideGlow = (index: number) => (material: MeshBasicMaterial | null) => {
     wideGlow.current[index] = material;
   };
 
@@ -106,21 +104,15 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
     }
     rgbWave(t, 0, color);
     if (under.current) {
-      under.current.color.copy(color);
-      under.current.emissive.copy(color);
-      under.current.emissiveIntensity = 0.62 + 0.18 * Math.sin(t * 0.9);
+      under.current.color.copy(color).multiplyScalar(0.82 + 0.18 * Math.sin(t * 0.9));
     }
     wideGlow.current.forEach((mat, index) => {
       if (!mat) return;
       const key = layout.wide[index];
       rgbWave(t + index * 0.08, key?.x ?? 0, color);
-      mat.color.copy(color);
-      mat.emissive.copy(color);
-      mat.emissiveIntensity = 0.18 + 0.08 * Math.sin(t * 0.76 + index * 0.5);
+      mat.color.copy(color).multiplyScalar(0.62 + 0.22 * Math.sin(t * 0.76 + index * 0.5));
     });
-    rimMat.emissive.copy(color);
-    rimMat.color.copy(color);
-    rimMat.emissiveIntensity = 0.9 + 0.22 * Math.sin(t * 1.05);
+    rimMat.color.copy(color).multiplyScalar(0.92 + 0.18 * Math.sin(t * 1.05));
   });
 
   return (
@@ -134,7 +126,7 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
       </mesh>
       <mesh position={[0, -0.007, 0]}>
         <boxGeometry args={[chassisW - 0.03, 0.002, chassisD - 0.02]} />
-        <meshStandardMaterial ref={under} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.35} roughness={0.3} />
+        <meshBasicMaterial ref={under} color="#22d3ee" toneMapped={false} />
       </mesh>
       {/* perimeter RGB — four edge strips, not a hidden under-plate */}
       <mesh position={[0, 0.001, chassisD / 2]} material={rimMat}>
@@ -171,13 +163,7 @@ export function Keyboard({ reduced }: { reduced?: boolean }) {
           </mesh>
           <mesh position={[0, -0.005, 0]}>
             <boxGeometry args={[key.w * 0.9, 0.0025, U * 0.6]} />
-            <meshStandardMaterial
-              ref={setWideGlow(index)}
-              color="#22d3ee"
-              emissive="#7c3aed"
-              emissiveIntensity={0.24}
-              roughness={0.35}
-            />
+            <meshBasicMaterial ref={setWideGlow(index)} color="#22d3ee" toneMapped={false} />
           </mesh>
         </group>
       ))}

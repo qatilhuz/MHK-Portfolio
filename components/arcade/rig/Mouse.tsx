@@ -2,7 +2,7 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Color, ExtrudeGeometry, Shape, type MeshStandardMaterial } from "three";
+import { Color, ExtrudeGeometry, Shape, type MeshBasicMaterial } from "three";
 import { hexPadAlbedo } from "./textures";
 
 /**
@@ -75,7 +75,7 @@ function clickShape(side: -1 | 1) {
 
 export function MousePad({ reduced }: { reduced?: boolean }) {
   const hex = useMemo(() => hexPadAlbedo(), []);
-  const edges = useRef<(MeshStandardMaterial | null)[]>([]);
+  const edges = useRef<(MeshBasicMaterial | null)[]>([]);
   const color = useMemo(() => new Color(), []);
 
   useFrame((state) => {
@@ -84,13 +84,11 @@ export function MousePad({ reduced }: { reduced?: boolean }) {
     edges.current.forEach((mat, index) => {
       if (!mat) return;
       rgbAt(t * 0.07 + index * 0.14, color);
-      mat.color.copy(color);
-      mat.emissive.copy(color);
-      mat.emissiveIntensity = 0.42 + 0.11 * Math.sin(t * 0.72 + index * 0.55);
+      mat.color.copy(color).multiplyScalar(0.74 + 0.16 * Math.sin(t * 0.72 + index * 0.55));
     });
   });
 
-  const setEdge = (index: number) => (material: MeshStandardMaterial | null) => {
+  const setEdge = (index: number) => (material: MeshBasicMaterial | null) => {
     edges.current[index] = material;
   };
 
@@ -102,28 +100,28 @@ export function MousePad({ reduced }: { reduced?: boolean }) {
       </mesh>
       <mesh position={[0, 0.182, 0.002]}>
         <boxGeometry args={[1.18, 0.006, 0.004]} />
-        <meshStandardMaterial ref={setEdge(0)} color="#c084fc" emissive="#c084fc" emissiveIntensity={0.55} roughness={0.25} />
+        <meshBasicMaterial ref={setEdge(0)} color="#c084fc" toneMapped={false} />
       </mesh>
       <mesh position={[0, -0.182, 0.002]}>
         <boxGeometry args={[1.18, 0.006, 0.004]} />
-        <meshStandardMaterial ref={setEdge(1)} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.55} roughness={0.25} />
+        <meshBasicMaterial ref={setEdge(1)} color="#22d3ee" toneMapped={false} />
       </mesh>
       <mesh position={[-0.592, 0, 0.002]}>
         <boxGeometry args={[0.006, 0.36, 0.004]} />
-        <meshStandardMaterial ref={setEdge(2)} color="#c084fc" emissive="#c084fc" emissiveIntensity={0.5} roughness={0.25} />
+        <meshBasicMaterial ref={setEdge(2)} color="#c084fc" toneMapped={false} />
       </mesh>
       <mesh position={[0.592, 0, 0.002]}>
         <boxGeometry args={[0.006, 0.36, 0.004]} />
-        <meshStandardMaterial ref={setEdge(3)} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.5} roughness={0.25} />
+        <meshBasicMaterial ref={setEdge(3)} color="#22d3ee" toneMapped={false} />
       </mesh>
     </group>
   );
 }
 
 export function Mouse({ reduced }: { reduced?: boolean }) {
-  const rgbL = useRef<MeshStandardMaterial>(null);
-  const rgbR = useRef<MeshStandardMaterial>(null);
-  const wheelLed = useRef<MeshStandardMaterial>(null);
+  const rgbL = useRef<MeshBasicMaterial>(null);
+  const rgbR = useRef<MeshBasicMaterial>(null);
+  const wheelLed = useRef<MeshBasicMaterial>(null);
   const color = useMemo(() => new Color(), []);
   const base = useMemo(() => extrudeY(baseShape(), 0.006, 0.001), []);
   const palm = useMemo(() => extrudeY(palmShape(), 0.02, 0.008), []);
@@ -136,9 +134,7 @@ export function Mouse({ reduced }: { reduced?: boolean }) {
     const pulse = 1.05 + 0.3 * Math.sin(state.clock.elapsedTime * 1.05);
     for (const mat of [rgbL.current, rgbR.current, wheelLed.current]) {
       if (!mat) continue;
-      mat.emissive.copy(color);
-      mat.color.copy(color);
-      mat.emissiveIntensity = pulse;
+      mat.color.copy(color).multiplyScalar(pulse);
     }
   });
 
@@ -186,7 +182,7 @@ export function Mouse({ reduced }: { reduced?: boolean }) {
         ))}
         <mesh>
           <torusGeometry args={[0.0074, 0.0008, 8, 22]} />
-          <meshStandardMaterial ref={wheelLed} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.8} roughness={0.22} />
+          <meshBasicMaterial ref={wheelLed} color="#22d3ee" toneMapped={false} />
         </mesh>
       </group>
       <mesh position={[-0.03, 0.01, 0.004]} rotation={[0.05, 0, 0.4]}>
@@ -199,11 +195,11 @@ export function Mouse({ reduced }: { reduced?: boolean }) {
       </mesh>
       <mesh position={[-0.026, 0.008, 0.004]} rotation={[0.12, 0, -0.2]}>
         <boxGeometry args={[0.0025, 0.0025, 0.08]} />
-        <meshStandardMaterial ref={rgbL} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.7} roughness={0.22} />
+        <meshBasicMaterial ref={rgbL} color="#22d3ee" toneMapped={false} />
       </mesh>
       <mesh position={[0.026, 0.008, 0.004]} rotation={[0.12, 0, 0.2]}>
         <boxGeometry args={[0.0025, 0.0025, 0.08]} />
-        <meshStandardMaterial ref={rgbR} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.7} roughness={0.22} />
+        <meshBasicMaterial ref={rgbR} color="#22d3ee" toneMapped={false} />
       </mesh>
       {[
         [-0.015, -0.002, -0.04],

@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
-import { CanvasTexture, Color, RepeatWrapping, SRGBColorSpace, type MeshStandardMaterial } from "three";
+import { CanvasTexture, Color, RepeatWrapping, SRGBColorSpace, type MeshBasicMaterial } from "three";
 
 let cachedSpeakerConeMap: CanvasTexture | null = null;
 
@@ -64,8 +64,8 @@ export function Speaker({
   phase?: number;
 }) {
   const cone = useMemo(() => speakerConeMap(), []);
-  const ringMat = useRef<MeshStandardMaterial>(null);
-  const stripMat = useRef<MeshStandardMaterial>(null);
+  const ringMat = useRef<MeshBasicMaterial>(null);
+  const stripMat = useRef<MeshBasicMaterial>(null);
   const color = useMemo(() => new Color(), []);
 
   useFrame((state) => {
@@ -74,14 +74,10 @@ export function Speaker({
     rgbAt(t * 0.085 + phase, color);
     const pulse = 0.5 + 0.5 * Math.sin(t * 0.78 + phase * Math.PI * 2);
     if (ringMat.current) {
-      ringMat.current.emissive.copy(color);
-      ringMat.current.color.copy(color);
-      ringMat.current.emissiveIntensity = 1.15 + 0.3 * pulse;
+      ringMat.current.color.copy(color).multiplyScalar(1.0 + 0.25 * pulse);
     }
     if (stripMat.current) {
-      stripMat.current.color.copy(color);
-      stripMat.current.emissive.copy(color);
-      stripMat.current.emissiveIntensity = 0.78 + 0.2 * pulse;
+      stripMat.current.color.copy(color).multiplyScalar(0.82 + 0.2 * pulse);
     }
   });
 
@@ -127,16 +123,7 @@ export function Speaker({
         {/* RGB channel nested in the surround inner lip — XY torus, hole +Z */}
         <mesh position={[0, 0, -0.0008]}>
           <torusGeometry args={[0.0206, 0.0016, 12, 48]} />
-          <meshStandardMaterial
-            ref={ringMat}
-            color="#22d3ee"
-            emissive="#22d3ee"
-            emissiveIntensity={0.95}
-            roughness={0.2}
-            metalness={0.08}
-            transparent
-            opacity={0.9}
-          />
+          <meshBasicMaterial ref={ringMat} color="#22d3ee" transparent opacity={0.9} toneMapped={false} />
         </mesh>
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.005]}>
           <coneGeometry args={[0.019, 0.01, 36]} />
@@ -174,7 +161,7 @@ export function Speaker({
       {/* bottom light strip — flush in the plinth, not floating */}
       <mesh position={[0, -0.082, 0.04]}>
         <boxGeometry args={[0.062, 0.003, 0.006]} />
-        <meshStandardMaterial ref={stripMat} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.6} roughness={0.25} />
+        <meshBasicMaterial ref={stripMat} color="#22d3ee" toneMapped={false} />
       </mesh>
 
       <mesh position={[0, -0.09, 0]}>

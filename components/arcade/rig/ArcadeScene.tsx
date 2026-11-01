@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, Text, useProgress } from "@react-three/drei";
-import { Color, type Camera, type Group, type MeshBasicMaterial, type MeshStandardMaterial, type PointLight } from "three";
+import { Color, type Camera, type Group, type MeshBasicMaterial, type PointLight } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { prefersReducedMotion } from "@/lib/motion/engine";
 import {
@@ -424,9 +424,12 @@ function MiniArcade({ position, color }: { position: Vec3; color: string }) {
 
 function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
   const titleGroup = useRef<Group>(null);
-  const titleMat = useRef<MeshStandardMaterial>(null);
+  const titleMat = useRef<MeshBasicMaterial>(null);
   const plateMat = useRef<MeshBasicMaterial>(null);
-  const barMats = useRef<Array<MeshStandardMaterial | null>>([]);
+  const barMats = useRef<Array<MeshBasicMaterial | null>>([]);
+  const titleBase = useMemo(() => new Color("#9beef7"), []);
+  const barBase = useMemo(() => [new Color("#67e8f9"), new Color("#c084fc")], []);
+  const barTint = useMemo(() => new Color(), []);
 
   useFrame((state) => {
     if (reduced) return;
@@ -438,14 +441,15 @@ function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
       titleGroup.current.scale.set(s, s, 1);
     }
     if (titleMat.current) {
-      titleMat.current.emissiveIntensity = 2.25 + breath * 1.25;
+      titleMat.current.color.copy(titleBase).multiplyScalar(1.08 + breath * 0.3);
     }
     if (plateMat.current) {
       plateMat.current.opacity = 0.045 + breath * 0.07;
     }
     barMats.current.forEach((mat, index) => {
       if (!mat) return;
-      mat.emissiveIntensity = 0.55 + (index === 0 ? chase : 1 - chase) * 0.78;
+      const level = 0.62 + (index === 0 ? chase : 1 - chase) * 0.46;
+      mat.color.copy(barTint.copy(barBase[index] ?? barBase[0]).multiplyScalar(level));
     });
   });
 
@@ -457,27 +461,21 @@ function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
       </mesh>
       <mesh position={[0.04, 0.952, -1.052]}>
         <boxGeometry args={[0.7, 0.006, 0.006]} />
-        <meshStandardMaterial
+        <meshBasicMaterial
           ref={(material) => {
             barMats.current[0] = material;
           }}
           color="#67e8f9"
-          emissive="#22d3ee"
-          emissiveIntensity={0.95}
-          roughness={0.24}
           toneMapped={false}
         />
       </mesh>
       <mesh position={[0.04, 0.73, -1.052]}>
         <boxGeometry args={[0.62, 0.006, 0.006]} />
-        <meshStandardMaterial
+        <meshBasicMaterial
           ref={(material) => {
             barMats.current[1] = material;
           }}
           color="#c084fc"
-          emissive="#c084fc"
-          emissiveIntensity={0.78}
-          roughness={0.24}
           toneMapped={false}
         />
       </mesh>
@@ -494,15 +492,7 @@ function NeonWallTitle({ reduced = false }: { reduced?: boolean }) {
           outlineOpacity={0.7}
         >
           HUZAIFA
-          <meshStandardMaterial
-            ref={titleMat}
-            color="#ecfeff"
-            emissive="#22d3ee"
-            emissiveIntensity={2.35}
-            roughness={0.18}
-            metalness={0.04}
-            toneMapped={false}
-          />
+          <meshBasicMaterial ref={titleMat} color="#9beef7" toneMapped={false} />
         </Text>
       </Suspense>
     </group>
@@ -595,8 +585,8 @@ function ReferenceWall({ reduced = false }: { reduced?: boolean }) {
 
 
 function DeskAmbientLoops({ reduced = false }: { reduced?: boolean }) {
-  const edgeMat = useRef<MeshStandardMaterial>(null);
-  const runnerMat = useRef<MeshStandardMaterial>(null);
+  const edgeMat = useRef<MeshBasicMaterial>(null);
+  const runnerMat = useRef<MeshBasicMaterial>(null);
   const runner = useRef<Group>(null);
   const cyanLight = useRef<PointLight>(null);
   const cyan = useMemo(() => new Color("#22d3ee"), []);
@@ -611,17 +601,13 @@ function DeskAmbientLoops({ reduced = false }: { reduced?: boolean }) {
     live.lerpColors(cyan, magenta, chase);
 
     if (edgeMat.current) {
-      edgeMat.current.color.copy(live);
-      edgeMat.current.emissive.copy(live);
-      edgeMat.current.emissiveIntensity = 0.24 + breath * 0.32;
+      edgeMat.current.color.copy(live).multiplyScalar(0.58 + breath * 0.42);
     }
     if (runner.current) {
       runner.current.position.x = DESK_CENTER_X - 1.04 + ((t * 0.22) % 1) * 2.08;
     }
     if (runnerMat.current) {
-      runnerMat.current.color.copy(live);
-      runnerMat.current.emissive.copy(live);
-      runnerMat.current.emissiveIntensity = 0.9 + breath * 0.72;
+      runnerMat.current.color.copy(live).multiplyScalar(1.05 + breath * 0.45);
     }
     if (cyanLight.current) {
       cyanLight.current.color.copy(cyan);
@@ -633,21 +619,12 @@ function DeskAmbientLoops({ reduced = false }: { reduced?: boolean }) {
     <>
       <mesh position={[DESK_CENTER_X, 0.056, DESK_CENTER_Z + DESK_SIZE[2] / 2 + 0.004]}>
         <boxGeometry args={[DESK_SIZE[0] - 0.12, 0.006, 0.006]} />
-        <meshStandardMaterial ref={edgeMat} color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.32} roughness={0.28} toneMapped={false} />
+        <meshBasicMaterial ref={edgeMat} color="#22d3ee" toneMapped={false} />
       </mesh>
       <group ref={runner} position={[DESK_CENTER_X - 1.04, 0.0615, DESK_CENTER_Z + DESK_SIZE[2] / 2 + 0.010]}>
         <mesh>
           <boxGeometry args={[0.24, 0.004, 0.004]} />
-          <meshStandardMaterial
-            ref={runnerMat}
-            color="#c084fc"
-            emissive="#c084fc"
-            emissiveIntensity={1.2}
-            transparent
-            opacity={0.82}
-            roughness={0.18}
-            toneMapped={false}
-          />
+          <meshBasicMaterial ref={runnerMat} color="#c084fc" transparent opacity={0.82} toneMapped={false} />
         </mesh>
       </group>
       {/* hero light 2/3 — desk wash */}

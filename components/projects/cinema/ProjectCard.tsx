@@ -38,15 +38,22 @@ export function ProjectCard({
   return (
     <div
       data-reel-slot
-      className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 py-16 md:px-8"
+      // Earlier frames stay on top: the card leaving the stage must pass in
+      // front of the one rising behind it, and DOM order alone would do the
+      // opposite.
+      style={{ zIndex: total - index }}
+      className="pointer-events-none absolute inset-0 flex items-center justify-center px-3 pb-2 pt-1 sm:px-6 sm:py-3 md:px-8 md:py-4"
     >
       <article
         data-reel-card
-        aria-hidden={active ? undefined : "true"}
+        inert={!active}
         className={cn(
-          "relative flex aspect-[16/11] w-full max-w-[min(92vw,76rem)] flex-col overflow-hidden rounded-[1.75rem] border border-cyan-200/20 bg-[#0a0a0e]",
+          "relative flex h-full w-full max-w-[min(94vw,78rem)] flex-col overflow-hidden rounded-[1.5rem] border border-cyan-200/20 bg-[#0a0a0e] md:rounded-[1.75rem]",
           "shadow-[0_0_40px_rgba(34,211,238,0.10),0_0_140px_rgba(59,130,246,0.16),inset_0_1px_0_rgba(255,255,255,0.06)]",
-          "[backface-visibility:hidden] [transform-style:preserve-3d] sm:aspect-[16/10] lg:aspect-[16/9]",
+          "[backface-visibility:hidden] [transform-style:preserve-3d]",
+          // Pre-hydration pose. GSAP writes inline styles that beat these the
+          // moment the timeline is built, so this only governs the first paint.
+          index === 0 ? null : "invisible opacity-0",
           active ? "pointer-events-auto" : "pointer-events-none",
         )}
       >
@@ -101,7 +108,7 @@ export function ProjectCard({
         {/* ---------- info slate ---------- */}
         <div
           data-reel-layer="front"
-          className="relative z-40 mt-auto flex flex-col gap-4 p-5 md:p-8 lg:p-10"
+          className="relative z-40 mt-auto flex flex-col gap-2.5 p-4 sm:gap-3.5 sm:p-6 md:gap-4 md:p-8 lg:p-10"
         >
           <div className="flex items-center gap-3">
             <span
@@ -114,16 +121,16 @@ export function ProjectCard({
             </p>
           </div>
 
-          <h3 className="max-w-3xl text-balance text-[clamp(1.5rem,3.6vw,3.25rem)] font-semibold uppercase leading-[0.95] tracking-[-0.055em] text-foreground">
+          <h3 className="max-w-3xl text-balance text-[clamp(1.35rem,3.6vw,3.25rem)] font-semibold uppercase leading-[0.95] tracking-[-0.055em] text-foreground">
             {project.title}
           </h3>
 
-          <p className="max-w-2xl text-pretty text-sm leading-relaxed text-foreground/70 md:text-base">
+          <p className="line-clamp-3 max-w-2xl text-pretty text-[13px] leading-relaxed text-foreground/70 sm:line-clamp-none sm:text-sm md:text-base">
             {project.description}
           </p>
 
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3 pt-1">
-            <ul className="flex min-w-0 flex-wrap gap-2">
+            <ul className="flex min-w-0 flex-wrap gap-1.5 sm:gap-2">
               {project.techStack.map((tech) => (
                 <li
                   key={tech}

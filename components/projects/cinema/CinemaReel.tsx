@@ -66,6 +66,7 @@ export function CinemaReel({
   const progressRef = useRef<HTMLSpanElement>(null);
   const activeRef = useRef(0);
 
+  const HeadingTag = headingLevel;
   const reduced = useReducedMotion();
   const [category, setCategory] = useState<CinemaCategoryId>(DEFAULT_CINEMA_CATEGORY);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -179,9 +180,31 @@ export function CinemaReel({
         },
       });
 
+      // The opening frame rides in on the scroll that brings the section to
+      // the top of the viewport, so the stage is never empty once it locks.
+      if (!reduced) {
+        gsap.fromTo(
+          cards[0],
+          { ...BACK_POSE },
+          {
+            ...MARK_POSE,
+            ease: "power2.out",
+            force3D: true,
+            scrollTrigger: {
+              trigger: section,
+              start: "top bottom",
+              end: "top top",
+              scrub: 1.1,
+              invalidateOnRefresh: true,
+            },
+          },
+        );
+      }
+
       cards.forEach((card, index) => {
         const at = index * STEP;
         const last = index === cards.length - 1;
+        const first = index === 0;
 
         if (reduced) {
           // Honour the preference: same choreography, no depth or motion.
@@ -201,12 +224,14 @@ export function CinemaReel({
           return;
         }
 
-        timeline.fromTo(
-          card,
-          { ...BACK_POSE },
-          { ...MARK_POSE, duration: ENTER, ease: "power2.out", force3D: true },
-          at,
-        );
+        if (!first) {
+          timeline.fromTo(
+            card,
+            { ...BACK_POSE },
+            { ...MARK_POSE, duration: ENTER, ease: "power2.out", force3D: true },
+            at,
+          );
+        }
 
         if (!last) {
           timeline.to(
@@ -279,7 +304,7 @@ export function CinemaReel({
         />
 
         {/* ---------- header + tabs ---------- */}
-        <header className="relative z-30 shrink-0 px-[var(--page-gutter)] pt-[max(4.5rem,8vh)]">
+        <header className="relative z-30 shrink-0 px-[var(--page-gutter)] pt-[calc(4rem+1rem)] md:pt-[calc(4rem+2rem)]">
           <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div className="min-w-0">
               <p className="label mb-3 flex items-center gap-3">
@@ -289,21 +314,12 @@ export function CinemaReel({
                 />
                 SELECTED WORK / REEL
               </p>
-              {headingLevel === "h1" ? (
-                <h1 className="text-[clamp(2.25rem,6vw,5rem)] font-semibold uppercase leading-[0.86] tracking-[-0.07em] text-foreground">
-                  Built to{" "}
-                  <span className="bg-gradient-to-r from-foreground via-cyan-100 to-accent bg-clip-text text-transparent">
-                    Work.
-                  </span>
-                </h1>
-              ) : (
-                <h2 className="text-[clamp(2.25rem,6vw,5rem)] font-semibold uppercase leading-[0.86] tracking-[-0.07em] text-foreground">
-                  Built to{" "}
-                  <span className="bg-gradient-to-r from-foreground via-cyan-100 to-accent bg-clip-text text-transparent">
-                    Work.
-                  </span>
-                </h2>
-              )}
+              <HeadingTag className="text-[clamp(2rem,5.6vw,4.75rem)] font-semibold uppercase leading-[0.86] tracking-[-0.07em] text-foreground">
+                Built to{" "}
+                <span className="bg-gradient-to-r from-foreground via-cyan-100 to-accent bg-clip-text text-transparent">
+                  Work.
+                </span>
+              </HeadingTag>
               <p
                 key={activeCategory.id}
                 className="mt-3 max-w-xl text-sm leading-relaxed text-muted md:text-base"

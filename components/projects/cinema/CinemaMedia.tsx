@@ -207,7 +207,7 @@ export function CinemaMedia({ project, load, active }: MediaProps) {
   return (
     <div
       className="pointer-events-none absolute inset-0 select-none [&_iframe]:pointer-events-none [&_video]:pointer-events-none"
-      aria-hidden={project.pending ? undefined : "true"}
+      aria-hidden="true"
     >
       {project.pending ? (
         <PendingSlate project={project} />

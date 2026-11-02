@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "lenis/dist/lenis.css";
 import { registerSmoothScroller } from "@/lib/motion/scrollTo";
+import { isArcadeReturnActive, onArcadeReturnSettled } from "@/lib/arcade/spatialZoom";
 
 /**
  * Global smooth scrolling.
@@ -49,15 +50,27 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     const raf = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
-    lenis.start();
+    // ScrollTrigger.refresh() is a synchronous measurement of every trigger on
+    // the site. Returning from /arcade this component mounts *inside* the
+    // element the exit animation is scaling, so refreshing now both measures
+    // through a scaled ancestor and lands as a dropped-frame spike in the
+    // middle of the transition. Keep the page frozen and wait for the handoff.
+    if (isArcadeReturnActive()) lenis.stop();
+    else lenis.start();
 
-    // Returning from /arcade mounts this while the spatial root is still held
-    // at scale(1.15) with `contain: paint style`, so measuring right now reads
-    // every trigger through a scaled ancestor. Wait a frame here; the
-    // authoritative pass is finalizeArcadeReturn() once the zoom has cleared.
-    const refreshFrame = requestAnimationFrame(() => ScrollTrigger.refresh());
+    let refreshFrame = 0;
+    let disposed = false;
+    const unsubscribeArcade = onArcadeReturnSettled(() => {
+      refreshFrame = requestAnimationFrame(() => {
+        if (disposed) return;
+        lenis.start();
+        ScrollTrigger.refresh();
+      });
+    });
 
     return () => {
+      disposed = true;
+      unsubscribeArcade();
       cancelAnimationFrame(refreshFrame);
       registerSmoothScroller(null);
       lenis.off("scroll", updateScrollTrigger);

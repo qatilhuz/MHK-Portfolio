@@ -7,6 +7,7 @@ import { SceneErrorBoundary } from "@/components/three/SceneErrorBoundary";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { trackEvent } from "@/lib/analytics/client";
 import { ARCADE_ENTER_EVENT, ARCADE_EXIT_FLAG, ARCADE_TRANSITION_LOCK_CLASS } from "@/lib/arcade/session";
+import { onArcadeReturnSettled } from "@/lib/arcade/spatialZoom";
 
 const TERMINAL_BOOT_LINES = [
   "Initializing Huzaifa's 3D workspace...",
@@ -134,6 +135,16 @@ export function ArcadeSetup() {
   const [loaderMounted, setLoaderMounted] = useState(initialModeRef.current !== "exit");
   const [sceneNearViewport, setSceneNearViewport] = useState(initialModeRef.current === "exit");
   const [pageVisible, setPageVisible] = useState(true);
+  // Rebuilding the rig means a dynamic import plus several 2048x2048 canvas
+  // atlases drawn on the main thread. On the way back from /arcade that used
+  // to run underneath the exit animation and was the single biggest source of
+  // its frame drops. Hold it until the transition has handed the page back.
+  const [returnSettled, setReturnSettled] = useState(initialModeRef.current !== "exit");
+
+  useEffect(() => {
+    if (returnSettled) return;
+    return onArcadeReturnSettled(() => setReturnSettled(true));
+  }, [returnSettled]);
 
   useEffect(() => {
     router.prefetch("/arcade");
@@ -243,7 +254,7 @@ export function ArcadeSetup() {
         <ArcadeTerminalLoader />
       ) : (
         <>
-          {sceneRequested ? (
+          {sceneRequested && returnSettled ? (
             <div className="arcade-scene-shell" data-visible={canvasVisible ? "true" : "false"}>
               <SceneErrorBoundary fallback={<ArcadeFallback onEnter={goArcade} />}>
                 <Suspense fallback={<ArcadeTerminalLoader />}>
@@ -257,6 +268,7 @@ export function ArcadeSetup() {
               </SceneErrorBoundary>
             </div>
           ) : null}
+          {returnSettled ? null : <ArcadeTerminalLoader />}
           {loaderMounted ? <ArcadeTerminalLoader exiting={!showLoadingOverlay} /> : null}
           {sceneInteractive ? (
             <button

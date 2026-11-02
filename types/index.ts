@@ -1,3 +1,5 @@
+import type { AvatarEmotion } from "@/lib/assistant/emotion";
+
 export type ProjectType =
   | "interactive-web"
   | "video"
@@ -149,11 +151,16 @@ export interface AssistantMessage {
   role: "visitor" | "assistant";
   text: string;
   links?: AssistantLink[];
+  /** Drives the 3D avatar's face. Only ever set on assistant turns. */
+  emotion?: AvatarEmotion;
 }
 
 export interface AssistantReply {
   text: string;
   links?: AssistantLink[];
+  emotion?: AvatarEmotion;
+  /** "llm" when the model answered, "local" when the knowledge base did. */
+  source?: "llm" | "local";
 }
 
 export type SocialPlatform =

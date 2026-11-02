@@ -7,6 +7,7 @@ import { useAssistant } from "@/hooks/useAssistant";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
+import { DEFAULT_EMOTION, type AvatarEmotion } from "@/lib/assistant/emotion";
 import { SceneErrorBoundary } from "@/components/three/SceneErrorBoundary";
 import { AvatarChat } from "./AvatarChat";
 import { AvatarFallback } from "./AvatarFallback";
@@ -29,6 +30,8 @@ export function AvatarAssistant() {
   const webgl = useWebGLSupport();
   const { messages, status, setStatus, error, ask, reset } = useAssistant();
   const [input, setInput] = useState("");
+  // Drives the 3D face. Set from each assistant reply; falls back to neutral.
+  const [emotion, setEmotion] = useState<AvatarEmotion>(DEFAULT_EMOTION);
 
   useEffect(() => {
     trackEvent("assistant_open", undefined, { onceKey: "assistant_open" });
@@ -41,6 +44,7 @@ export function AvatarAssistant() {
       const reply = await ask(question);
       setInput("");
       if (!reply) return;
+      setEmotion(reply.emotion ?? DEFAULT_EMOTION);
       if (speech.supported && !speech.muted) {
         setStatus("speaking");
         speech.speak(reply.text, () => setStatus("idle"));
@@ -79,7 +83,7 @@ export function AvatarAssistant() {
             <AvatarFallback status={visualStatus} />
           ) : (
             <SceneErrorBoundary>
-              <AvatarScene status={visualStatus} />
+              <AvatarScene status={visualStatus} emotion={emotion} />
             </SceneErrorBoundary>
           )}
         </div>
@@ -113,6 +117,7 @@ export function AvatarAssistant() {
               speech.cancel();
               reset();
               setInput("");
+              setEmotion(DEFAULT_EMOTION);
             }}
             busy={status === "thinking"}
           />

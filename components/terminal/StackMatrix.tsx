@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { stackMatrix } from "@/data/terminalIntro";
 
 /**
@@ -8,7 +9,7 @@ import { stackMatrix } from "@/data/terminalIntro";
  * a single long line, so it stays readable at phone width where a real `cat`
  * would wrap into soup.
  */
-export function StackMatrix() {
+function StackMatrixImpl() {
   return (
     <div className="font-mono text-[11px] leading-relaxed sm:text-xs">
       <p className="text-white/30">{"{"}</p>
@@ -47,3 +48,9 @@ export function StackMatrix() {
     </div>
   );
 }
+
+/**
+ * Memoised. It takes no props and never changes, but it lives inside a tree
+ * that re-renders on every typed character of the intro.
+ */
+export const StackMatrix = memo(StackMatrixImpl);

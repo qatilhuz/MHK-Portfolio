@@ -105,6 +105,7 @@ function BootLine({
 export function TerminalWindow() {
   const shellRef = useRef<HTMLDivElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reduced = useReducedMotion();
@@ -133,15 +134,6 @@ export function TerminalWindow() {
 
       gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-      // Arm the intro slightly before the window is on screen, so the boot
-      // sequence is already a line or two in by the time it is readable.
-      ScrollTrigger.create({
-        trigger: shell,
-        start: "top bottom-=8%",
-        once: true,
-        onEnter: () => setAwake(true),
-      });
-
       // Gates the frame-rate sampler. Created before the reduced-motion
       // bail-out so the readout still works when animation is turned off.
       ScrollTrigger.create({
@@ -151,10 +143,26 @@ export function TerminalWindow() {
         onToggle: (self) => setVisible(self.isActive),
       });
 
-      if (reduced) {
-        setSettled(true);
-        return;
-      }
+      // The window has landed. Two things wait on this moment.
+      //
+      // The boot sequence used to start on first sight, which meant it was
+      // typing — and re-rendering this tree a couple of dozen times a second —
+      // while the 3D entrance was still being scrubbed. React reconciliation
+      // layered on top of a scrubbed transform is what the stutter was. It
+      // also reads better: the window arrives, *then* the OS comes up.
+      //
+      // The glass frosting waits for the same moment, for the same reason.
+      ScrollTrigger.create({
+        trigger: shell,
+        start: reduced ? "top bottom-=10%" : "center center+=12%",
+        end: "bottom top",
+        onToggle: (self) => {
+          setSettled(self.isActive);
+          if (self.isActive) setAwake(true);
+        },
+      });
+
+      if (reduced) return;
 
       gsap.set(shell, {
         transformPerspective: 1100,
@@ -200,17 +208,6 @@ export function TerminalWindow() {
           },
         },
       );
-
-      // backdrop-filter is the single most expensive thing in this design: it
-      // re-reads and re-blurs everything behind the panel, and the ambient
-      // blobs behind it never stop drifting. So the glass only frosts once the
-      // entrance has finished moving, and clears again when the window leaves.
-      ScrollTrigger.create({
-        trigger: shell,
-        start: "center center+=12%",
-        end: "bottom top",
-        onToggle: (self) => setSettled(self.isActive),
-      });
     },
     { scope: shellRef, dependencies: [reduced], revertOnUpdate: true },
   );
@@ -219,14 +216,42 @@ export function TerminalWindow() {
    * Log autoscroll
    * ---------------------------------------------------------------- */
 
-  useEffect(() => {
+  /**
+   * Scrolls the log, and only the log.
+   *
+   * Deliberately not bottomRef.scrollIntoView(): that walks up the tree and
+   * scrolls *every* scrollable ancestor, the document included. With Lenis
+   * driving the page that lands as a lurch, which is the exact problem the
+   * data-lenis-prevent work above exists to stop. Setting scrollTop on the
+   * container cannot escape it.
+   */
+  const scrollLogToBottom = (smooth: boolean) => {
     const log = logRef.current;
     if (!log) return;
-    // Only chase the bottom if the visitor is already there — scrolling back
-    // through earlier output should not be yanked away from them.
+    log.scrollTo({
+      top: log.scrollHeight,
+      behavior: smooth && !reduced ? "smooth" : "auto",
+    });
+  };
+
+  // A submitted command always wins. The visitor just asked for this output,
+  // so take them to it even if they had scrolled back up to read something.
+  useEffect(() => {
+    if (!lines.length) return;
+    scrollLogToBottom(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines.length]);
+
+  // The intro only chases the bottom if the visitor is already down there,
+  // and never smoothly: one queued smooth scroll per typed character would
+  // fight itself.
+  useEffect(() => {
+    const log = logRef.current;
+    if (!log || intro.complete) return;
     const distance = log.scrollHeight - log.scrollTop - log.clientHeight;
-    if (distance < 160) log.scrollTop = log.scrollHeight;
-  }, [intro.done, intro.typed, lines]);
+    if (distance < 160) scrollLogToBottom(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intro.done, intro.typed, intro.complete]);
 
   /* ---------------------------------------------------------------- *
    * REPL
@@ -360,9 +385,16 @@ export function TerminalWindow() {
     <div ref={shellRef} className="relative [backface-visibility:hidden]">
       <div
         className={cn(
-          "relative overflow-hidden rounded-2xl border border-white/10 bg-black/60",
+          "relative overflow-hidden rounded-2xl border border-white/10",
+          // Was bg-black/60 + backdrop-blur-xl. A 24px backdrop filter has to
+          // re-read and re-blur everything behind the panel every frame, and
+          // the ambient blobs back there never stop drifting — so it was
+          // burning GPU time continuously, not just during the entrance. The
+          // surface is now mostly opaque and the filter is a token 4px, which
+          // keeps the glass edge without paying for it.
+          "bg-[#0a0b0f]/90",
           "shadow-[0_40px_120px_-50px_rgba(34,211,238,0.45),inset_0_1px_0_rgba(255,255,255,0.07)]",
-          settled && "backdrop-blur-xl",
+          settled && "backdrop-blur-sm",
         )}
       >
         {/* ---------- title bar ---------- */}
@@ -398,7 +430,13 @@ export function TerminalWindow() {
         {/* ---------- output ---------- */}
         <div
           ref={logRef}
-          className="max-h-[26rem] min-h-[20rem] space-y-2 overflow-y-auto p-4 sm:p-5"
+          // Lenis swallows wheel events globally; this attribute is the
+          // documented opt-out. Lenis checks the event's composedPath for it
+          // and bails, handing the gesture back to the browser so this div
+          // scrolls natively. overscroll-contain then stops the scroll
+          // chaining to the page once the log hits its end.
+          data-lenis-prevent
+          className="panel-scroll max-h-[26rem] min-h-[20rem] space-y-2.5 overflow-y-auto overscroll-contain p-5 leading-relaxed sm:max-h-[30rem] sm:p-6"
         >
           {/* aria-live is off here on purpose: a boot sequence announced line
               by line would bury a screen reader. The text stays readable by
@@ -422,11 +460,15 @@ export function TerminalWindow() {
               </div>
             ))}
           </div>
+
+          {/* End-of-log marker. Doubles as breathing room so the last line is
+              never flush against the edge of the scroll box. */}
+          <div ref={bottomRef} className="h-2" aria-hidden="true" />
         </div>
 
         {/* ---------- prompt ---------- */}
         <form
-          className="flex items-center gap-2 border-t border-white/10 bg-white/[0.02] px-4 py-3"
+          className="flex items-center gap-2.5 border-t border-white/10 bg-white/[0.02] px-5 py-3.5 sm:px-6"
           onSubmit={onSubmit}
           onClick={() => {
             if (!intro.complete) handleSkip();
@@ -451,7 +493,7 @@ export function TerminalWindow() {
             autoComplete="off"
             spellCheck={false}
             disabled={!intro.complete}
-            className="h-9 min-w-0 flex-1 bg-transparent font-mono text-sm text-cyan-200 caret-cyan-300 outline-none placeholder:text-white/25 disabled:cursor-pointer"
+            className="h-10 min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 font-mono text-sm text-cyan-200 caret-cyan-300 outline-none transition-colors duration-[var(--motion-micro)] placeholder:text-white/25 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-500/50 disabled:cursor-pointer disabled:text-white/30"
             placeholder={
               intro.complete ? "help, about, skills, projects…" : "booting…"
             }
@@ -459,7 +501,7 @@ export function TerminalWindow() {
           <button
             type="submit"
             disabled={!intro.complete}
-            className="shrink-0 rounded-md border border-cyan-300/25 bg-cyan-300/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-200 transition-colors duration-[var(--motion-micro)] hover:border-cyan-200/60 hover:bg-cyan-300/20 disabled:opacity-30"
+            className="h-10 shrink-0 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-4 font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-200 outline-none transition-colors duration-[var(--motion-micro)] hover:border-cyan-200/60 hover:bg-cyan-300/20 focus:ring-1 focus:ring-cyan-500/50 disabled:opacity-30"
           >
             run
           </button>

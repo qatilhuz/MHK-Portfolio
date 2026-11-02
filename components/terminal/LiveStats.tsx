@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
 /** Chromium exposes this; the spec does not. Treated as optional everywhere. */
 interface PerformanceWithMemory extends Performance {
@@ -59,7 +59,7 @@ function Stat({ label, value, measured = false, tone = "default" }: StatProps) {
  * The sampling loop only runs while `live` is true, so it costs nothing once
  * the section has scrolled away.
  */
-export function LiveStats({ live }: { live: boolean }) {
+function LiveStatsImpl({ live }: { live: boolean }) {
   const [fps, setFps] = useState<number | null>(null);
   const [heap, setHeap] = useState<number | null>(null);
   const [session, setSession] = useState(0);
@@ -115,3 +115,9 @@ export function LiveStats({ live }: { live: boolean }) {
     </div>
   );
 }
+
+/**
+ * Memoised. It already re-renders itself once a second; it does not also need
+ * to re-render on every keystroke of the intro above it.
+ */
+export const LiveStats = memo(LiveStatsImpl);

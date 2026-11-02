@@ -81,6 +81,46 @@ html.lenis-scrolling main {
   pointer-events: none;
 }
 
+/* ...with one exception. Wheel events are delivered by hit testing, so an
+   element with pointer-events:none is invisible to them and the event lands
+   on the document instead — which means Lenis never sees the
+   [data-lenis-prevent] container in the event's composedPath and scrolls the
+   whole page. Any region that opts out of Lenis has to stay hit-testable. */
+html.lenis-scrolling main [data-lenis-prevent],
+html.lenis-scrolling main [data-lenis-prevent] * {
+  pointer-events: auto;
+}
+
+/* Thin, dark, unobtrusive scrollbar for panels that scroll internally.
+   Firefox gets the standard properties; WebKit and Blink get the pseudo
+   elements. Both degrade to the platform default if unsupported. */
+.panel-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.panel-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.panel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel-scroll::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(103, 232, 249, 0.38);
+}
+
+.panel-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -178,7 +218,9 @@ h3 {
   }
   100% {
     clip-path: inset(0 0 0 0);
-    text-shadow: 0 0 22px rgba(59, 130, 246, 0.38), 0 0 48px rgba(59, 130, 246, 0.16);
+    text-shadow:
+      0 0 22px rgba(59, 130, 246, 0.38),
+      0 0 48px rgba(59, 130, 246, 0.16);
   }
 }
 
@@ -336,7 +378,13 @@ h3 {
   position: absolute;
   inset: -1px;
   pointer-events: none;
-  background: linear-gradient(105deg, transparent 36%, rgba(165, 243, 252, 0.065) 47%, rgba(255, 255, 255, 0.13) 50%, transparent 62%);
+  background: linear-gradient(
+    105deg,
+    transparent 36%,
+    rgba(165, 243, 252, 0.065) 47%,
+    rgba(255, 255, 255, 0.13) 50%,
+    transparent 62%
+  );
   transform: translateX(-128%) skewX(-12deg);
   animation: terminal-shell-sheen 6.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
@@ -373,7 +421,12 @@ h3 {
   left: -30%;
   width: 34%;
   pointer-events: none;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.52), transparent);
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.52),
+    transparent
+  );
   mix-blend-mode: screen;
   opacity: 0;
   transform: translateX(-170%) skewX(-18deg);
@@ -416,8 +469,16 @@ h3 {
 
 .grid-fade {
   background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px);
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--border) 35%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--border) 35%, transparent) 1px,
+      transparent 1px
+    );
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
 }
@@ -466,7 +527,11 @@ h3 {
 .ambient-blob {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--ambient-blob), transparent 68%);
+  background: radial-gradient(
+    circle at 30% 30%,
+    var(--ambient-blob),
+    transparent 68%
+  );
   opacity: var(--ambient-opacity);
   will-change: transform;
   animation-timing-function: ease-in-out;
@@ -490,7 +555,11 @@ h3 {
   right: -8%;
   top: 38%;
   border-radius: 58% 42% 62% 38%;
-  background: radial-gradient(circle at 60% 40%, var(--ambient-blob-soft), transparent 70%);
+  background: radial-gradient(
+    circle at 60% 40%,
+    var(--ambient-blob-soft),
+    transparent 70%
+  );
   animation-name: ambient-drift-y;
   animation-duration: var(--ambient-duration-b);
 }
@@ -511,8 +580,13 @@ h3 {
   inset: -8%;
   background:
     radial-gradient(ellipse at 20% 0%, var(--accent-soft), transparent 55%),
-    radial-gradient(ellipse at 90% 80%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 50%);
-  animation: ambient-veil var(--ambient-duration-c) ease-in-out infinite alternate;
+    radial-gradient(
+      ellipse at 90% 80%,
+      color-mix(in srgb, var(--accent) 10%, transparent),
+      transparent 50%
+    );
+  animation: ambient-veil var(--ambient-duration-c) ease-in-out infinite
+    alternate;
   opacity: 0.85;
 }
 
@@ -520,7 +594,11 @@ h3 {
   display: none;
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--foreground) 14%, transparent) 1px, transparent 1.5px);
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--foreground) 14%, transparent) 1px,
+    transparent 1.5px
+  );
   background-size: 28px 28px;
   opacity: 0.18;
   mask-image: radial-gradient(ellipse at center, black 10%, transparent 75%);
@@ -560,8 +638,6 @@ h3 {
   }
 }
 
-
-
 [data-arcade-spatial-root] {
   transform-origin: 50% 50%;
   backface-visibility: hidden;
@@ -581,7 +657,6 @@ body.arcade-transition-lock {
   cursor: default !important;
   user-select: none;
 }
-
 
 .arcade-scene-shell {
   position: absolute;
@@ -607,8 +682,13 @@ body.arcade-transition-lock {
   place-items: center;
   padding: 1rem;
   background:
-    linear-gradient(rgba(34, 197, 94, 0.035) 1px, transparent 1px) 0 0 / 100% 0.6rem,
-    radial-gradient(circle at 50% 40%, rgba(34, 197, 94, 0.14), transparent 34%),
+    linear-gradient(rgba(34, 197, 94, 0.035) 1px, transparent 1px) 0 0 / 100%
+      0.6rem,
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(34, 197, 94, 0.14),
+      transparent 34%
+    ),
     linear-gradient(180deg, rgba(0, 0, 0, 0.96), rgba(2, 6, 23, 0.94));
 }
 
@@ -626,7 +706,12 @@ body.arcade-transition-lock {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent, rgba(34, 197, 94, 0.055), transparent);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(34, 197, 94, 0.055),
+    transparent
+  );
   opacity: 0.55;
   transform: translateY(-100%);
   animation: arcade-terminal-scan 2.4s linear infinite;
@@ -652,7 +737,11 @@ body.arcade-transition-lock {
   gap: 0.45rem;
   border-bottom: 1px solid rgba(34, 197, 94, 0.18);
   padding: 0.68rem 0.85rem;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(0, 8, 4, 0.68));
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.78),
+    rgba(0, 8, 4, 0.68)
+  );
 }
 
 .arcade-terminal-chrome span {
@@ -763,7 +852,8 @@ body.arcade-transition-lock {
 }
 
 body.arcade-transition-lock .arcade-enter-hotspot,
-[data-arcade-spatial-root][data-arcade-spatial-active="true"] .arcade-enter-hotspot {
+[data-arcade-spatial-root][data-arcade-spatial-active="true"]
+  .arcade-enter-hotspot {
   pointer-events: none;
 }
 .arcade-rig {
@@ -772,11 +862,25 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   --arcade-blue: #3b82f6;
   border: 1px solid color-mix(in srgb, var(--arcade-cyan) 30%, var(--border));
   background:
-    radial-gradient(ellipse at 18% 20%, rgba(34, 211, 238, 0.22), transparent 36%),
-    radial-gradient(ellipse at 55% 0%, rgba(192, 132, 252, 0.18), transparent 48%),
-    radial-gradient(ellipse at 82% 18%, rgba(34, 211, 238, 0.16), transparent 38%),
+    radial-gradient(
+      ellipse at 18% 20%,
+      rgba(34, 211, 238, 0.22),
+      transparent 36%
+    ),
+    radial-gradient(
+      ellipse at 55% 0%,
+      rgba(192, 132, 252, 0.18),
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse at 82% 18%,
+      rgba(34, 211, 238, 0.16),
+      transparent 38%
+    ),
     linear-gradient(180deg, #121827 0%, #07090f 100%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025), 0 24px 80px -42px rgba(34, 211, 238, 0.28);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.025),
+    0 24px 80px -42px rgba(34, 211, 238, 0.28);
 }
 
 .arcade-portal {
@@ -787,7 +891,11 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   opacity: 0;
   visibility: hidden;
   background:
-    radial-gradient(circle at 50% 40%, rgba(34, 211, 238, 0.45), transparent 38%),
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(34, 211, 238, 0.45),
+      transparent 38%
+    ),
     radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.55), #05060a 72%);
   clip-path: circle(0% at 50% 40%);
 }
@@ -802,7 +910,11 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   position: absolute;
   inset: auto 10% -20% 10%;
   height: 40%;
-  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.22), transparent 70%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(59, 130, 246, 0.22),
+    transparent 70%
+  );
   pointer-events: none;
 }
 
@@ -820,7 +932,9 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   border-radius: 0.45rem;
   background: linear-gradient(180deg, #1c1d24, #0d0e12);
   border: 1px solid #2a2b33;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 28px rgba(192, 132, 252, 0.12);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 28px rgba(192, 132, 252, 0.12);
 }
 
 .arcade-pc-window {
@@ -828,7 +942,12 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   inset: 12% 14% 18% 14%;
   overflow: hidden;
   border-radius: 0.2rem;
-  background: radial-gradient(circle at 30% 20%, rgba(192, 132, 252, 0.35), transparent 50%),
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(192, 132, 252, 0.35),
+      transparent 50%
+    ),
     radial-gradient(circle at 70% 80%, rgba(34, 211, 238, 0.28), #07080c 70%);
 }
 
@@ -838,7 +957,11 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   height: 2.1rem;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.18);
-  background: repeating-conic-gradient(from 0deg, transparent 0 18deg, rgba(255, 255, 255, 0.22) 18deg 28deg);
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0 18deg,
+    rgba(255, 255, 255, 0.22) 18deg 28deg
+  );
   animation: arcade-spin 3.2s linear infinite;
   box-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
 }
@@ -862,7 +985,12 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   bottom: 10%;
   height: 0.45rem;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--arcade-magenta), var(--arcade-cyan), var(--arcade-blue));
+  background: linear-gradient(
+    90deg,
+    var(--arcade-magenta),
+    var(--arcade-cyan),
+    var(--arcade-blue)
+  );
   background-size: 200% 100%;
   animation: arcade-rgb 4s linear infinite;
 }
@@ -873,7 +1001,12 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   right: 0;
   bottom: 8%;
   height: 3px;
-  background: linear-gradient(90deg, var(--arcade-cyan), var(--arcade-magenta), var(--arcade-blue));
+  background: linear-gradient(
+    90deg,
+    var(--arcade-cyan),
+    var(--arcade-magenta),
+    var(--arcade-blue)
+  );
   background-size: 200% 100%;
   animation: arcade-rgb 5s linear infinite;
 }
@@ -891,7 +1024,9 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   border-radius: 0.7rem;
   background: linear-gradient(180deg, #1a1b22, #0b0c10);
   border: 1px solid #2e2f38;
-  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.9), 0 0 40px rgba(59, 130, 246, 0.12);
+  box-shadow:
+    0 18px 40px -24px rgba(0, 0, 0, 0.9),
+    0 0 40px rgba(59, 130, 246, 0.12);
 }
 
 .arcade-screen {
@@ -906,8 +1041,16 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   position: absolute;
   inset: -20%;
   background:
-    radial-gradient(circle at 20% 30%, rgba(34, 211, 238, 0.28), transparent 32%),
-    radial-gradient(circle at 80% 70%, rgba(192, 132, 252, 0.3), transparent 36%),
+    radial-gradient(
+      circle at 20% 30%,
+      rgba(34, 211, 238, 0.28),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(192, 132, 252, 0.3),
+      transparent 36%
+    ),
     linear-gradient(125deg, #07101c, #120818 45%, #061018);
   animation: arcade-wall 10s ease-in-out infinite alternate;
 }
@@ -915,7 +1058,11 @@ body.arcade-transition-lock .arcade-enter-hotspot,
 .arcade-scanlines {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(0, 0, 0, 0.18) 3px 4px);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 3px,
+    rgba(0, 0, 0, 0.18) 3px 4px
+  );
   opacity: 0.35;
   pointer-events: none;
 }
@@ -951,7 +1098,11 @@ body.arcade-transition-lock .arcade-enter-hotspot,
 .arcade-enter {
   margin-top: 0.35rem;
   border: 1px solid color-mix(in srgb, var(--arcade-cyan) 55%, white);
-  background: linear-gradient(180deg, rgba(34, 211, 238, 0.18), rgba(59, 130, 246, 0.12));
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 0.18),
+    rgba(59, 130, 246, 0.12)
+  );
   color: #f4f4f5;
   border-radius: 999px;
   padding: 0.55rem 1.15rem;
@@ -961,7 +1112,11 @@ body.arcade-transition-lock .arcade-enter-hotspot,
 }
 
 .arcade-enter:hover:not(:disabled) {
-  background: linear-gradient(180deg, rgba(34, 211, 238, 0.32), rgba(59, 130, 246, 0.2));
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 0.32),
+    rgba(59, 130, 246, 0.2)
+  );
 }
 
 .arcade-enter:disabled {
@@ -1027,7 +1182,11 @@ body.arcade-transition-lock .arcade-enter-hotspot,
   padding: 1.25rem 1rem 1.4rem;
   min-height: 22rem;
   background:
-    radial-gradient(ellipse at 50% -10%, rgba(34, 211, 238, 0.14), transparent 50%),
+    radial-gradient(
+      ellipse at 50% -10%,
+      rgba(34, 211, 238, 0.14),
+      transparent 50%
+    ),
     linear-gradient(180deg, #07080e, #09090b);
 }
 

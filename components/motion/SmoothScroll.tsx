@@ -49,10 +49,16 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     const raf = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
+    lenis.start();
 
-    ScrollTrigger.refresh();
+    // Returning from /arcade mounts this while the spatial root is still held
+    // at scale(1.15) with `contain: paint style`, so measuring right now reads
+    // every trigger through a scaled ancestor. Wait a frame here; the
+    // authoritative pass is finalizeArcadeReturn() once the zoom has cleared.
+    const refreshFrame = requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
+      cancelAnimationFrame(refreshFrame);
       registerSmoothScroller(null);
       lenis.off("scroll", updateScrollTrigger);
       gsap.ticker.remove(raf);

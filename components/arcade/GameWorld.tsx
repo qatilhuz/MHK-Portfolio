@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { trackEvent } from "@/lib/analytics/client";
 import { arcadeGames, futureCabinets } from "@/lib/arcade/registry";
 import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
-import { runArcadeExitHandoff } from "@/lib/arcade/spatialZoom";
+import { releaseArcadeScrollLock, runArcadeExitHandoff } from "@/lib/arcade/spatialZoom";
 import type { ArcadeGameId } from "@/lib/arcade/gameTypes";
 
 const RockPaperScissors = dynamic(() =>
@@ -24,9 +24,32 @@ export function GameWorld() {
   const [game, setGame] = useState<ArcadeGameId | null>(null);
 
   const exit = useCallback(() => {
-    sessionStorage.setItem(ARCADE_EXIT_FLAG, "exit");
+    try {
+      sessionStorage.setItem(ARCADE_EXIT_FLAG, "exit");
+    } catch {
+      /* ignore blocked storage */
+    }
+    // Unpin the document *before* the route change. Next renders "/" while this
+    // component is still mounted, so leaving `overflow: hidden` on <body> until
+    // the unmount cleanup means the home page boots - and measures all of its
+    // ScrollTriggers - against a document with zero scrollable distance.
+    releaseArcadeScrollLock();
     runArcadeExitHandoff(() => router.push("/#arcade"));
   }, [router]);
+
+  // Mount-scoped on purpose. The keyboard effect below has to re-run whenever
+  // `game` changes, and sharing one effect let the saved overflow value drift
+  // to "hidden" and get written back permanently on exit.
+  useEffect(() => {
+    const { body } = document;
+    const previousOverflow = body.style.overflow;
+    body.style.overflow = "hidden";
+
+    return () => {
+      if (previousOverflow) body.style.overflow = previousOverflow;
+      else body.style.removeProperty("overflow");
+    };
+  }, []);
 
   useEffect(() => {
     router.prefetch("/");
@@ -44,8 +67,6 @@ export function GameWorld() {
       cancelWarmArcadeRig = () => window.clearTimeout(timeoutId);
     }
 
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (game) setGame(null);
@@ -55,7 +76,6 @@ export function GameWorld() {
     window.addEventListener("keydown", onKey);
     return () => {
       cancelWarmArcadeRig();
-      document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
   }, [exit, game, router]);

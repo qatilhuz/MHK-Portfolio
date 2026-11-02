@@ -6,7 +6,11 @@ import { CharacterWorldLazy } from "@/components/character/CharacterWorldLazy";
 import { GuideProvider } from "@/lib/guide/context";
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import { ARCADE_EXIT_FLAG } from "@/lib/arcade/session";
-import { clearArcadeSpatialZoom, runArcadeReturnZoom } from "@/lib/arcade/spatialZoom";
+import {
+  clearArcadeSpatialZoom,
+  releaseArcadeDocumentLocks,
+  runArcadeReturnZoom,
+} from "@/lib/arcade/spatialZoom";
 import { Footer } from "./Footer";
 import { Navbar } from "./Navbar";
 
@@ -17,10 +21,11 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
 
   useLayoutEffect(() => {
     if (arcade) return;
+    const root = spatialRootRef.current;
 
     try {
       if (sessionStorage.getItem(ARCADE_EXIT_FLAG) === "exit") {
-        runArcadeReturnZoom(spatialRootRef.current, () => {
+        runArcadeReturnZoom(root, () => {
           try {
             sessionStorage.removeItem(ARCADE_EXIT_FLAG);
           } catch {
@@ -28,11 +33,16 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
           }
         });
       } else {
-        clearArcadeSpatialZoom(spatialRootRef.current);
+        clearArcadeSpatialZoom(root);
       }
     } catch {
       /* keep route rendering resilient if storage is blocked */
+      releaseArcadeDocumentLocks();
     }
+
+    // Leaving mid-zoom must not strand the page at opacity 0 / pointer-events:
+    // none with the transition lock still on <body>.
+    return () => clearArcadeSpatialZoom(root);
   }, [arcade]);
 
   if (arcade) {

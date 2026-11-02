@@ -32,6 +32,7 @@ import { Speaker, disposeSpeakerTextures } from "./Speakers";
 import { StaticInstances, type InstanceSpec } from "./StaticInstances";
 import { concreteAlbedo, disposeArcadeTextures, woodAlbedo } from "./textures";
 import { disposePcTextures } from "./pcTextures";
+import { acquireArcadeTextureCaches, releaseArcadeTextureCaches } from "./textureLifecycle";
 
 type Vec3 = [number, number, number];
 
@@ -706,8 +707,48 @@ function ShadowBaker({ rebuildKey }: { rebuildKey: unknown }) {
   return null;
 }
 
+/**
+ * Keep the canvas recoverable.
+ *
+ * A browser that drops the WebGL context (VRAM pressure, GPU process restart,
+ * a backgrounded tab) fires `webglcontextlost`. Unless the default is
+ * prevented it never follows up with `webglcontextrestored`, so the canvas
+ * stays black for the rest of the session - exactly the reported glitch. R3F
+ * does not install these handlers itself.
+ */
+function WebGLContextGuard() {
+  const gl = useThree((state) => state.gl);
+  const invalidate = useThree((state) => state.invalidate);
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+
+    const handleLost = (event: Event) => {
+      event.preventDefault();
+    };
+    const handleRestored = () => {
+      // Baked shadows and the compiled program cache died with the context.
+      gl.shadowMap.needsUpdate = true;
+      invalidate();
+    };
+
+    canvas.addEventListener("webglcontextlost", handleLost);
+    canvas.addEventListener("webglcontextrestored", handleRestored);
+    return () => {
+      canvas.removeEventListener("webglcontextlost", handleLost);
+      canvas.removeEventListener("webglcontextrestored", handleRestored);
+    };
+  }, [gl, invalidate]);
+
+  return null;
+}
+
 function ArcadeWarmupGate({ enabled, onReady }: { enabled: boolean; onReady?: () => void }) {
   const { active: assetsLoading, progress, total } = useProgress();
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  const camera = useThree((state) => state.camera);
+  const precompiled = useRef(false);
   const ready = useRef(false);
   const frameCount = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -726,6 +767,16 @@ function ArcadeWarmupGate({ enabled, onReady }: { enabled: boolean; onReady?: ()
     if (enabled) return;
     ready.current = false;
   }, [enabled]);
+
+  // Build every program up front, while the terminal loader is still covering
+  // the canvas. Without this the first frame of the enter transition is where
+  // the rig compiles its material/light permutations, which is precisely the
+  // stall the visitor feels after clicking "Enter the Arcade".
+  useEffect(() => {
+    if (!enabled || precompiled.current) return;
+    precompiled.current = true;
+    gl.compile(scene, camera);
+  }, [camera, enabled, gl, scene]);
 
   useEffect(() => {
     return () => {
@@ -844,18 +895,25 @@ export function ArcadeScene({
 
   // The procedural atlases live in module-level caches, so they outlive the
   // canvas: R3F disposes materials on unmount but Material.dispose() never
-  // touches its maps. Release them here, or the generated textures (and their
-  // GPU uploads) stay resident for the rest of the session. The generators are
-  // pure, so a later mount just rebuilds what it needs.
-  useEffect(
-    () => () => {
-      disposeArcadeTextures();
-      disposePcTextures();
-      disposeDeskAccessoryTextures();
-      disposeSpeakerTextures();
-    },
-    [],
-  );
+  // touches its maps. They still have to be released or several MB of GPU
+  // uploads stay resident for the rest of the session.
+  //
+  // Ownership is reference counted rather than tied straight to this cleanup.
+  // Next mounts the incoming tree before running the outgoing tree's passive
+  // cleanups, so returning from /arcade used to let the *previous* scene
+  // dispose the textures the *new* scene had already memoised - every affected
+  // material then rendered black. Suspense re-suspension and StrictMode have
+  // the same shape. See textureLifecycle.ts.
+  useEffect(() => {
+    acquireArcadeTextureCaches();
+    return () =>
+      releaseArcadeTextureCaches([
+        disposeArcadeTextures,
+        disposePcTextures,
+        disposeDeskAccessoryTextures,
+        disposeSpeakerTextures,
+      ]);
+  }, []);
 
   return (
     <Canvas
@@ -900,6 +958,7 @@ export function ArcadeScene({
           onExitComplete={handleExitComplete}
         />
         <ShadowBaker rebuildKey={fullRigReady} />
+        <WebGLContextGuard />
         <ArcadeWarmupGate enabled={fullRigReady} onReady={handleWarmupReady} />
         <StrictOrbitControls controlsRef={controlsRef} />
       </Suspense>

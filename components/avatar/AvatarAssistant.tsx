@@ -73,12 +73,19 @@ export function AvatarAssistant() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <p className="text-sm">Portfolio Assistant</p>
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_24px_70px_rgba(3,5,10,0.6)] backdrop-blur-xl">
+        {/* Soft cyan bloom behind the canvas so the head sits in a glow. */}
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_42%,rgba(34,211,238,0.13),rgba(9,9,11,0)_72%)]"
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-cyan-200/80">
+            Portfolio Assistant
+          </p>
           <AvatarStatus status={visualStatus} />
         </div>
-        <div className="h-[280px] lg:h-[360px]">
+        <div className="relative h-[280px] lg:h-[360px]">
           {webgl === false ? (
             <AvatarFallback status={visualStatus} />
           ) : (
@@ -89,7 +96,7 @@ export function AvatarAssistant() {
         </div>
       </div>
 
-      <div className="rounded-[var(--radius-lg)] border border-border bg-surface p-5">
+      <div className="rounded-2xl border border-white/10 bg-black/40 p-5 shadow-[0_24px_70px_rgba(3,5,10,0.6)] backdrop-blur-xl">
         <AvatarVoice
           recognitionSupported={recognition.supported}
           synthesisSupported={speech.supported}

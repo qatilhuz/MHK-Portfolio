@@ -646,6 +646,67 @@ body.arcade-transition-lock {
   user-select: none;
 }
 
+/* ---------------------------------------------------------------------------
+ * Portfolio assistant - futuristic loading state
+ * ------------------------------------------------------------------------ */
+
+/* Equaliser bars shown while the LLM is working. Only transform and opacity
+   animate, so each bar stays on the compositor. */
+@keyframes assistant-wave {
+  0%,
+  100% {
+    transform: scaleY(0.22);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.assistant-wave-bar {
+  transform-origin: center bottom;
+  animation: assistant-wave 1.05s ease-in-out infinite;
+}
+
+/* Light sweeping across the thinking row. */
+@keyframes assistant-sheen {
+  from {
+    transform: translateX(-130%);
+  }
+  to {
+    transform: translateX(230%);
+  }
+}
+
+.assistant-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(103, 232, 249, 0.14) 45%,
+    rgba(103, 232, 249, 0.3) 50%,
+    rgba(103, 232, 249, 0.14) 55%,
+    transparent
+  );
+  transform: translateX(-130%);
+  animation: assistant-sheen 2.1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-wave-bar {
+    animation: none;
+    transform: scaleY(0.6);
+  }
+  .assistant-sheen::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 
 .arcade-scene-shell {
   position: absolute;

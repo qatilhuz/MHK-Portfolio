@@ -617,6 +617,30 @@ h3 {
   contain: paint style;
 }
 
+/*
+ * Freeze decorative motion for the duration of the arcade transition.
+ *
+ * While the zoom runs, the spatial root is a single composited layer being
+ * scaled and faded. Every descendant that is still animating - the three
+ * full-bleed ambient blobs each carry `will-change: transform`, plus the
+ * terminal caret, scanline and RGB sweeps - forces that layer to re-rasterise
+ * on every frame, which is what makes entering and leaving the arcade drop
+ * frames. The transition itself only needs transform and opacity, and the root
+ * sits at or near opacity 0 throughout, so none of this is visible anyway.
+ *
+ * Paused rather than removed: `animation-play-state` does not restart
+ * anything, so each animation resumes exactly where it left off once
+ * `data-arcade-spatial-active` is cleared.
+ */
+[data-arcade-spatial-root][data-arcade-spatial-active="true"] *,
+[data-arcade-spatial-root][data-arcade-spatial-active="true"] *::before,
+[data-arcade-spatial-root][data-arcade-spatial-active="true"] *::after,
+.arcade-world[data-arcade-handoff-active="true"] *,
+.arcade-world[data-arcade-handoff-active="true"] *::before,
+.arcade-world[data-arcade-handoff-active="true"] *::after {
+  animation-play-state: paused !important;
+}
+
 body.arcade-transition-lock {
   cursor: default !important;
   user-select: none;

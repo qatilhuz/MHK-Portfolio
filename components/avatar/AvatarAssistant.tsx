@@ -72,20 +72,33 @@ export function AvatarAssistant() {
     recognition.listening ? "listening" : speech.speaking ? "speaking" : status;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_24px_70px_rgba(3,5,10,0.6)] backdrop-blur-xl">
-        {/* Soft cyan bloom behind the canvas so the head sits in a glow. */}
+    <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)]">
+      {/* The stage. Given equal billing with the chat and a lot more height
+          than before, so the bot is the thing you look at first. */}
+      <div className="relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_30px_90px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
+        {/* Layered blooms so the head sits in light rather than on a flat
+            panel: a broad cyan wash, a tighter core, and a floor glow. */}
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_42%,rgba(34,211,238,0.13),rgba(9,9,11,0)_72%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_50%_38%,rgba(34,211,238,0.16),rgba(9,9,11,0)_72%)]"
           aria-hidden="true"
         />
-        <div className="relative flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_32%_26%_at_50%_44%,rgba(125,211,252,0.13),rgba(9,9,11,0)_70%)]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(ellipse_55%_100%_at_50%_100%,rgba(59,130,246,0.14),rgba(9,9,11,0)_75%)]"
+          aria-hidden="true"
+        />
+
+        <div className="relative flex items-center justify-between border-b border-white/[0.07] px-5 py-3.5">
           <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-cyan-200/80">
             Portfolio Assistant
           </p>
           <AvatarStatus status={visualStatus} />
         </div>
-        <div className="relative h-[280px] lg:h-[360px]">
+
+        <div className="relative h-[340px] flex-1 lg:h-[520px]">
           {webgl === false ? (
             <AvatarFallback status={visualStatus} />
           ) : (
@@ -94,9 +107,15 @@ export function AvatarAssistant() {
             </SceneErrorBoundary>
           )}
         </div>
+
+        {/* Reflective floor line under the bot. */}
+        <div
+          className="pointer-events-none absolute inset-x-10 bottom-10 h-px bg-gradient-to-r from-transparent via-cyan-300/25 to-transparent"
+          aria-hidden="true"
+        />
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-black/40 p-5 shadow-[0_24px_70px_rgba(3,5,10,0.6)] backdrop-blur-xl">
+      <div className="flex h-full flex-col rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_30px_90px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
         <AvatarVoice
           recognitionSupported={recognition.supported}
           synthesisSupported={speech.supported}
@@ -114,7 +133,7 @@ export function AvatarAssistant() {
             {recognition.error ?? error}
           </p>
         ) : null}
-        <div className="mt-4">
+        <div className="mt-4 flex min-h-0 flex-1 flex-col">
           <AvatarChat
             messages={messages}
             input={input}

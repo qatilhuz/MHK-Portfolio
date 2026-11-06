@@ -79,7 +79,7 @@ function DecryptingText() {
 function ThinkingIndicator() {
   return (
     <div
-      className="assistant-sheen relative flex items-center gap-4 overflow-hidden rounded-xl border border-cyan-300/20 bg-cyan-400/[0.06] px-4 py-3"
+      className="assistant-sheen relative mr-auto flex max-w-[88%] items-center gap-4 overflow-hidden rounded-2xl rounded-bl-md border border-cyan-300/20 bg-cyan-400/[0.07] px-4 py-3 backdrop-blur-xl"
       role="status"
       aria-live="polite"
     >
@@ -125,55 +125,61 @@ export function AvatarChat({
       <div
         ref={listRef}
         data-lenis-prevent
-        className="panel-scroll max-h-72 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1"
+        className="panel-scroll flex max-h-[18rem] min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain pr-1 lg:max-h-none"
         role="log"
         aria-live="polite"
         aria-relevant="additions"
       >
         {messages.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-            <p className="label mb-1 text-cyan-200/80">System</p>
+          <div className="mr-auto max-w-[88%] rounded-2xl rounded-bl-md border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
+            <p className="label mb-1 text-cyan-200/80">Assistant</p>
             <p className="text-sm text-muted">
               Hi — I’m Huzaifa’s portfolio assistant. Ask me about his
-              experience, skills, projects, or tech stack.
+              experience, skills, projects, or tech stack. Roman Urdu bhi
+              chalega.
             </p>
           </div>
         ) : (
-          messages.map((message) => (
-            <article
-              key={message.id}
-              className={
-                message.role === "visitor"
-                  ? "rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm"
-                  : "rounded-xl border border-cyan-300/20 bg-cyan-400/[0.07] px-4 py-3 text-sm shadow-[0_0_28px_rgba(34,211,238,0.07)]"
-              }
-            >
-              <p
+          messages.map((message) => {
+            const isVisitor = message.role === "visitor";
+            return (
+              <article
+                key={message.id}
                 className={
-                  message.role === "visitor"
-                    ? "label mb-1"
-                    : "label mb-1 text-cyan-200/85"
+                  isVisitor
+                    ? // Gradient bubble, right-aligned, tail on the bottom right.
+                      "ml-auto max-w-[88%] rounded-2xl rounded-br-md border border-cyan-300/25 bg-gradient-to-br from-cyan-500/25 via-sky-500/15 to-blue-600/20 px-4 py-3 text-sm shadow-[0_8px_30px_-12px_rgba(34,211,238,0.5)] backdrop-blur-xl"
+                    : // Minimal translucent bubble, left-aligned.
+                      "mr-auto max-w-[88%] rounded-2xl rounded-bl-md border border-white/10 bg-white/[0.04] px-4 py-3 text-sm backdrop-blur-xl"
                 }
               >
-                {message.role === "visitor" ? "You" : "Assistant"}
-              </p>
-              <p className="leading-relaxed">{message.text}</p>
-              {message.links?.length ? (
-                <ul className="mt-2 flex flex-wrap gap-3">
-                  {message.links.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="text-accent underline-offset-4 hover:underline"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </article>
-          ))
+                <p
+                  className={
+                    isVisitor
+                      ? "label mb-1 text-right text-cyan-100/80"
+                      : "label mb-1 text-cyan-200/85"
+                  }
+                >
+                  {isVisitor ? "You" : "Assistant"}
+                </p>
+                <p className="leading-relaxed">{message.text}</p>
+                {message.links?.length ? (
+                  <ul className="mt-2 flex flex-wrap gap-3">
+                    {message.links.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="text-accent underline-offset-4 hover:underline"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </article>
+            );
+          })
         )}
 
         {busy ? <ThinkingIndicator /> : null}
@@ -184,7 +190,7 @@ export function AvatarChat({
           <button
             key={question}
             type="button"
-            className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-muted transition-colors duration-[var(--motion-micro)] hover:border-cyan-300/40 hover:bg-cyan-400/10 hover:text-foreground disabled:opacity-40"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-muted backdrop-blur-xl transition-colors duration-[var(--motion-micro)] hover:border-cyan-300/40 hover:bg-cyan-400/10 hover:text-foreground disabled:opacity-40"
             onClick={() => onSend(question)}
             disabled={busy}
           >
@@ -201,7 +207,7 @@ export function AvatarChat({
           id="assistant-input"
           value={input}
           onChange={(event) => onInput(event.target.value)}
-          className="h-11 flex-1 rounded-xl border border-white/10 bg-black/30 px-4 text-sm outline-none transition-colors duration-[var(--motion-micro)] placeholder:text-muted/70 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-500/50"
+          className="h-11 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none backdrop-blur-xl transition-colors duration-[var(--motion-micro)] placeholder:text-muted/70 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-500/50"
           placeholder="Ask me about Huzaifa..."
           autoComplete="off"
           disabled={busy}
@@ -210,14 +216,14 @@ export function AvatarChat({
           <button
             type="submit"
             disabled={busy}
-            className="h-11 rounded-xl border border-cyan-300/30 bg-cyan-400/15 px-5 text-sm font-medium text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,0.12)] outline-none transition-colors duration-[var(--motion-micro)] hover:border-cyan-200/60 hover:bg-cyan-400/25 focus-visible:ring-1 focus-visible:ring-cyan-500/60 disabled:opacity-40"
+            className="h-11 rounded-2xl border border-cyan-300/30 bg-gradient-to-br from-cyan-400/25 to-blue-600/20 px-5 text-sm font-medium text-cyan-50 shadow-[0_8px_30px_-12px_rgba(34,211,238,0.6)] outline-none transition-colors duration-[var(--motion-micro)] hover:border-cyan-200/60 hover:from-cyan-400/35 hover:to-blue-600/30 focus-visible:ring-1 focus-visible:ring-cyan-500/60 disabled:opacity-40"
           >
             Send ↗
           </button>
           <button
             type="button"
             onClick={onReset}
-            className="h-11 rounded-xl border border-white/10 px-4 text-sm text-muted outline-none transition-colors duration-[var(--motion-micro)] hover:border-white/25 hover:text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/50"
+            className="h-11 rounded-2xl border border-white/10 px-4 text-sm text-muted outline-none backdrop-blur-xl transition-colors duration-[var(--motion-micro)] hover:border-white/25 hover:text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/50"
           >
             Reset
           </button>

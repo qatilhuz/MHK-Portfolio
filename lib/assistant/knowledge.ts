@@ -6,12 +6,38 @@ import { coreStrengths, skills } from "@/data/skills";
 import { siteConfig } from "@/data/site";
 import { getActiveSocialLinks } from "@/data/social";
 import type { AssistantReply } from "@/types";
-import { buildLinkDirectory, karachiSentence, linkChips } from "./context";
+import { buildLinkDirectory, karachiSentence, karachiSentenceUrdu, linkChips } from "./context";
 import type { AvatarEmotion } from "./emotion";
+import {
+  detectLanguage,
+  pickLine,
+  type AssistantLanguage,
+  type Bilingual,
+  FACT_LEAD_IN,
+  FAREWELL,
+  GREETING,
+  HOW_ARE_YOU,
+  JOKE,
+  ROLEPLAY,
+  THANKS,
+  UNKNOWN_REPLY,
+  WHO_ARE_YOU,
+} from "./language";
 
 export const unknownReply: AssistantReply = {
-  text: "That one is not in my records yet. Ask me about Huzaifa’s experience, his tech stack, the projects he has shipped, or how he built this site — those I can do.",
+  text: UNKNOWN_REPLY.en[0],
+  emotion: "sad",
 };
+
+/** Same meaning, in whichever language the visitor used. */
+export function unknownReplyFor(language: AssistantLanguage): AssistantReply {
+  return { text: UNKNOWN_REPLY[language][0], emotion: "sad" };
+}
+
+/** True for the "I don't know" reply in any supported language. */
+export function isUnknownReply(text: string): boolean {
+  return UNKNOWN_REPLY.en.includes(text) || UNKNOWN_REPLY["ur-Latn"].includes(text);
+}
 
 /**
  * Mood performances, handled before any FAQ lookup.
@@ -23,24 +49,16 @@ export const unknownReply: AssistantReply = {
  * there is exactly the dull behaviour this assistant is meant to avoid.
  */
 const ROLEPLAY_ACTION =
-  /\b(act|acts|acting|be|being|look|looks|show|shows|get|gets|go|turn|turns|pretend|pretends|seem|seems|make|makes|give|feel|feels|try)\b/;
+  /\b(act|acts|acting|be|being|look|looks|show|shows|get|gets|go|turn|turns|pretend|pretends|seem|seems|make|makes|give|feel|feels|try|ho|hoja|hojao|hojaye|kar|karo|kro|karke|dikhao|dikha|dikhaao|bano|ban|banja|raho|rakho)\b/;
 
 const EMOTION_WORDS: ReadonlyArray<readonly [RegExp, AvatarEmotion]> = [
-  [/\b(angry|anger|mad|furious|fury|rage|raging|annoyed|irritated|grumpy|cross)\b/, "angry"],
-  [/\b(happy|happier|joy|joyful|excited|cheerful|glad|smile|smiling|delighted|thrilled)\b/, "happy"],
-  [/\b(sad|sadder|upset|unhappy|gloomy|depressed|down|cry|crying|miserable|sorrow)\b/, "sad"],
-  [/\b(neutral|calm|normal|relax|relaxed|serious|composed|poker face)\b/, "neutral"],
+  [/\b(angry|anger|mad|furious|fury|rage|raging|annoyed|irritated|grumpy|cross|gussa|ghussa|gusse|naraz)\b/, "angry"],
+  [/\b(happy|happier|joy|joyful|excited|cheerful|glad|smile|smiling|delighted|thrilled|khush|khushi|khushh|hansi)\b/, "happy"],
+  [/\b(sad|sadder|upset|unhappy|gloomy|depressed|down|cry|crying|miserable|sorrow|udaas|dukhi|ghamgeen|pareshan)\b/, "sad"],
+  [/\b(neutral|calm|normal|relax|relaxed|serious|composed|poker face|aam|seedha)\b/, "neutral"],
 ];
 
-const ROLEPLAY_LINES: Record<AvatarEmotion, string> = {
-  angry:
-    "Oh, you want angry? Fine. Do you have ANY idea how many times I have been asked whether Huzaifa knows React today? Thirty. The answer is yes. It has always been yes. … There, rage vented. I feel much better.",
-  happy:
-    "Oh, with pleasure. Everything is excellent, the frame rate is buttery, the shaders compiled first try, and someone is actually reading this portfolio. This is my favourite part of the job.",
-  sad: "Very well, bracing for melancholy. Somewhere out there is a beautifully engineered side project that nobody ever starred, and I think about it often. … Right. That is quite enough of that.",
-  neutral:
-    "Resetting to standard operating demeanour. Expression neutral, voice level, opinions filed away. Ask me anything about Huzaifa and I will answer it straight.",
-};
+
 
 /**
  * Greetings and chit-chat.
@@ -49,69 +67,50 @@ const ROLEPLAY_LINES: Record<AvatarEmotion, string> = {
  * reply, which is how a greeting used to be answered with "that is not in my
  * records". Small talk is a conversation, so it is handled before any lookup.
  */
-const SMALL_TALK: ReadonlyArray<readonly [RegExp, AvatarEmotion, readonly string[]]> = [
+const SMALL_TALK: ReadonlyArray<readonly [RegExp, AvatarEmotion, Bilingual]> = [
   [
-    /\b(hello|hi|hey|yo|hiya|howdy|greetings|salam|assalam|asalam|good (morning|afternoon|evening))\b/,
+    /\b(hello|hi|hey|yo|hiya|howdy|greetings|salam|assalam|asalam|aslam|adab|khush aamdeed|good (morning|afternoon|evening))\b/,
     "happy",
-    [
-      "Hello. Good to have you here — I am Huzaifa's portfolio assistant, and I have read everything on this site so you do not have to. What would you like to know?",
-      "Hey there. You have reached Huzaifa's assistant, fully booted and unreasonably enthusiastic about his tech stack. Where shall we start?",
-      "Hi. Welcome in. Ask me about Huzaifa's experience, his projects, or how he built the 3D parts of this site — I enjoy that last one most.",
-    ],
+    GREETING,
   ],
   [
-    /\b(how are you|how r u|hows it going|how is it going|how do you do|whats up|what s up|sup)\b/,
+    /\b(how are you|how r u|hows it going|how is it going|how do you do|whats up|what s up|sup|kaise ho|kaisay ho|kese ho|kesay ho|kaise hain|kaisay hain|kese hain|kaise hon|kya haal|kya hal|kia haal|kya haal hai|sab theek|sab thik)\b/,
     "happy",
-    [
-      "Running beautifully, thank you for asking — sixty frames a second and not a single dropped promise. How can I help you?",
-      "Very well indeed. All systems nominal, eyes glowing, no memory leaks today. What brings you to Huzaifa's portfolio?",
-    ],
+    HOW_ARE_YOU,
   ],
   [
-    /\b(thank you|thanks|thx|appreciate it|cheers)\b/,
+    /\b(thank you|thanks|thx|appreciate it|cheers|shukriya|shukria|mehrbani|bohat shukriya)\b/,
     "happy",
-    [
-      "My pleasure entirely. Ask me anything else — I am literally here for this.",
-      "Any time. That is what I am for.",
-    ],
+    THANKS,
   ],
   [
-    /\b(bye|goodbye|see you|see ya|later|good night|take care)\b/,
+    /\b(bye|goodbye|see you|see ya|later|good night|take care|khuda hafiz|allah hafiz|khudahafiz|shab bakhair|phir milte)\b/,
     "happy",
-    [
-      "Goodbye, and thanks for stopping by. The contact form is right there if you would like to reach Huzaifa properly.",
-      "Take care. Do come back — the arcade is more fun the second time.",
-    ],
+    FAREWELL,
   ],
   [
-    /\b(who are you|what are you|your name|are you (a )?(bot|robot|ai|human|real))\b/,
+    /\b(who are you|what are you|your name|are you (a )?(bot|robot|ai|human|real)|tum kaun|tum kon|aap kaun|aap kon|tumhara naam|aap ka naam|apka naam|kaun ho tum)\b/,
     "neutral",
-    [
-      "I am the portfolio assistant Huzaifa built: a 3D face wired to a language model, grounded on his real CV, with eyes that change to match my mood. Not human, but reasonably good company.",
-    ],
+    WHO_ARE_YOU,
   ],
   [
-    /\b(joke|funny|make me laugh|pun)\b/,
+    /\b(joke|funny|make me laugh|pun|mazaak|mazak|latifa|hansao|hasao)\b/,
     "happy",
-    [
-      "A developer's wife asks him to go to the shop and buy a loaf of bread, and if they have eggs, get six. He came back with six loaves of bread. … I am contractually obliged to tell that one.",
-      "There are only two hard problems in computer science: cache invalidation, naming things, and off-by-one errors. I will see myself out.",
-    ],
+    JOKE,
   ],
 ];
 
-function pick(options: readonly string[]): string {
-  return options[Math.floor(Math.random() * options.length)];
-}
-
 /** A greeting or other chit-chat, or null for a real question. */
-export function detectSmallTalk(question: string): AssistantReply | null {
+export function detectSmallTalk(
+  question: string,
+  language: AssistantLanguage = detectLanguage(question),
+): AssistantReply | null {
   const q = normalize(question);
   // Long messages are questions that merely open with a greeting.
   if (q.split(" ").length > 12) return null;
 
-  for (const [pattern, emotion, lines] of SMALL_TALK) {
-    if (pattern.test(q)) return { text: pick(lines), emotion };
+  for (const [pattern, emotion, bank] of SMALL_TALK) {
+    if (pattern.test(q)) return { text: pickLine(bank, language), emotion };
   }
   return null;
 }
@@ -120,19 +119,25 @@ export function detectSmallTalk(question: string): AssistantReply | null {
  * "What time is it?" - answered from the live Karachi clock.
  * Guarded against biographical phrasing like "what time did he work there".
  */
-const TIME_QUESTION = /\b(time|date|day|today|clock)\b/;
-const TIME_INTENT = /\b(what|whats|which|current|currently|right now|now|tell me|is it)\b/;
+const TIME_QUESTION = /\b(time|date|day|today|clock|waqt|baje|bajay|baj|tareekh|tarikh|din|ghari)\b/;
+const TIME_INTENT =
+  /\b(what|whats|which|current|currently|right now|now|tell me|is it|kya|kia|abhi|batao|btao|bta|bataiye|bataye|kitne|kitna|kaunsa|konsa|kon sa|raha|rahe|rhe|rha)\b/;
 const BIOGRAPHICAL = /\b(he|his|him|huzaifa|experience|job|role|project|company|employer|start|end|year|graduat)\b/;
 
-export function detectTimeQuestion(question: string): AssistantReply | null {
+export function detectTimeQuestion(
+  question: string,
+  language: AssistantLanguage = detectLanguage(question),
+): AssistantReply | null {
   const q = normalize(question);
   if (!TIME_QUESTION.test(q) || !TIME_INTENT.test(q)) return null;
   if (BIOGRAPHICAL.test(q) && !/karachi|pakistan|pkt|your (time|clock)/.test(q)) return null;
 
-  return {
-    text: `It is ${karachiSentence()} in Karachi, where Huzaifa is based.`,
-    emotion: "neutral",
-  };
+  const text =
+    language === "ur-Latn"
+      ? `Karachi mein abhi ${karachiSentenceUrdu()} ho rahe hain \u2014 wahin Huzaifa rehte hain.`
+      : `It is ${karachiSentence()} in Karachi, where Huzaifa is based.`;
+
+  return { text, emotion: "neutral" };
 }
 
 /** Requests for GitHub, LinkedIn, email, the resume, or "your links". */
@@ -140,12 +145,15 @@ const LINK_TARGETS: ReadonlyArray<readonly [RegExp, string]> = [
   [/\b(github|git hub|repo|repository|repos|source code)\b/, "GitHub"],
   [/\b(linkedin|linked in)\b/, "LinkedIn"],
   [/\b(resume|cv|curriculum vitae)\b/, "Resume"],
-  [/\b(email|e mail|mail|contact|reach him|reach out|get in touch|hire|availability)\b/, "Email"],
+  [/\b(email|e mail|mail|contact|reach him|reach out|get in touch|hire|availability|rabta)\b/, "Email"],
 ];
 
-export function detectLinkRequest(question: string): AssistantReply | null {
+export function detectLinkRequest(
+  question: string,
+  language: AssistantLanguage = detectLanguage(question),
+): AssistantReply | null {
   const q = normalize(question);
-  const wantsEverything = /\b(links?|socials?|profiles?|where can i find)\b/.test(q);
+  const wantsEverything = /\b(links?|socials?|profiles?|where can i find|kahan milega|kahan milay)\b/.test(q);
   const wanted = LINK_TARGETS.filter(([pattern]) => pattern.test(q)).map(([, label]) => label);
 
   if (wanted.length === 0 && !wantsEverything) return null;
@@ -163,17 +171,21 @@ export function detectLinkRequest(question: string): AssistantReply | null {
   if (parts.length === 0) return null;
 
   const chips = linkChips([...labels, "Contact form"]);
-  return { text: parts.join(" "), emotion: "neutral", links: chips };
+  const lead = language === "ur-Latn" ? "Yeh lijiye \u2014 " : "";
+  return { text: `${lead}${parts.join(" ")}`, emotion: "neutral", links: chips };
 }
 
 /** A request to perform a mood, or null if this is an ordinary question. */
-export function detectRoleplay(question: string): AssistantReply | null {
+export function detectRoleplay(
+  question: string,
+  language: AssistantLanguage = detectLanguage(question),
+): AssistantReply | null {
   const q = normalize(question);
   if (!ROLEPLAY_ACTION.test(q)) return null;
 
   for (const [pattern, emotion] of EMOTION_WORDS) {
     if (pattern.test(q)) {
-      return { text: ROLEPLAY_LINES[emotion], emotion };
+      return { text: pickLine(ROLEPLAY[emotion], language), emotion };
     }
   }
 
@@ -208,20 +220,37 @@ export function scoreFaq(question: string): { faqId: string; score: number } | n
 
 export function replyFromKnowledge(question: string): AssistantReply {
   const q = normalize(question);
+  // Detected once and handed to every detector so a single message cannot be
+  // scored as English by one and Roman Urdu by the next.
+  const language = detectLanguage(question);
 
   // Conversation before lookup: none of these are questions about the CV,
   // and matching them against the FAQ corpus produces nonsense.
-  const performance = detectRoleplay(question);
+  const performance = detectRoleplay(question, language);
   if (performance) return performance;
 
-  const chat = detectSmallTalk(question);
+  const chat = detectSmallTalk(question, language);
   if (chat) return chat;
 
-  const clock = detectTimeQuestion(question);
+  const clock = detectTimeQuestion(question, language);
   if (clock) return clock;
 
-  const links = detectLinkRequest(question);
+  const links = detectLinkRequest(question, language);
   if (links) return links;
+
+  // Every CV fact below is stored in English. Answer, then adapt the wrapper
+  // to the visitor's language in one place rather than at each return site.
+  const fact = factReply(q, question);
+  if (language !== "ur-Latn") return fact;
+  if (isUnknownReply(fact.text)) return unknownReplyFor(language);
+  return { ...fact, text: `${FACT_LEAD_IN}${fact.text}` };
+}
+
+/**
+ * The English fact lookup: FAQ corpus first, then the hand-written branches.
+ * Always returns English - `replyFromKnowledge` handles the language wrapper.
+ */
+function factReply(q: string, question: string): AssistantReply {
 
   const match = scoreFaq(question);
   if (match) {

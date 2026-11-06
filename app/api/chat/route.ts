@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { replyFromKnowledge, unknownReply } from "@/lib/assistant/knowledge";
+import { isUnknownReply, replyFromKnowledge } from "@/lib/assistant/knowledge";
 import { buildSystemPrompt } from "@/lib/assistant/prompt";
 import {
   AVATAR_EMOTIONS,
@@ -118,7 +118,7 @@ function parseBody(value: unknown): ChatBody | null {
 /** Links come from the local corpus - the model is never asked to invent URLs. */
 function groundedLinks(question: string): AssistantLink[] | undefined {
   const local = replyFromKnowledge(question);
-  if (local.text === unknownReply.text) return undefined;
+  if (isUnknownReply(local.text)) return undefined;
   return local.links;
 }
 
@@ -127,7 +127,7 @@ function localAnswer(question: string, emotion: AvatarEmotion = "neutral") {
   // A roleplay performance picks its own face; otherwise use the caller's
   // default, and look sad only when we genuinely have nothing to offer.
   const resolved =
-    local.emotion ?? (local.text === unknownReply.text ? "sad" : emotion);
+    local.emotion ?? (isUnknownReply(local.text) ? "sad" : emotion);
 
   return NextResponse.json({
     text: local.text,

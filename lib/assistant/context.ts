@@ -40,6 +40,24 @@ export function karachiSentence(now: Date = new Date()): string {
   return `${time} PKT on ${date}`;
 }
 
+/** Roman Urdu phrasing of the same clock: "shaam 8:25 baje, Friday ...". */
+export function karachiSentenceUrdu(now: Date = new Date()): string {
+  const time = now.toLocaleString("en-US", {
+    timeZone: ASSISTANT_TIME_ZONE,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const date = now.toLocaleString("en-US", {
+    timeZone: ASSISTANT_TIME_ZONE,
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  return `${time} (PKT), ${date}`;
+}
+
 export interface LinkFact {
   label: string;
   /** Absolute URL or in-site path, or null when the portfolio has no value. */

@@ -32,10 +32,18 @@ import type { AssistantLink } from "@/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Must be at least as long as UPSTREAM_TIMEOUT_MS or the platform kills the
+ * function before our own abort can fire and serve the fallback. 60 is the
+ * ceiling on Vercel's Hobby plan; raise it alongside the timeout on Pro.
+ */
+export const maxDuration = 60;
+
 const MAX_BYTES = 8_192;
 const MAX_MESSAGE_CHARS = 1_000;
 const MAX_HISTORY_TURNS = 8;
-const UPSTREAM_TIMEOUT_MS = 20_000;
+/** Gemini can be slow to first byte on a cold model; 20s was cutting it off. */
+const UPSTREAM_TIMEOUT_MS = 60_000;
 /** JSON mode spends tokens on syntax; too low a cap truncates mid-object. */
 const MAX_OUTPUT_TOKENS = 800;
 

@@ -6,6 +6,7 @@ import { coreStrengths, skills } from "@/data/skills";
 import { siteConfig } from "@/data/site";
 import { getActiveSocialLinks } from "@/data/social";
 import type { AssistantReply } from "@/types";
+import { buildLinkDirectory, karachiSentence, linkChips } from "./context";
 import type { AvatarEmotion } from "./emotion";
 
 export const unknownReply: AssistantReply = {
@@ -40,6 +41,130 @@ const ROLEPLAY_LINES: Record<AvatarEmotion, string> = {
   neutral:
     "Resetting to standard operating demeanour. Expression neutral, voice level, opinions filed away. Ask me anything about Huzaifa and I will answer it straight.",
 };
+
+/**
+ * Greetings and chit-chat.
+ *
+ * Matching "hello" against a CV corpus scores zero and lands on the unknown
+ * reply, which is how a greeting used to be answered with "that is not in my
+ * records". Small talk is a conversation, so it is handled before any lookup.
+ */
+const SMALL_TALK: ReadonlyArray<readonly [RegExp, AvatarEmotion, readonly string[]]> = [
+  [
+    /\b(hello|hi|hey|yo|hiya|howdy|greetings|salam|assalam|asalam|good (morning|afternoon|evening))\b/,
+    "happy",
+    [
+      "Hello. Good to have you here — I am Huzaifa's portfolio assistant, and I have read everything on this site so you do not have to. What would you like to know?",
+      "Hey there. You have reached Huzaifa's assistant, fully booted and unreasonably enthusiastic about his tech stack. Where shall we start?",
+      "Hi. Welcome in. Ask me about Huzaifa's experience, his projects, or how he built the 3D parts of this site — I enjoy that last one most.",
+    ],
+  ],
+  [
+    /\b(how are you|how r u|hows it going|how is it going|how do you do|whats up|what s up|sup)\b/,
+    "happy",
+    [
+      "Running beautifully, thank you for asking — sixty frames a second and not a single dropped promise. How can I help you?",
+      "Very well indeed. All systems nominal, eyes glowing, no memory leaks today. What brings you to Huzaifa's portfolio?",
+    ],
+  ],
+  [
+    /\b(thank you|thanks|thx|appreciate it|cheers)\b/,
+    "happy",
+    [
+      "My pleasure entirely. Ask me anything else — I am literally here for this.",
+      "Any time. That is what I am for.",
+    ],
+  ],
+  [
+    /\b(bye|goodbye|see you|see ya|later|good night|take care)\b/,
+    "happy",
+    [
+      "Goodbye, and thanks for stopping by. The contact form is right there if you would like to reach Huzaifa properly.",
+      "Take care. Do come back — the arcade is more fun the second time.",
+    ],
+  ],
+  [
+    /\b(who are you|what are you|your name|are you (a )?(bot|robot|ai|human|real))\b/,
+    "neutral",
+    [
+      "I am the portfolio assistant Huzaifa built: a 3D face wired to a language model, grounded on his real CV, with eyes that change to match my mood. Not human, but reasonably good company.",
+    ],
+  ],
+  [
+    /\b(joke|funny|make me laugh|pun)\b/,
+    "happy",
+    [
+      "A developer's wife asks him to go to the shop and buy a loaf of bread, and if they have eggs, get six. He came back with six loaves of bread. … I am contractually obliged to tell that one.",
+      "There are only two hard problems in computer science: cache invalidation, naming things, and off-by-one errors. I will see myself out.",
+    ],
+  ],
+];
+
+function pick(options: readonly string[]): string {
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+/** A greeting or other chit-chat, or null for a real question. */
+export function detectSmallTalk(question: string): AssistantReply | null {
+  const q = normalize(question);
+  // Long messages are questions that merely open with a greeting.
+  if (q.split(" ").length > 12) return null;
+
+  for (const [pattern, emotion, lines] of SMALL_TALK) {
+    if (pattern.test(q)) return { text: pick(lines), emotion };
+  }
+  return null;
+}
+
+/**
+ * "What time is it?" - answered from the live Karachi clock.
+ * Guarded against biographical phrasing like "what time did he work there".
+ */
+const TIME_QUESTION = /\b(time|date|day|today|clock)\b/;
+const TIME_INTENT = /\b(what|whats|which|current|currently|right now|now|tell me|is it)\b/;
+const BIOGRAPHICAL = /\b(he|his|him|huzaifa|experience|job|role|project|company|employer|start|end|year|graduat)\b/;
+
+export function detectTimeQuestion(question: string): AssistantReply | null {
+  const q = normalize(question);
+  if (!TIME_QUESTION.test(q) || !TIME_INTENT.test(q)) return null;
+  if (BIOGRAPHICAL.test(q) && !/karachi|pakistan|pkt|your (time|clock)/.test(q)) return null;
+
+  return {
+    text: `It is ${karachiSentence()} in Karachi, where Huzaifa is based.`,
+    emotion: "neutral",
+  };
+}
+
+/** Requests for GitHub, LinkedIn, email, the resume, or "your links". */
+const LINK_TARGETS: ReadonlyArray<readonly [RegExp, string]> = [
+  [/\b(github|git hub|repo|repository|repos|source code)\b/, "GitHub"],
+  [/\b(linkedin|linked in)\b/, "LinkedIn"],
+  [/\b(resume|cv|curriculum vitae)\b/, "Resume"],
+  [/\b(email|e mail|mail|contact|reach him|reach out|get in touch|hire|availability)\b/, "Email"],
+];
+
+export function detectLinkRequest(question: string): AssistantReply | null {
+  const q = normalize(question);
+  const wantsEverything = /\b(links?|socials?|profiles?|where can i find)\b/.test(q);
+  const wanted = LINK_TARGETS.filter(([pattern]) => pattern.test(q)).map(([, label]) => label);
+
+  if (wanted.length === 0 && !wantsEverything) return null;
+
+  const directory = buildLinkDirectory();
+  const labels = wanted.length > 0 ? wanted : ["GitHub", "LinkedIn", "Email", "Resume"];
+  const parts: string[] = [];
+
+  for (const label of labels) {
+    const item = directory.find((entry) => entry.label === label);
+    if (!item) continue;
+    parts.push(item.href ? `${item.label}: ${item.href}` : `${item.label} is ${item.note}.`);
+  }
+
+  if (parts.length === 0) return null;
+
+  const chips = linkChips([...labels, "Contact form"]);
+  return { text: parts.join(" "), emotion: "neutral", links: chips };
+}
 
 /** A request to perform a mood, or null if this is an ordinary question. */
 export function detectRoleplay(question: string): AssistantReply | null {
@@ -84,9 +209,19 @@ export function scoreFaq(question: string): { faqId: string; score: number } | n
 export function replyFromKnowledge(question: string): AssistantReply {
   const q = normalize(question);
 
-  // Performances first: a mood request is not a lookup against the CV.
+  // Conversation before lookup: none of these are questions about the CV,
+  // and matching them against the FAQ corpus produces nonsense.
   const performance = detectRoleplay(question);
   if (performance) return performance;
+
+  const chat = detectSmallTalk(question);
+  if (chat) return chat;
+
+  const clock = detectTimeQuestion(question);
+  if (clock) return clock;
+
+  const links = detectLinkRequest(question);
+  if (links) return links;
 
   const match = scoreFaq(question);
   if (match) {

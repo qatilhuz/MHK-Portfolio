@@ -56,12 +56,22 @@ export function isUnknownReply(text: string): boolean {
  * there is exactly the dull behaviour this assistant is meant to avoid.
  */
 const ROLEPLAY_ACTION =
-  /\b(act|acts|acting|be|being|look|looks|show|shows|get|gets|go|turn|turns|pretend|pretends|seem|seems|make|makes|give|feel|feels|try|ho|hoja|hojao|hojaye|kar|karo|kro|karke|dikhao|dikha|dikhaao|bano|ban|banja|raho|rakho)\b/;
+  /\b(act|acts|acting|be|being|look|looks|show|shows|get|gets|go|turn|turns|pretend|pretends|seem|seems|make|makes|give|feel|feels|feeling|try|calm|chill|relax|settle|cheer|lighten|ho|hoja|hojao|hojaye|kar|karo|kro|karke|dikhao|dikha|dikhaao|bano|ban|banja|raho|rakho|jao|jaao)\b/;
+
+/**
+ * A bare mood with no verb ("Calm down", "angrier!") is still a request to
+ * perform it. Only accepted for very short messages that are not questions,
+ * so "What is his mood like?" and "Is he happy at Techcose?" stay lookups.
+ */
+const ROLEPLAY_NOT_IMPERATIVE =
+  /\b(is|are|was|were|do|does|did|why|what|whats|who|when|where|how|which|his|he|him|her|she|they|huzaifa|about|tell)\b/;
 
 const EMOTION_WORDS: ReadonlyArray<readonly [RegExp, AvatarEmotion]> = [
   [/\b(angry|anger|mad|furious|fury|rage|raging|annoyed|irritated|grumpy|cross|gussa|ghussa|gusse|naraz)\b/, "angry"],
   [/\b(happy|happier|joy|joyful|excited|cheerful|glad|smile|smiling|delighted|thrilled|khush|khushi|khushh|hansi)\b/, "happy"],
-  [/\b(sad|sadder|upset|unhappy|gloomy|depressed|down|cry|crying|miserable|sorrow|udaas|dukhi|ghamgeen|pareshan)\b/, "sad"],
+  // Bare "down" is too ambiguous - it made "calm down" register as sad,
+  // beating the neutral rule below it. Only the explicit phrases count.
+  [/\b(sad|sadder|upset|unhappy|gloomy|depressed|feeling down|feel down|let down|cry|crying|miserable|sorrow|udaas|dukhi|ghamgeen|pareshan)\b/, "sad"],
   [/\b(neutral|calm|normal|relax|relaxed|serious|composed|poker face|aam|seedha)\b/, "neutral"],
 ];
 
@@ -214,7 +224,10 @@ export function detectRoleplay(
   language: AssistantLanguage = detectLanguage(question),
 ): AssistantReply | null {
   const q = normalize(question);
-  if (!ROLEPLAY_ACTION.test(q)) return null;
+  const imperative =
+    ROLEPLAY_ACTION.test(q) ||
+    (q.split(" ").length <= 3 && !ROLEPLAY_NOT_IMPERATIVE.test(q));
+  if (!imperative) return null;
 
   for (const [pattern, emotion] of EMOTION_WORDS) {
     if (pattern.test(q)) {

@@ -12,6 +12,12 @@ import {
   resolveLlmConfig,
   type LlmConfig,
 } from "@/lib/assistant/env";
+import {
+  discoverChatModel,
+  getWorkingModel,
+  isModelAvailabilityError,
+  rememberWorkingModel,
+} from "@/lib/assistant/models";
 import type { AssistantLink } from "@/types";
 
 /**
@@ -252,13 +258,21 @@ function hintForStatus(status: number, provider: string): string {
       : "the API key was rejected - check LLM_API_KEY";
   }
   if (status === 404) {
-    return provider === "gemini"
-      ? `model not found for this key - try LLM_MODEL=gemini-2.0-flash (the 1.5 series is unavailable to newer keys)`
-      : "model not found - check LLM_MODEL";
+    if (provider === "gemini") {
+      return "model not found for this key - try LLM_MODEL=gemini-2.0-flash (the 1.5 series is unavailable to newer keys)";
+    }
+    return "model not found - LLM_MODEL is stale and live discovery could not replace it";
   }
   if (status === 429) return "rate limited or out of quota";
   if (status >= 500) return "provider-side outage";
   return "unexpected status";
+}
+
+/** Friendly name for the log line. */
+function providerLabel(provider: string): string {
+  if (provider === "groq") return "Groq";
+  if (provider === "gemini") return "Gemini";
+  return "OpenAI";
 }
 
 async function callOpenAICompatible(
@@ -267,37 +281,75 @@ async function callOpenAICompatible(
   body: ChatBody,
   signal: AbortSignal,
 ): Promise<string | null> {
-  const response = await fetch(`${config.baseUrl}/chat/completions`, {
-    method: "POST",
-    signal,
-    headers: {
-      Authorization: `Bearer ${config.apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: config.model,
-      temperature: 0.4,
-      max_tokens: MAX_OUTPUT_TOKENS,
-      // Provider-level JSON mode. parseAssistantEnvelope still validates.
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        ...body.history.map((turn) => ({
-          role: turn.role === "assistant" ? ("assistant" as const) : ("user" as const),
-          content: turn.text,
-        })),
-        { role: "user", content: body.message },
-      ],
-    }),
-  });
+  const post = (model: string) =>
+    fetch(`${config.baseUrl}/chat/completions`, {
+      method: "POST",
+      signal,
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.4,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        // Provider-level JSON mode. parseAssistantEnvelope still validates.
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: system },
+          ...body.history.map((turn) => ({
+            role: turn.role === "assistant" ? ("assistant" as const) : ("user" as const),
+            content: turn.text,
+          })),
+          { role: "user", content: body.message },
+        ],
+      }),
+    });
+
+  // Prefer an id already proven live for this host over the configured one,
+  // so a decommissioned LLM_MODEL costs one failed call, not one per request.
+  const cached = getWorkingModel(config.baseUrl);
+  let model = cached ?? config.model;
+  let response = await post(model);
+  let detail = response.ok ? "" : await describeFailure(response);
+
+  if (!response.ok) {
+    if (isModelAvailabilityError(response.status, detail)) {
+      console.warn(`${LOG} model "${model}" was rejected: ${detail}`);
+      const discovered = await discoverChatModel(config.baseUrl, config.apiKey, signal);
+
+      if (discovered && discovered !== model) {
+        console.info(
+          `${LOG} Fallback to active ${providerLabel(config.provider)} model: ${discovered}`,
+        );
+        model = discovered;
+        response = await post(model);
+        detail = response.ok ? "" : await describeFailure(response);
+      } else if (!discovered) {
+        console.error(
+          `${LOG} could not read a live model list from ${config.baseUrl}/models -`,
+          "serving the local knowledge base.",
+        );
+      }
+    } else {
+      console.error(
+        `${LOG} ${config.provider} ${detail} -`,
+        hintForStatus(response.status, config.provider),
+      );
+      return null;
+    }
+  }
 
   if (!response.ok) {
     console.error(
-      `${LOG} openai ${await describeFailure(response)} -`,
-      hintForStatus(response.status, "openai"),
+      `${LOG} ${config.provider} ${detail} -`,
+      hintForStatus(response.status, config.provider),
     );
     return null;
   }
+
+  // Only cache once a request has actually succeeded with this id.
+  if (model !== cached) rememberWorkingModel(config.baseUrl, model);
 
   const data = (await response.json()) as {
     choices?: { message?: { content?: string } }[];

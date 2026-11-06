@@ -12,7 +12,7 @@
  * sent to the browser. `describeLlmConfig` masks the key for logging.
  */
 
-export type LlmProvider = "openai" | "gemini";
+export type LlmProvider = "openai" | "gemini" | "groq";
 
 const GEMINI_ALIASES = new Set([
   "gemini",
@@ -27,6 +27,8 @@ const GEMINI_ALIASES = new Set([
   "google-ai-studio",
 ]);
 
+const GROQ_ALIASES = new Set(["groq", "groqcloud", "groq-cloud"]);
+
 const OPENAI_ALIASES = new Set([
   "openai",
   "oai",
@@ -34,7 +36,6 @@ const OPENAI_ALIASES = new Set([
   "azure",
   "azureopenai",
   "azure-openai",
-  "groq",
   "openrouter",
   "together",
   "deepseek",
@@ -50,6 +51,8 @@ const OPENAI_ALIASES = new Set([
 
 export const DEFAULT_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
 export const DEFAULT_OPENAI_BASE = "https://api.openai.com/v1";
+/** Groq speaks the OpenAI wire format, but from its own host. */
+export const DEFAULT_GROQ_BASE = "https://api.groq.com/openai/v1";
 
 /**
  * Google retired the 1.5 series for keys created from mid-2025 onward, so a
@@ -58,6 +61,11 @@ export const DEFAULT_OPENAI_BASE = "https://api.openai.com/v1";
  */
 export const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash";
 export const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
+/**
+ * Groq retires models aggressively, so treat this only as a starting guess -
+ * lib/assistant/models.ts discovers a live id when this one is rejected.
+ */
+export const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
 
 /** Quote characters people paste in from docs, including smart quotes. */
 const QUOTES = ['"', "'", "`", "\u201C", "\u201D", "\u2018", "\u2019"];
@@ -95,13 +103,25 @@ function looksLikeOpenAiKey(key: string): boolean {
   return /^sk-/i.test(key);
 }
 
+/** Groq issues `gsk_...` keys, which are not valid at any other provider. */
+function looksLikeGroqKey(key: string): boolean {
+  return /^gsk_/i.test(key);
+}
+
+/** Every provider except Gemini is driven through the OpenAI wire format. */
+export function isOpenAiCompatible(provider: LlmProvider): boolean {
+  return provider !== "gemini";
+}
+
 function normaliseProvider(declared: string | undefined): LlmProvider | null {
   if (!declared) return null;
   const key = declared.toLowerCase().replace(/\s+/g, "");
   if (GEMINI_ALIASES.has(key)) return "gemini";
+  if (GROQ_ALIASES.has(key)) return "groq";
   if (OPENAI_ALIASES.has(key)) return "openai";
   // Unknown but clearly Google-flavoured, e.g. "gemini-pro" in the wrong slot.
   if (key.includes("gemini") || key.includes("google")) return "gemini";
+  if (key.includes("groq")) return "groq";
   if (key.includes("openai")) return "openai";
   return null;
 }
@@ -136,7 +156,11 @@ export function resolveLlmConfig(): LlmConfig | null {
 
   if (!provider) {
     // Nothing usable declared: infer from the key shape rather than assuming.
-    provider = looksLikeGoogleKey(apiKey) ? "gemini" : "openai";
+    provider = looksLikeGoogleKey(apiKey)
+      ? "gemini"
+      : looksLikeGroqKey(apiKey)
+        ? "groq"
+        : "openai";
     notes.push(
       declared
         ? `LLM_PROVIDER="${declared}" is not recognised; inferred "${provider}" from the key format`
@@ -156,16 +180,31 @@ export function resolveLlmConfig(): LlmConfig | null {
     } else if (provider === "gemini" && looksLikeOpenAiKey(apiKey)) {
       provider = "openai";
       notes.push("LLM_API_KEY looks like an OpenAI key (sk-...); switched to the OpenAI-compatible endpoint");
+    } else if (provider !== "groq" && looksLikeGroqKey(apiKey)) {
+      provider = "groq";
+      notes.push("LLM_API_KEY looks like a Groq key (gsk_...); switched to the Groq endpoint");
     }
   }
 
-  const defaultBase = provider === "gemini" ? DEFAULT_GEMINI_BASE : DEFAULT_OPENAI_BASE;
+  // A base URL is the strongest signal of all: whatever the operator declared,
+  // a request to api.groq.com needs Groq's defaults, not OpenAI's.
+  if (configuredBase && /groq\.com/i.test(configuredBase) && provider !== "groq") {
+    notes.push(`LLM_API_BASE points at Groq; treating the provider as "groq"`);
+    provider = "groq";
+  }
+
+  const defaultBase =
+    provider === "gemini"
+      ? DEFAULT_GEMINI_BASE
+      : provider === "groq"
+        ? DEFAULT_GROQ_BASE
+        : DEFAULT_OPENAI_BASE;
   let baseUrl = defaultBase;
 
   if (configuredBase) {
     const belongsToOther =
-      (provider === "gemini" && /openai\.com/i.test(configuredBase)) ||
-      (provider === "openai" && /googleapis\.com/i.test(configuredBase));
+      (provider === "gemini" && /openai\.com|groq\.com/i.test(configuredBase)) ||
+      (provider !== "gemini" && /googleapis\.com/i.test(configuredBase));
 
     if (belongsToOther) {
       notes.push(
@@ -177,7 +216,12 @@ export function resolveLlmConfig(): LlmConfig | null {
     }
   }
 
-  const defaultModel = provider === "gemini" ? DEFAULT_GEMINI_MODEL : DEFAULT_OPENAI_MODEL;
+  const defaultModel =
+    provider === "gemini"
+      ? DEFAULT_GEMINI_MODEL
+      : provider === "groq"
+        ? DEFAULT_GROQ_MODEL
+        : DEFAULT_OPENAI_MODEL;
   let model = defaultModel;
   const configuredModel = readEnv("LLM_MODEL");
 
@@ -187,6 +231,8 @@ export function resolveLlmConfig(): LlmConfig | null {
     const wrongFamily =
       (provider === "gemini" && /^(gpt|o[13]|text-|davinci|chatgpt)/i.test(bare)) ||
       (provider === "openai" && /^gemini/i.test(bare));
+    // Deliberately no family check for Groq: it serves llama, qwen, kimi and
+    // openai/gpt-oss ids, and a decommissioned one is repaired at runtime.
 
     if (wrongFamily) {
       notes.push(

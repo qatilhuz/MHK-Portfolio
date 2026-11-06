@@ -25,16 +25,22 @@ export function AvatarScene({
       className="h-full w-full"
       aria-label="Portfolio assistant avatar"
     >
-      <ambientLight intensity={0.55} />
-      {/* Key, cool rim and a cyan kicker from the front: enough specular
-          structure to sell the clearcoat without loading an HDR. */}
-      <directionalLight position={[2, 3, 2.5]} intensity={1.6} />
-      <directionalLight position={[-2.6, -0.4, 1.4]} intensity={0.55} color="#38bdf8" />
-      <pointLight position={[0, 0.55, 1.7]} intensity={1.1} color="#67e8f9" />
+      {/* A dark charcoal shell needs harder, tighter speculars than a white
+          one did: the form now reads from highlights rather than from
+          diffuse shading. Still no HDR, so nothing is fetched. */}
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[2.2, 3, 2.5]} intensity={2.1} />
+      {/* Cool rim along the left edge carves the silhouette off the panel. */}
+      <directionalLight position={[-3, 0.6, 1.2]} intensity={1.35} color="#7dd3fc" />
+      {/* Warm underside bounce stops the chin going dead black. */}
+      <directionalLight position={[0.4, -2.2, 1.6]} intensity={0.5} color="#fbbf24" />
+      {/* Tight front kicker for the visor's glass highlight. */}
+      <pointLight position={[0, 0.5, 1.5]} intensity={1.4} color="#e0f2fe" />
+      <pointLight position={[-0.9, -0.3, 0.9]} intensity={0.7} color="#38bdf8" />
 
       <AiFaceAvatar status={status} emotion={emotion} reducedMotion={reducedMotion} />
 
-      <ContactShadows position={[0, -0.42, 0]} opacity={0.4} scale={2.2} blur={2.6} far={1.2} />
+      <ContactShadows position={[0, -0.46, 0]} opacity={0.5} scale={2.4} blur={2.8} far={1.3} />
     </Canvas>
   );
 }

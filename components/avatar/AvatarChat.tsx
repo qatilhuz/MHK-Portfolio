@@ -121,11 +121,11 @@ export function AvatarChat({
   };
 
   return (
-    <div className="flex h-full min-h-[280px] flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={listRef}
         data-lenis-prevent
-        className="panel-scroll flex max-h-[18rem] min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain pr-1 lg:max-h-none"
+        className="panel-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain pr-1"
         role="log"
         aria-live="polite"
         aria-relevant="additions"

@@ -72,10 +72,20 @@ export function AvatarAssistant() {
     recognition.listening ? "listening" : speech.speaking ? "speaking" : status;
 
   return (
-    <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)]">
+    /*
+      The height has to be definite here. Previously this grid was sized by
+      its content, so `h-full` on the chat column resolved against a row that
+      the messages themselves were growing - every new message made the row
+      taller, which made the "scroll" container taller, so it never scrolled.
+      A fixed 90vh gives the whole chain something real to resolve against.
+      Every descendant down to the log also needs min-h-0, because grid and
+      flex items default to min-height:auto and refuse to shrink below their
+      content no matter what overflow is set.
+    */
+    <div className="grid h-[90vh] max-h-[90dvh] grid-rows-[minmax(0,0.8fr)_minmax(0,1.2fr)] items-stretch gap-5 overflow-hidden lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.32fr)] lg:grid-rows-[minmax(0,1fr)]">
       {/* The stage. Given equal billing with the chat and a lot more height
           than before, so the bot is the thing you look at first. */}
-      <div className="relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_30px_90px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
+      <div className="relative flex min-h-0 flex-col overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_30px_90px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
         {/* Layered blooms so the head sits in light rather than on a flat
             panel: a broad cyan wash, a tighter core, and a floor glow. */}
         <div
@@ -98,7 +108,7 @@ export function AvatarAssistant() {
           <AvatarStatus status={visualStatus} />
         </div>
 
-        <div className="relative h-[340px] flex-1 lg:h-[520px]">
+        <div className="relative min-h-0 flex-1">
           {webgl === false ? (
             <AvatarFallback status={visualStatus} />
           ) : (
@@ -115,7 +125,7 @@ export function AvatarAssistant() {
         />
       </div>
 
-      <div className="flex h-full flex-col rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_30px_90px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
+      <div className="flex h-full min-h-0 flex-col rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_30px_90px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
         <AvatarVoice
           recognitionSupported={recognition.supported}
           synthesisSupported={speech.supported}

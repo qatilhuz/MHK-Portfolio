@@ -124,9 +124,14 @@ function groundedLinks(question: string): AssistantLink[] | undefined {
 
 function localAnswer(question: string, emotion: AvatarEmotion = "neutral") {
   const local = replyFromKnowledge(question);
+  // A roleplay performance picks its own face; otherwise use the caller's
+  // default, and look sad only when we genuinely have nothing to offer.
+  const resolved =
+    local.emotion ?? (local.text === unknownReply.text ? "sad" : emotion);
+
   return NextResponse.json({
     text: local.text,
-    emotion: local.text === unknownReply.text ? "sad" : emotion,
+    emotion: resolved,
     links: local.links,
     source: "local" as const,
   });

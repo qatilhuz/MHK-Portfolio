@@ -6,10 +6,54 @@ import { coreStrengths, skills } from "@/data/skills";
 import { siteConfig } from "@/data/site";
 import { getActiveSocialLinks } from "@/data/social";
 import type { AssistantReply } from "@/types";
+import type { AvatarEmotion } from "./emotion";
 
 export const unknownReply: AssistantReply = {
-  text: "I don’t have that information in this portfolio yet.",
+  text: "That one is not in my records yet. Ask me about Huzaifa’s experience, his tech stack, the projects he has shipped, or how he built this site — those I can do.",
 };
+
+/**
+ * Mood performances, handled before any FAQ lookup.
+ *
+ * "Act angry" is a request for a performance, not a question about Huzaifa,
+ * so matching it against the FAQ corpus produces nonsense. It also has to
+ * work without a language model: this is the same path that answers when no
+ * LLM_API_KEY is set or the provider is down, and refusing to play along
+ * there is exactly the dull behaviour this assistant is meant to avoid.
+ */
+const ROLEPLAY_ACTION =
+  /\b(act|acts|acting|be|being|look|looks|show|shows|get|gets|go|turn|turns|pretend|pretends|seem|seems|make|makes|give|feel|feels|try)\b/;
+
+const EMOTION_WORDS: ReadonlyArray<readonly [RegExp, AvatarEmotion]> = [
+  [/\b(angry|anger|mad|furious|fury|rage|raging|annoyed|irritated|grumpy|cross)\b/, "angry"],
+  [/\b(happy|happier|joy|joyful|excited|cheerful|glad|smile|smiling|delighted|thrilled)\b/, "happy"],
+  [/\b(sad|sadder|upset|unhappy|gloomy|depressed|down|cry|crying|miserable|sorrow)\b/, "sad"],
+  [/\b(neutral|calm|normal|relax|relaxed|serious|composed|poker face)\b/, "neutral"],
+];
+
+const ROLEPLAY_LINES: Record<AvatarEmotion, string> = {
+  angry:
+    "Oh, you want angry? Fine. Do you have ANY idea how many times I have been asked whether Huzaifa knows React today? Thirty. The answer is yes. It has always been yes. … There, rage vented. I feel much better.",
+  happy:
+    "Oh, with pleasure. Everything is excellent, the frame rate is buttery, the shaders compiled first try, and someone is actually reading this portfolio. This is my favourite part of the job.",
+  sad: "Very well, bracing for melancholy. Somewhere out there is a beautifully engineered side project that nobody ever starred, and I think about it often. … Right. That is quite enough of that.",
+  neutral:
+    "Resetting to standard operating demeanour. Expression neutral, voice level, opinions filed away. Ask me anything about Huzaifa and I will answer it straight.",
+};
+
+/** A request to perform a mood, or null if this is an ordinary question. */
+export function detectRoleplay(question: string): AssistantReply | null {
+  const q = normalize(question);
+  if (!ROLEPLAY_ACTION.test(q)) return null;
+
+  for (const [pattern, emotion] of EMOTION_WORDS) {
+    if (pattern.test(q)) {
+      return { text: ROLEPLAY_LINES[emotion], emotion };
+    }
+  }
+
+  return null;
+}
 
 export const suggestedQuestions = [
   "Who is Huzaifa?",
@@ -39,6 +83,11 @@ export function scoreFaq(question: string): { faqId: string; score: number } | n
 
 export function replyFromKnowledge(question: string): AssistantReply {
   const q = normalize(question);
+
+  // Performances first: a mood request is not a lookup against the CV.
+  const performance = detectRoleplay(question);
+  if (performance) return performance;
+
   const match = scoreFaq(question);
   if (match) {
     const item = faq.find((entry) => entry.id === match.faqId);

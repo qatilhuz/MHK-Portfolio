@@ -168,6 +168,37 @@ export const faq: FAQ[] = [
     relatedSection: "/projects",
   },
   {
+    id: "site-creator",
+    question: "Who built this website?",
+    answer: `${siteConfig.legalName} built this entire portfolio himself, from the design to the 3D work - no template underneath it. It is a Next.js and React app in TypeScript, with Three.js and React Three Fiber driving the 3D, GSAP handling the animation and Tailwind CSS for styling.`,
+    category: "about",
+    relatedSection: "/about",
+  },
+  {
+    id: "site-stack",
+    question: "What technology is this website built with?",
+    answer:
+      "Next.js and React with TypeScript, Three.js and React Three Fiber for the 3D scenes, GSAP for scroll and timeline animation, and Tailwind CSS for styling. Huzaifa also ships mobile apps with Flutter and Dart.",
+    category: "about",
+    relatedSection: "/#skills",
+  },
+  {
+    id: "site-features",
+    question: "What can I do on this site?",
+    answer:
+      "Beyond the usual sections there is a 3D Arcade Mode, a Developer Terminal you can type real commands into, a cinematic projects reel, and this assistant - a procedural 3D face whose eyes react to the mood of each answer. Huzaifa built every one of them.",
+    category: "about",
+    relatedSection: "/#arcade",
+  },
+  {
+    id: "site-assistant",
+    question: "Who made you, and how do you work?",
+    answer:
+      "Huzaifa built me. I am this portfolio's assistant: a Next.js API route talking to a language model, grounded on his real CV data, returning both an answer and an emotion that drives the React Three Fiber face you are looking at.",
+    category: "about",
+    relatedSection: "/#avatar",
+  },
+  {
     id: "contact",
     question: "How can I contact Huzaifa?",
     answer:

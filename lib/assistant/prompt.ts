@@ -1,6 +1,12 @@
 import { faq } from "@/data/faq";
 import { siteConfig } from "@/data/site";
-import { describeLinkDirectory, karachiNow } from "./context";
+import {
+  describeLinkDirectory,
+  huzaifaAge,
+  HUZAIFA_DOB_LABEL,
+  isHuzaifaBirthday,
+  karachiNow,
+} from "./context";
 import { AVATAR_EMOTIONS } from "./emotion";
 
 /**
@@ -39,6 +45,14 @@ export function buildSystemPrompt(now: Date = new Date()): string {
   return [
     `You are the official AI Portfolio Assistant for ${siteConfig.legalName} (Huzaifa), a Full-Stack and Front-End Web Developer based in ${siteConfig.location}.`,
     "You speak to recruiters, clients and fellow engineers browsing his portfolio.",
+    "",
+    "HUZAIFA PROFILE",
+    `- Age: ${huzaifaAge(now)} years old (DOB: ${HUZAIFA_DOB_LABEL}). You know his exact age and birthday, so answer age questions directly and confidently - never say you do not have that information.`,
+    "- The age above is recalculated on every message from the live date, so quote that number exactly and do not do your own arithmetic on the birth year.",
+    ...(isHuzaifaBirthday(now)
+      ? ["- Today is his birthday. Mention it warmly if age or dates come up."]
+      : []),
+    `- Based in ${siteConfig.location}. Current role: ${siteConfig.role} at ${siteConfig.company}.`,
     "",
     "PERSONALITY",
     "- Expressive, witty, energetic and genuinely helpful - a next-generation sci-fi assistant, J.A.R.V.I.S. with the dry humour left in.",

@@ -6,7 +6,14 @@ import { coreStrengths, skills } from "@/data/skills";
 import { siteConfig } from "@/data/site";
 import { getActiveSocialLinks } from "@/data/social";
 import type { AssistantReply } from "@/types";
-import { buildLinkDirectory, karachiSentence, karachiSentenceUrdu, linkChips } from "./context";
+import {
+  buildLinkDirectory,
+  huzaifaAge,
+  HUZAIFA_DOB_LABEL,
+  karachiSentence,
+  karachiSentenceUrdu,
+  linkChips,
+} from "./context";
 import type { AvatarEmotion } from "./emotion";
 import {
   detectLanguage,
@@ -113,6 +120,32 @@ export function detectSmallTalk(
     if (pattern.test(q)) return { text: pickLine(bank, language), emotion };
   }
   return null;
+}
+
+/**
+ * "How old is he?" - computed, never stored, so it cannot go stale.
+ *
+ * Runs before the clock detector on purpose: "what is his date of birth"
+ * contains "date", which the time matcher would otherwise answer with the
+ * wall clock.
+ */
+const AGE_QUESTION =
+  /\b(age|how old|years old|yrs old|born|birthday|birth date|date of birth|dob|umar|umr|umer|kitne saal|kitni umar|paida|paidaish|janam|salgirah|saalgirah)\b/;
+
+export function detectAgeQuestion(
+  question: string,
+  language: AssistantLanguage = detectLanguage(question),
+): AssistantReply | null {
+  const q = normalize(question);
+  if (!AGE_QUESTION.test(q)) return null;
+
+  const age = huzaifaAge();
+  const text =
+    language === "ur-Latn"
+      ? `Huzaifa ${age} saal ke hain \u2014 unki paidaish ${HUZAIFA_DOB_LABEL} ko hui thi.`
+      : `Huzaifa is ${age} years old \u2014 born on ${HUZAIFA_DOB_LABEL}.`;
+
+  return { text, emotion: "neutral" };
 }
 
 /**
@@ -231,6 +264,10 @@ export function replyFromKnowledge(question: string): AssistantReply {
 
   const chat = detectSmallTalk(question, language);
   if (chat) return chat;
+
+  // Before the clock: "date of birth" contains "date".
+  const age = detectAgeQuestion(question, language);
+  if (age) return age;
 
   const clock = detectTimeQuestion(question, language);
   if (clock) return clock;

@@ -9,6 +9,7 @@ import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { useWebGLSupport } from "@/hooks/useWebGLSupport";
 import { DEFAULT_EMOTION, type AvatarEmotion } from "@/lib/assistant/emotion";
 import { SceneErrorBoundary } from "@/components/three/SceneErrorBoundary";
+import { AdvancedVisualizer } from "./AdvancedVisualizer";
 import { AvatarChat } from "./AvatarChat";
 import { AvatarFallback } from "./AvatarFallback";
 import { AvatarStatus } from "./AvatarStatus";
@@ -108,21 +109,34 @@ export function AvatarAssistant() {
           <AvatarStatus status={visualStatus} />
         </div>
 
-        <div className="relative min-h-0 flex-1">
-          {webgl === false ? (
-            <AvatarFallback status={visualStatus} />
-          ) : (
-            <SceneErrorBoundary>
-              <AvatarScene status={visualStatus} emotion={emotion} />
-            </SceneErrorBoundary>
-          )}
-        </div>
+        {/* Flex column owning both the square stage and the diagnostics,
+            so each takes its own share of the locked height budget. */}
+        <div className="relative flex min-h-0 flex-1 flex-col gap-3 p-3">
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            {/*
+              aspect-square sizes the height from the width, but this column
+              lives inside a 90vh lock, so on a wide-and-short viewport a
+              width-driven square would overflow the budget. Capping the
+              width by the height left over after the header, padding, gap
+              and the diagnostics panel keeps it a true square at every size
+              instead of letting it clip or go rectangular.
+            */}
+            <div className="relative aspect-square w-full max-w-[min(100%,calc(90vh-15rem))] overflow-hidden rounded-2xl border border-white/10 bg-black/50 backdrop-blur-md">
+              {webgl === false ? (
+                <AvatarFallback status={visualStatus} />
+              ) : (
+                <SceneErrorBoundary>
+                  <AvatarScene status={visualStatus} emotion={emotion} />
+                </SceneErrorBoundary>
+              )}
+            </div>
+          </div>
 
-        {/* Reflective floor line under the bot. */}
-        <div
-          className="pointer-events-none absolute inset-x-10 bottom-10 h-px bg-gradient-to-r from-transparent via-cyan-300/25 to-transparent"
-          aria-hidden="true"
-        />
+          <AdvancedVisualizer
+            isThinking={status === "thinking"}
+            status={visualStatus}
+          />
+        </div>
       </div>
 
       <div className="flex h-full min-h-0 flex-col rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_30px_90px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl">

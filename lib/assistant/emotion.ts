@@ -6,7 +6,15 @@
  * touch `process.env`.
  */
 
-export const AVATAR_EMOTIONS = ["neutral", "happy", "sad", "angry"] as const;
+export const AVATAR_EMOTIONS = [
+  "neutral",
+  "happy",
+  "sad",
+  "angry",
+  "thinking",
+  "surprised",
+  "cheeky",
+] as const;
 
 export type AvatarEmotion = (typeof AVATAR_EMOTIONS)[number];
 

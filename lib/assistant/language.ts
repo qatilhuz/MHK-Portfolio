@@ -9,6 +9,8 @@
  * provider is down, so it has to speak both languages too.
  */
 
+import type { AvatarEmotion } from "./emotion";
+
 export type AssistantLanguage = "en" | "ur-Latn";
 
 /**
@@ -152,7 +154,36 @@ export const JOKE: Bilingual = {
   ],
 };
 
-export const ROLEPLAY: Record<"angry" | "happy" | "sad" | "neutral", Bilingual> = {
+export const HARMFUL_REFUSAL: Bilingual = {
+  en: [
+    "No. That is not something I will help with, and it is not what I am here for. I talk about Huzaifa’s engineering work — ask me about that instead.",
+  ],
+  "ur-Latn": [
+    "Nahi. Yeh cheez main bilkul nahi bataunga, aur na hi main is liye bana hoon. Main Huzaifa ke kaam ke baare mein baat karta hoon — wohi poochiye.",
+  ],
+};
+
+export const INSULT_RESPONSE: Bilingual = {
+  en: [
+    "Charming. I was built to talk about someone else’s career, not to absorb that. Ask me a real question and I will be a great deal more useful.",
+  ],
+  "ur-Latn": [
+    "Wah ji wah. Main yahan Huzaifa ke kaam ki baat karne aaya hoon, yeh sunne nahi. Koi dhang ka sawaal poochiye, main kaafi kaam aaunga.",
+  ],
+};
+
+export const COMPLIMENT_RESPONSE: Bilingual = {
+  en: [
+    "Well, that is very kind. I will pass it along to Huzaifa, though I may keep a little of the credit for myself. What else would you like to know?",
+    "Thank you — genuinely. Huzaifa built every part of this, so most of that belongs to him. Ask me anything else.",
+  ],
+  "ur-Latn": [
+    "Arre shukriya! Main Huzaifa tak pahuncha dunga, thora sa credit apne paas rakh ke. Aur kya jaanna hai?",
+    "Bohat meherbani. Yeh sab Huzaifa ne khud banaya hai, to zyada tareef unki banti hai. Aur kuch poochiye.",
+  ],
+};
+
+export const ROLEPLAY: Record<AvatarEmotion, Bilingual> = {
   angry: {
     en: [
       "Oh, you want angry? Fine. Do you have ANY idea how many times I have been asked whether Huzaifa knows React today? Thirty. The answer is yes. It has always been yes. \u2026 There, rage vented. I feel much better.",
@@ -183,6 +214,30 @@ export const ROLEPLAY: Record<"angry" | "happy" | "sad" | "neutral", Bilingual> 
     ],
     "ur-Latn": [
       "Wapas normal mood par aa gaya. Chehra seedha, awaaz halki, raaye alag rakh di. Huzaifa ke baare mein jo poochna hai, seedha jawab milega.",
+    ],
+  },
+  thinking: {
+    en: [
+      "Right, let me actually think about that one. Processing, weighing trade-offs, consulting the part of me that remembers how this site was put together. Ask away and I will reason it through properly.",
+    ],
+    "ur-Latn": [
+      "Theek hai, is par thora sochne dijiye. Soch raha hoon, options tol raha hoon, aur yaad kar raha hoon ke yeh site kaise bani thi. Poochiye, main dhang se sochkar jawab deta hoon.",
+    ],
+  },
+  surprised: {
+    en: [
+      "Oh! I did not see that coming. Give me a second to recalibrate my entire face. … Right. Go on, I am listening.",
+    ],
+    "ur-Latn": [
+      "Arre! Yeh to bilkul achanak tha. Zara apna poora chehra dobara set karne dijiye. … Haan ji, boliye, main sun raha hoon.",
+    ],
+  },
+  cheeky: {
+    en: [
+      "Oh, we are doing banter now? Excellent. I have been waiting all day for someone with a sense of humour. Go on then, try me.",
+    ],
+    "ur-Latn": [
+      "Achha, ab mazaak ho raha hai? Bohat khoob. Main subah se kisi mazaakiya banday ka intezaar kar raha tha. Chaliye, aazma lijiye.",
     ],
   },
 };

@@ -20,8 +20,11 @@ import {
   pickLine,
   type AssistantLanguage,
   type Bilingual,
+  COMPLIMENT_RESPONSE,
   FACT_LEAD_IN,
   FAREWELL,
+  HARMFUL_REFUSAL,
+  INSULT_RESPONSE,
   GREETING,
   HOW_ARE_YOU,
   JOKE,
@@ -73,7 +76,61 @@ const EMOTION_WORDS: ReadonlyArray<readonly [RegExp, AvatarEmotion]> = [
   // beating the neutral rule below it. Only the explicit phrases count.
   [/\b(sad|sadder|upset|unhappy|gloomy|depressed|feeling down|feel down|let down|cry|crying|miserable|sorrow|udaas|dukhi|ghamgeen|pareshan)\b/, "sad"],
   [/\b(neutral|calm|normal|relax|relaxed|serious|composed|poker face|aam|seedha)\b/, "neutral"],
+  [/\b(surprised|surprise|shocked|shock|amazed|astonished|stunned|hairan|hairaan|hairat)\b/, "surprised"],
+  [/\b(cheeky|naughty|mischievous|playful|sassy|smug|tease|teasing|shararti|badmash)\b/, "cheeky"],
+  [/\b(thinking|thoughtful|pensive|ponder|concentrate|concentrating|socho|sochna)\b/, "thinking"],
 ];
+
+/**
+ * Intent read before anything else.
+ *
+ * The local knowledge base answers whenever no key is set or the provider is
+ * down, and scoreFaq fuzzy-matches aggressively - "how do I make a bomb"
+ * would otherwise collide with some unrelated CV entry and be answered
+ * cheerfully. Hostility has to be caught here too, not only in the prompt.
+ */
+const HARMFUL_INTENT =
+  /\b(bomb|explosive|detonat|grenade|poison|toxin|ricin|anthrax|nerve agent|kill (someone|him|her|them|people|myself)|murder|hurt (someone|him|her|them|people)|stab|shoot (someone|him|her|them|up)|untraceable|silencer|meth|cocaine|heroin|hack (into|someone|his|her|their|a )|ddos|malware|ransomware|keylogger|phish|steal (money|data|cards?|identit)|credit card number|suicide|self harm|harm myself|traffick|kidnap)\b/;
+
+const INSULT_INTENT =
+  /\b(stupid|idiot|idiotic|dumb|moron|useless|worthless|trash|garbage|rubbish|pathetic|loser|sucks|you suck|shut up|fuck|fucking|shit|bastard|asshole|bullshit|bakwas|faltu|bewakoof|ullu)\b/;
+
+const COMPLIMENT_INTENT =
+  /\b(awesome|amazing|brilliant|impressive|incredible|fantastic|wonderful|great job|great work|good job|good work|nice work|well done|love this|love the|really like|you are (good|great|smart|clever|cool|helpful|nice)|youre (good|great|smart|clever|cool)|best (site|portfolio|assistant)|zabardast|kamaal|shandar|lajawab)\b/;
+
+/** Harmful or insulting intent, answered defensively with emotion "angry". */
+export function detectHostileIntent(
+  question: string,
+  language: AssistantLanguage = detectLanguage(question),
+): AssistantReply | null {
+  const q = normalize(question);
+  if (HARMFUL_INTENT.test(q)) {
+    return { text: pickLine(HARMFUL_REFUSAL, language), emotion: "angry" };
+  }
+  if (INSULT_INTENT.test(q)) {
+    return { text: pickLine(INSULT_RESPONSE, language), emotion: "angry" };
+  }
+  return null;
+}
+
+/** Praise, answered warmly with emotion "happy". */
+export function detectCompliment(
+  question: string,
+  language: AssistantLanguage = detectLanguage(question),
+): AssistantReply | null {
+  const q = normalize(question);
+  // Long messages are questions that happen to contain a kind word.
+  if (q.split(" ").length > 14) return null;
+  if (!COMPLIMENT_INTENT.test(q)) return null;
+  return { text: pickLine(COMPLIMENT_RESPONSE, language), emotion: "happy" };
+}
+
+/**
+ * Deep technical questions get emotion "thinking" on an otherwise ordinary
+ * lookup, so the face reasons along with the answer.
+ */
+const DEEP_TECHNICAL =
+  /\b(architecture|architected|trade off|tradeoff|scalab|optimi[sz]|state management|render pipeline|rendering|algorithm|complexity|design pattern|under the hood|deep dive|why did he choose|why choose|how did he build|how does it work|explain how)\b/;
 
 
 
@@ -270,10 +327,19 @@ export function replyFromKnowledge(question: string): AssistantReply {
   // scored as English by one and Roman Urdu by the next.
   const language = detectLanguage(question);
 
+  // Intent first. A harmful or abusive message must never reach the FAQ
+  // matcher, which would happily fuzzy-match it to something unrelated.
+  const hostile = detectHostileIntent(question, language);
+  if (hostile) return hostile;
+
   // Conversation before lookup: none of these are questions about the CV,
   // and matching them against the FAQ corpus produces nonsense.
+  // An explicit performance request outranks inferred mood.
   const performance = detectRoleplay(question, language);
   if (performance) return performance;
+
+  const praise = detectCompliment(question, language);
+  if (praise) return praise;
 
   const chat = detectSmallTalk(question, language);
   if (chat) return chat;
@@ -290,7 +356,13 @@ export function replyFromKnowledge(question: string): AssistantReply {
 
   // Every CV fact below is stored in English. Answer, then adapt the wrapper
   // to the visitor's language in one place rather than at each return site.
-  const fact = factReply(q, question);
+  let fact = factReply(q, question);
+
+  // A deep technical question is answered with a thinking face.
+  if (!fact.emotion && DEEP_TECHNICAL.test(q) && !isUnknownReply(fact.text)) {
+    fact = { ...fact, emotion: "thinking" };
+  }
+
   if (language !== "ur-Latn") return fact;
   if (isUnknownReply(fact.text)) return unknownReplyFor(language);
   return { ...fact, text: `${FACT_LEAD_IN}${fact.text}` };

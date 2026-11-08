@@ -5,12 +5,15 @@ import { useFrame } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import gsap from "gsap";
 import {
+  BackSide,
   Color,
+  DoubleSide,
   MathUtils,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  PlaneGeometry,
+  type BufferAttribute,
   type Group,
-  type Mesh,
 } from "three";
 import type { AvatarEmotion } from "@/lib/assistant/emotion";
 import type { AssistantStatus } from "@/types";
@@ -61,13 +64,28 @@ const EYE_H = 0.086;
  */
 const EYE_DEPTH = 0.056;
 const EYE_RADIUS = 0.026;
+/**
+ * The LED squircle's furthest point from its centre is 0.0487: the corner
+ * arc centre at (0.015, 0.017) plus the 0.026 corner radius. Bezel and halo
+ * are sized from that rather than from the full half-diagonal, so the rim
+ * hugs the actual silhouette like a camera lens instead of floating off it.
+ */
+const EYE_BEZEL_INNER = 0.0495;
+const EYE_BEZEL_OUTER = 0.0545;
+const EYE_HALO_R = 0.058;
 
-/** Mouth is a row of LED dots, morphed between a curve and a ring. */
-const MOUTH_DOTS = 9;
+/**
+ * The mouth is one continuous ribbon: a plane strip whose vertices are
+ * rewritten each frame to follow the current curve. A strip is used rather
+ * than a rebuilt TubeGeometry because the vertex buffer can be mutated in
+ * place - morphing between a smile, a frown and a closed ring allocates
+ * nothing and creates no garbage.
+ */
+const MOUTH_SEGMENTS = 48;
 const MOUTH_HALF_W = 0.072;
 const MOUTH_CURVE_AMP = 0.03;
 const MOUTH_RING_R = 0.042;
-const MOUTH_DOT_R = 0.0105;
+const MOUTH_THICK = 0.017;
 
 interface MouthPose {
   /** Parabola coefficient: positive smiles, negative frowns, 0 is flat. */
@@ -210,6 +228,63 @@ function approach(current: number, target: number, lambda: number, dt: number) {
 
 const POSE_LAMBDA = 9;
 
+/**
+ * Rewrite a plane strip so it traces the current mouth shape.
+ *
+ * PlaneGeometry lays its vertices out row by row, so for a one-row strip the
+ * top edge is columns 0..seg and the bottom edge is the next seg+1 columns.
+ * Each column is placed at a point on the curve, then pushed out along the
+ * curve's *perpendicular* rather than straight up and down - offsetting in y
+ * alone would visibly thin the stroke wherever the smile steepens.
+ *
+ * The line form and the ring form are evaluated independently and blended by
+ * `round`, which is what lets the mouth morph continuously into the
+ * surprised "o". At round = 1 the two ends of the strip land on the same
+ * point, so the ring closes seamlessly.
+ */
+function writeRibbon(
+  pos: BufferAttribute,
+  m: { curve: number; width: number; round: number; shiftX: number; thick: number },
+  thickness: number,
+) {
+  const cols = MOUTH_SEGMENTS + 1;
+  const spread = MOUTH_HALF_W * m.width;
+  const ring = MOUTH_RING_R * m.width;
+  const half = (thickness * m.thick) / 2;
+
+  for (let i = 0; i < cols; i += 1) {
+    const u = i / MOUTH_SEGMENTS;
+    const s = u * 2 - 1;
+
+    // Line form, and the normal of its tangent.
+    const lx = spread * s;
+    const ly = MOUTH_CURVE_AMP * m.curve * (s * s - 1 / 3);
+    const slope = spread === 0 ? 0 : (2 * MOUTH_CURVE_AMP * m.curve * s) / spread;
+    const lnLen = Math.hypot(slope, 1) || 1;
+    const nlx = -slope / lnLen;
+    const nly = 1 / lnLen;
+
+    // Ring form, whose normal is simply radial.
+    const phi = u * Math.PI * 2;
+    const nrx = Math.sin(phi);
+    const nry = Math.cos(phi);
+
+    const cx = lx + (ring * nrx - lx) * m.round + m.shiftX;
+    const cy = ly + (ring * nry - ly) * m.round;
+
+    let nx = nlx + (nrx - nlx) * m.round;
+    let ny = nly + (nry - nly) * m.round;
+    const nLen = Math.hypot(nx, ny) || 1;
+    nx /= nLen;
+    ny /= nLen;
+
+    pos.setXYZ(i, cx + nx * half, cy + ny * half, 0);
+    pos.setXYZ(cols + i, cx - nx * half, cy - ny * half, 0);
+  }
+
+  pos.needsUpdate = true;
+}
+
 export function AiFaceAvatar({
   emotion,
   status,
@@ -227,7 +302,6 @@ export function AiFaceAvatar({
   const leftCoreRef = useRef<Group>(null);
   const rightCoreRef = useRef<Group>(null);
   const mouthRef = useRef<Group>(null);
-  const dotRefs = useRef<(Mesh | null)[]>([]);
 
   // Read inside useFrame without re-subscribing the loop on every change.
   const statusRef = useRef(status);
@@ -245,6 +319,16 @@ export function AiFaceAvatar({
    * mesh. Standard material with a strong emissive gives the sci-fi glow the
    * brief asks for while still responding to the rig lights.
    */
+  // Two strips: the solid stroke, and a thicker translucent one behind it
+  // standing in for a bloom pass.
+  const mouthGeo = useMemo(() => new PlaneGeometry(1, 1, MOUTH_SEGMENTS, 1), []);
+  const mouthGlowGeo = useMemo(() => new PlaneGeometry(1, 1, MOUTH_SEGMENTS, 1), []);
+
+  useEffect(() => {
+    const owned = [mouthGeo, mouthGlowGeo];
+    return () => owned.forEach((geometry) => geometry.dispose());
+  }, [mouthGeo, mouthGlowGeo]);
+
   const mats = useMemo(() => {
     const base = POSES.neutral.color;
     return {
@@ -271,6 +355,23 @@ export function AiFaceAvatar({
         roughness: 0.25,
         metalness: 0,
         toneMapped: false,
+        // The strip reverses winding as it curls into the ring.
+        side: DoubleSide,
+      }),
+      mouthGlow: new MeshBasicMaterial({
+        color: new Color(base),
+        transparent: true,
+        opacity: 0.17,
+        depthWrite: false,
+        toneMapped: false,
+        side: DoubleSide,
+      }),
+      bezel: new MeshBasicMaterial({
+        color: new Color(base),
+        transparent: true,
+        opacity: 0.42,
+        depthWrite: false,
+        toneMapped: false,
       }),
       glow: new MeshBasicMaterial({
         color: new Color(base),
@@ -291,7 +392,7 @@ export function AiFaceAvatar({
         color: new Color(base),
         transparent: true,
         opacity: 0.07,
-        side: 1 /* THREE.BackSide */,
+        side: BackSide,
         toneMapped: false,
       }),
     };
@@ -393,25 +494,12 @@ export function AiFaceAvatar({
     m.shiftX = approach(m.shiftX, pose.mouth.shiftX, lambda, dt);
     m.thick = approach(m.thick, pose.mouth.thick, lambda, dt);
 
-    for (let i = 0; i < MOUTH_DOTS; i += 1) {
-      const dot = dotRefs.current[i];
-      if (!dot) continue;
-
-      const u = (i / (MOUTH_DOTS - 1)) * 2 - 1; // -1 .. 1
-      // Line form. The -1/3 is the mean of u^2 over the span, so changing the
-      // curve bends the mouth about its centre instead of sliding it up.
-      const lineX = MOUTH_HALF_W * m.width * u;
-      const lineY = MOUTH_CURVE_AMP * m.curve * (u * u - 1 / 3);
-
-      // Ring form, for the surprised "o".
-      const phi = (i / MOUTH_DOTS) * Math.PI * 2;
-      const ringX = MOUTH_RING_R * m.width * Math.sin(phi);
-      const ringY = MOUTH_RING_R * m.width * Math.cos(phi);
-
-      dot.position.x = MathUtils.lerp(lineX, ringX, m.round) + m.shiftX;
-      dot.position.y = MathUtils.lerp(lineY, ringY, m.round);
-      dot.scale.setScalar(m.thick);
-    }
+    writeRibbon(mouthGeo.attributes.position as BufferAttribute, m, MOUTH_THICK);
+    writeRibbon(
+      mouthGlowGeo.attributes.position as BufferAttribute,
+      m,
+      MOUTH_THICK * 2.9,
+    );
 
     // -- colour -------------------------------------------------------------
     targetColor.set(pose.color);
@@ -421,6 +509,8 @@ export function AiFaceAvatar({
     mats.antenna.emissive.lerp(targetColor, colourAlpha);
     mats.glow.color.lerp(targetColor, colourAlpha);
     mats.rim.color.lerp(targetColor, colourAlpha);
+    mats.bezel.color.lerp(targetColor, colourAlpha);
+    mats.mouthGlow.color.lerp(targetColor, colourAlpha);
 
     // -- gaze ---------------------------------------------------------------
     const gaze = gazeRef.current;
@@ -519,20 +609,17 @@ export function AiFaceAvatar({
         </group>
       </group>
 
-      {/* Mouth: a row of LED dots driven entirely by transforms, so morphing
-          between a smile, a frown and an "o" allocates no geometry. */}
+      {/* Mouth: one solid continuous stroke. frustumCulled is off because the
+          vertices move every frame, which leaves the cached bounding sphere
+          stale and can cull the mesh at the edge of view. */}
       <group ref={mouthRef} position={[0, MOUTH_Y, MOUTH_Z]}>
-        {Array.from({ length: MOUTH_DOTS }, (_, i) => (
-          <mesh
-            key={i}
-            ref={(node) => {
-              dotRefs.current[i] = node;
-            }}
-            material={mats.mouth}
-          >
-            <sphereGeometry args={[MOUTH_DOT_R, 14, 14]} />
-          </mesh>
-        ))}
+        <mesh
+          geometry={mouthGlowGeo}
+          material={mats.mouthGlow}
+          position={[0, 0, -0.004]}
+          frustumCulled={false}
+        />
+        <mesh geometry={mouthGeo} material={mats.mouth} frustumCulled={false} />
       </group>
     </group>
   );
@@ -566,6 +653,7 @@ function Eye({
     led: MeshStandardMaterial;
     core: MeshStandardMaterial;
     glow: MeshBasicMaterial;
+    bezel: MeshBasicMaterial;
   };
 }) {
   return (
@@ -585,9 +673,15 @@ function Eye({
         </mesh>
       </group>
 
-      {/* Cheap bloom stand-in: a soft additive disc behind the LED. */}
-      <mesh position={[0, 0, -0.005]} scale={2.1} material={mats.glow}>
-        <circleGeometry args={[EYE_W * 0.72, 32]} />
+      {/* Lens bezel: a thin ring sitting just outside the LED silhouette, so
+          the eye reads as a seated optic rather than a floating lozenge. */}
+      <mesh position={[0, 0, -0.003]} material={mats.bezel}>
+        <ringGeometry args={[EYE_BEZEL_INNER, EYE_BEZEL_OUTER, 48]} />
+      </mesh>
+
+      {/* Soft halo, sized to hug the bezel instead of swamping it. */}
+      <mesh position={[0, 0, -0.005]} material={mats.glow}>
+        <circleGeometry args={[EYE_HALO_R, 32]} />
       </mesh>
     </group>
   );

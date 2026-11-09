@@ -462,6 +462,38 @@ h3 {
   mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.animate-shimmer-flash {
+  animation: shimmer 3s linear infinite;
+}
+
+/*
+ * TextReveal splits the hero heading into per-character spans that carry
+ * will-change: transform. A compositor-promoted descendant is rasterised into
+ * its own layer, outside the ancestor's background-clip: text - those glyphs
+ * would read as color: transparent against nothing and disappear. The reveal
+ * is a one-shot tween, so dropping the hint costs nothing and keeps every
+ * character inside the clip.
+ */
+.animate-shimmer-flash [data-char],
+.animate-shimmer-flash [data-word] {
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer-flash {
+    animation: none;
+  }
+}
+
 @keyframes ambient-drift-x {
   from {
     transform: translate3d(-6%, 0, 0) scale(1);

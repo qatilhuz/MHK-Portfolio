@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
  */
 const LAYER_CLASS =
   "pointer-events-none absolute inset-0 h-full w-full scale-125 translate-z-0 transform-gpu object-contain " +
-  "will-change-transform [backface-visibility:hidden]";
+  "will-change-transform [backface-visibility:hidden] [contain:layout_paint]";
 
 const MASK_RADIUS = 250;
 const MASK_TILE = MASK_RADIUS * 2;
@@ -186,7 +186,15 @@ export function HeroInteractiveVideo({
         // `group` drives the fade through CSS :hover, so hovering does not
         // set state either. overflow stays visible on purpose - the 125%
         // scale is what gives the layers their pop-out.
+        //
+        // contain is layout-only here, deliberately. `contain: paint` clips
+        // every descendant to the padding box, which would amputate the
+        // scale-125 pop-out (72px per side) that this component exists for.
+        // layout containment still cuts the subtree out of the page's layout
+        // graph; the paint containment lives on the video layers instead,
+        // where there is nothing to clip.
         "group relative flex w-full items-center justify-center overflow-visible",
+        "translate-z-0 transform-gpu [contain:layout]",
         failed ? undefined : "h-[500px]",
         className,
       )}
@@ -223,6 +231,12 @@ export function HeroInteractiveVideo({
             aria-hidden="true"
             className={cn(
               LAYER_CLASS,
+              // Overrides will-change-transform from LAYER_CLASS (tailwind-merge
+              // keeps the last member of the will-change group). mask-image is
+              // the requested hint; mask-position is the property that actually
+              // animates every frame; transform keeps the compositor promotion
+              // that guarantees this layer gets its own GPU surface.
+              "will-change-[mask-image,mask-position,transform]",
               "opacity-0 transition-opacity duration-300 group-hover:opacity-100",
             )}
             style={COLOR_LAYER_STYLE}

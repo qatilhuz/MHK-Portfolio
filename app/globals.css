@@ -462,34 +462,41 @@ h3 {
   mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
 }
 
-@keyframes shimmer {
+@keyframes text-shimmer {
   0% {
-    background-position: 200% center;
+    background-position: 200% 0;
   }
   100% {
-    background-position: -200% center;
+    background-position: -200% 0;
   }
-}
-
-.animate-shimmer-flash {
-  animation: shimmer 3s linear infinite;
 }
 
 /*
- * TextReveal splits the hero heading into per-character spans that carry
- * will-change: transform. A compositor-promoted descendant is rasterised into
- * its own layer, outside the ancestor's background-clip: text - those glyphs
- * would read as color: transparent against nothing and disappear. The reveal
- * is a one-shot tween, so dropping the hint costs nothing and keeps every
- * character inside the clip.
+ * Gradient-clipped heading text.
+ *
+ * color: #ffffff is a real fallback, not decoration. If a browser does not
+ * support -webkit-text-fill-color the glyphs stay solid white instead of
+ * vanishing, which is the failure mode the previous Tailwind version had.
+ *
+ * Hard requirement: the element this lands on must contain its text DIRECTLY.
+ * background-clip: text only masks glyphs painted in the same layer, and in
+ * Blink a descendant with overflow: hidden or will-change: transform becomes
+ * self-painting - its glyphs drop out of the mask and render as transparent.
+ * That is exactly why the heading disappeared when it was built out of
+ * TextReveal's per-word/per-character spans.
  */
-.animate-shimmer-flash [data-char],
-.animate-shimmer-flash [data-word] {
-  will-change: auto;
+.hero-heading-shimmer {
+  color: #ffffff;
+  background: linear-gradient(110deg, #ffffff 40%, #22d3ee 50%, #ffffff 60%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer 4s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-shimmer-flash {
+  .hero-heading-shimmer {
     animation: none;
   }
 }

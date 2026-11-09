@@ -149,22 +149,27 @@ export function HeroInteractiveVideo({
 
     const startBoth = () => {
       if (cancelled) return;
-      // HAVE_FUTURE_DATA on both, or starting now would stall one of them.
-      if (base.readyState < 3 || color.readyState < 3) return;
+      // HAVE_METADATA, not HAVE_FUTURE_DATA. preload="metadata" tells the
+      // browser to stop after the container header, so `canplay` would never
+      // fire on its own and this effect would deadlock with two frozen
+      // videos. Metadata is enough to know both elements are real and
+      // decodable; play() is what asks for the frames, so all buffering
+      // happens after mount instead of racing first paint.
+      if (base.readyState < 1 || color.readyState < 1) return;
       void Promise.all([base.play(), color.play()]).catch(() => {
         // Autoplay can still be refused; the poster frame is an acceptable
         // resting state and there is nothing useful to retry.
       });
     };
 
-    base.addEventListener("canplay", startBoth);
-    color.addEventListener("canplay", startBoth);
+    base.addEventListener("loadedmetadata", startBoth);
+    color.addEventListener("loadedmetadata", startBoth);
     startBoth();
 
     return () => {
       cancelled = true;
-      base.removeEventListener("canplay", startBoth);
-      color.removeEventListener("canplay", startBoth);
+      base.removeEventListener("loadedmetadata", startBoth);
+      color.removeEventListener("loadedmetadata", startBoth);
     };
   }, [failed, reducedMotion]);
 
@@ -209,7 +214,7 @@ export function HeroInteractiveVideo({
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             disablePictureInPicture
             disableRemotePlayback
             onError={handleError}
@@ -224,7 +229,7 @@ export function HeroInteractiveVideo({
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             disablePictureInPicture
             disableRemotePlayback
             onError={handleError}

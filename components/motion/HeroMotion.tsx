@@ -5,20 +5,24 @@ import { HeroStackLoop } from "@/components/hero/HeroStackLoop";
 import { requestEmote } from "@/lib/character/emoteBus";
 import { isPageRevealed, onPageRevealed } from "@/lib/boot/reveal";
 import { prefersReducedMotion } from "@/lib/motion/engine";
-import { TextReveal } from "./TextReveal";
 
 /**
- * One source of truth for the hero heading so the revealed branch and the
- * pre-reveal fallback cannot drift apart - the shimmer has to survive the
- * swap between them or it would blink off for the first paint.
+ * The heading is a plain <h1> holding its text directly, and that is load
+ * bearing rather than a simplification.
  *
- * The gradient is painted on the heading box and clipped to the glyphs, so
- * the sweep crosses the whole line rather than each letter individually.
+ * It previously rendered through <TextReveal variant="assemble" />, which
+ * wraps every word in an `inline-block overflow-hidden` span and every
+ * character in a `will-change: transform` span. Both of those make a
+ * descendant self-painting in Blink, and `background-clip: text` can only
+ * mask glyphs painted in the same layer - so every character fell outside
+ * the gradient mask and painted as -webkit-text-fill-color: transparent
+ * against nothing. The heading was not faded or mispositioned; it was
+ * genuinely drawing nothing at all.
+ *
+ * Any future reveal effect here has to animate the <h1> as a whole (opacity,
+ * transform, clip-path on the element itself). Splitting the text into
+ * wrapper spans will silently delete the heading again.
  */
-const HEADING_CLASS =
-  "display mt-5 bg-[linear-gradient(110deg,#ffffff,45%,#22d3ee,55%,#ffffff)] " +
-  "bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer-flash";
-
 export function HeroMotion({
   name,
 }: {
@@ -38,19 +42,9 @@ export function HeroMotion({
 
   return (
     <div>
-      {live || isPageRevealed() ? (
-        <>
-          <HeroStackLoop />
-          <TextReveal as="h1" className={HEADING_CLASS} text={name} variant="assemble" once={false} delay={0.08} />
-          <span className="hero-scan mt-2 block h-px w-24 bg-accent/50" aria-hidden="true" />
-        </>
-      ) : (
-        <>
-          <HeroStackLoop />
-          <h1 className={HEADING_CLASS}>{name}</h1>
-          <span className="hero-scan mt-2 block h-px w-24 bg-accent/50" aria-hidden="true" />
-        </>
-      )}
+      <HeroStackLoop />
+      <h1 className="hero-heading-shimmer display mt-5">{name}</h1>
+      <span className="hero-scan mt-2 block h-px w-24 bg-accent/50" aria-hidden="true" />
     </div>
   );
 }

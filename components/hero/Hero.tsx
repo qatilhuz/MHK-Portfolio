@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import { HeroDescription } from "@/components/hero/HeroDescription";
+import { HeroInteractiveVideo } from "@/components/hero/HeroInteractiveVideo";
 import { TerminalBrailleImage } from "@/components/hero/TerminalBrailleImage";
 import { HeroMotion } from "@/components/motion/HeroMotion";
 import { InView } from "@/components/motion/InView";
@@ -112,11 +113,14 @@ export function Hero() {
           ) : null}
         </div>
 
-        <InView className="relative z-20 lg:mt-21" y={18}>
+        <InView className="relative z-20" y={18}>
           <p className="mb-4 text-right font-mono text-[9px] uppercase tracking-[0.28em] text-cyan-100/52">
             DESIGNED WITH INTENT. BUILT TO WORK.
           </p>
-          <TerminalBrailleImage />
+          {/* The braille terminal is kept as the fallback: until the two
+              clips exist in public/videos the hero would otherwise render
+              two empty boxes. It disappears the moment the files load. */}
+          <HeroInteractiveVideo fallback={<TerminalBrailleImage />} />
         </InView>
 
         <div className="pointer-events-none absolute bottom-6 left-[var(--page-gutter)] hidden items-center gap-3 font-mono text-[9px] uppercase tracking-[0.24em] text-white/35 md:flex">

@@ -61,7 +61,7 @@ export function HeroStackLoop() {
   }, []);
 
   return (
-    <p className="mt-3 flex h-[1.4em] items-center" aria-label="Next.js, React, and .NET">
+    <p className="mt-7 flex h-[1.4em] items-center" aria-label="Next.js, React, and .NET">
       <span className="relative inline-flex min-w-[7.5ch] items-center font-mono text-[0.8rem] tracking-[0.08em] text-accent">
         <span className="invisible select-none" aria-hidden="true">
           {LONGEST}

@@ -43,7 +43,7 @@ export function Hero() {
 
       <Container className="relative z-30 grid min-h-[calc(100svh-4rem)] flex-1 items-center gap-10 py-6 pb-14 sm:py-8 sm:pb-16 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-10 lg:pb-14">
         <div className="relative z-20">
-          <InView stagger="[data-hero-intro]" y={12}>
+          {/* <InView stagger="[data-hero-intro]" y={12}>
             <div
               data-hero-intro
               className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/[0.075] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-100/80 shadow-[0_0_32px_rgba(34,211,238,0.16)] backdrop-blur-md"
@@ -51,7 +51,7 @@ export function Hero() {
               <Orbit size={13} aria-hidden="true" />
               FULL-STACK DEVELOPER · SOFTWARE ENGINEER
             </div>
-          </InView>
+          </InView> */}
 
           <HeroMotion name={siteConfig.heroTitle} />
           <div className="mt-1 max-w-2xl border-l border-cyan-300/25 bg-black/[0.08] pl-5 backdrop-blur-[1px]">
@@ -114,9 +114,9 @@ export function Hero() {
         </div>
 
         <InView className="relative z-20" y={18}>
-          <p className="mb-4 text-right font-mono text-[9px] uppercase tracking-[0.28em] text-cyan-100/52">
+          {/* <p className="mb-4 text-right font-mono text-[9px] uppercase tracking-[0.28em] text-cyan-100/52">
             DESIGNED WITH INTENT. BUILT TO WORK.
-          </p>
+          </p> */}
           {/* The braille terminal is kept as the fallback: until the two
               clips exist in public/videos the hero would otherwise render
               two empty boxes. It disappears the moment the files load. */}

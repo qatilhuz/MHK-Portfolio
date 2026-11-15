@@ -82,7 +82,29 @@ const MARKERS = [
  * literal lands anywhere between 1.14x and 1.21x as H moves with the
  * breakpoint and the text. The pixel form below is exact everywhere.
  */
-const DRAW_SPEED = 1.25;
+const DRAW_SPEED = 1.55;
+
+/**
+ * Start percentage of `start: "top 85%"` below, as a number. Kept in step
+ * with it by hand so the completion maths can reason about where the
+ * section sits when the draw ends.
+ */
+const START_PCT = 0.85;
+
+/**
+ * Hard floor on the travel: the line may never finish drawing while its own
+ * terminal node is still below the fold.
+ *
+ * On the stacked layout the diagram sits underneath a min-h-[85vh] text
+ * column, so the section is ~1.3x the viewport and a short travel completes
+ * the path before the bullseye has scrolled into view - the whole animation
+ * would be over by the time you could see it. Measured rather than assumed,
+ * so it adapts to however the column actually lays out.
+ *
+ * Side-by-side layouts finish around 85-90% of the viewport and never reach
+ * this floor, so they get the full DRAW_SPEED.
+ */
+const END_VISIBLE = 0.95;
 
 const CONTACT = 6; // px of contact tolerance before the bend
 const WALK_STEP = 2; // px between samples along the path
@@ -277,8 +299,14 @@ export function NeuralPathway({ className }: { className?: string }) {
            * ask. Function form so it is re-evaluated on every refresh and
            * stays correct across resizes and breakpoints.
            */
-          end: () =>
-            `+=${Math.max(1, Math.round((trigger.offsetHeight + 0.2 * window.innerHeight) / DRAW_SPEED))}`,
+          end: () => {
+            const viewport = window.innerHeight;
+            const nominal = (trigger.offsetHeight + 0.2 * viewport) / DRAW_SPEED;
+            // Distance from the section's top edge to the end of the line.
+            const tail = svg.getBoundingClientRect().bottom - trigger.getBoundingClientRect().top;
+            const floor = tail - (END_VISIBLE - START_PCT) * viewport;
+            return `+=${Math.max(1, Math.round(Math.max(nominal, floor)))}`;
+          },
           /**
            * 1:1 with the scrollbar, no catch-up. The previous `scrub: 0.5`
            * was a second smoothing pass stacked on top of Lenis, which

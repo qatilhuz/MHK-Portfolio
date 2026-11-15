@@ -4,65 +4,47 @@ import { useEffect, useRef } from "react";
 import { motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
 
 /**
- * One continuous monoline stroke: top edge -> scalloped looped brain ->
- * serpentine switchbacks -> terminal node.
+ * One continuous monoline stroke: start node -> scalloped brain crown with
+ * inward loops -> inner cortical arch -> brainstem neck oval -> two wide
+ * horizontal S-curves -> concentric target node.
  *
- * The brain is the caller-supplied monoline artwork: a scalloped dome whose
- * folds each resolve into a tight self-intersecting curlicue, base loops at
- * the lower left and lower right, and an inner cortical arch carrying a
- * downward-hanging loop at its centre. Eight self-intersections in total.
- *
- * Two deliberate departures from the supplied `d`, both structural:
- *
- * 1. The supplied dome is a closed cycle - it returns to the crown it starts
- *    from. A cycle always ends where it began, so it cannot offer a separate
- *    exit for the pathway: covering every arc of a cycle and finishing
- *    somewhere else is impossible without either omitting an arc or adding
- *    one. Omitting would have deleted the entire right side of the dome, so
- *    one chord is added instead, from the crown down to the lower-right base.
- *    It is given its own curlicue so it reads as a parieto-occipital fold in
- *    the same visual language rather than as a connector.
- *
- * 2. The supplied inner arch terminated with two segments that reversed
- *    direction along the same horizontal (`... 250 206, 234 206` then
- *    `254 206, ...`). That is a 180-degree cusp, which renders as a flat
- *    spike rather than a curve. It is rewritten as a small curl matching the
- *    other folds.
- *
- * Verified on the final geometry: one M, no Z, starts exactly at y=0, ends
- * exactly on the node at (150,640), 8 self-intersections.
+ * Geometry is the caller-supplied artwork, used verbatim. Verified before
+ * shipping by flattening and rasterising it: a single M with no Z, starting
+ * exactly on the start node at (126,104), ending exactly on the target at
+ * (162,695), total arc length 2458.6 units, bounds x 94..343 y 46..695
+ * inside the 420x740 viewBox.
  */
 const PATH_D =
-  "M205 0L205 46C182 40 152 46 138 64C131 73 143 79 147 69C150 61 136 56 118 64" +
-  "C94 74 76 94 72 114C70 125 83 127 84 117C85 107 68 106 52 122C26 148 26 202 56 228" +
-  "C74 244 98 246 110 238C118 232 108 222 102 232C96 242 114 250 120 234" +
-  "C126 216 116 184 134 162C152 140 184 142 196 158C203 167 191 175 188 165" +
-  "C185 155 202 144 226 144C254 144 274 162 272 184C262 198 240 202 232 210" +
-  "C226 218 238 222 242 212C246 202 262 212 282 224C287 234 274 240 271 230" +
-  "C268 220 286 218 304 226C326 236 344 214 342 186C340 168 324 162 318 172" +
-  "C313 180 326 186 334 174C344 158 338 122 314 98C296 80 272 74 258 82C250 87 258 97 264 89" +
-  "C270 81 254 62 228 52C216 48 208 46 205 46C236 64 258 92 268 124C272 138 262 146 256 138" +
-  "C250 130 264 120 276 132C292 149 300 196 304 226L304 314C304 328.36 292.36 340 278 340" +
-  "L96 340C81.6402 340 70 351.64 70 366L70 404C70 418.36 81.6402 430 96 430L304 430" +
-  "C318.36 430 330 441.64 330 456L330 494C330 508.36 318.36 520 304 520L176 520" +
-  "C161.64 520 150 531.64 150 546L150 640";
+  "M 126 104 C 138 74, 162 56, 178 62 C 186 65, 177 77, 172 69 C 168 62, 186 46, 218 46 " +
+  "C 248 46, 268 58, 270 68 C 272 76, 260 76, 262 66 C 264 57, 292 64, 310 86 " +
+  "C 324 103, 330 120, 328 130 C 326 138, 315 133, 321 125 C 327 117, 346 128, 342 156 " +
+  "C 338 178, 314 190, 298 182 C 290 178, 296 167, 303 174 C 310 181, 292 196, 256 196 " +
+  "C 214 196, 162 198, 146 184 C 142 175, 153 175, 151 186 C 149 198, 116 202, 102 180 " +
+  "C 88 158, 96 120, 124 114 C 144 110, 158 118, 164 128 C 172 104, 206 102, 218 126 " +
+  "C 223 136, 212 140, 213 128 C 215 106, 252 98, 272 118 C 290 136, 278 168, 252 172 " +
+  "C 226 176, 184 176, 176 198 C 168 220, 212 248, 246 244 C 268 241, 272 222, 252 214 " +
+  "C 228 205, 198 224, 206 254 C 214 282, 244 294, 232 316 C 218 340, 96 312, 94 352 " +
+  "C 92 392, 286 358, 286 396 C 286 434, 114 406, 114 446 C 114 486, 274 456, 274 494 " +
+  "C 274 528, 162 512, 162 548 L 162 695 ";
 
 /**
- * Checkpoints measured on that geometry rather than chosen by feel, so each
- * label illuminates exactly as the stroke arrives beside it. `top` is the
- * path's y at `at`, as a percentage of the 672-unit viewBox height.
+ * Checkpoints measured on that geometry rather than chosen by feel, so a
+ * label lights exactly as the stroke reaches the feature it names. Each
+ * `at` is the arc-length fraction of the nearest path point to the anchor;
+ * `left`/`top` are the specified label coordinates as percentages of the
+ * 420x740 viewBox, so they track the drawing at every breakpoint.
  *
- *   INTENT      t=0.551  the dome is complete and the stroke leaves the crown
- *   INTERACTION t=0.740  the upper serpentine bend at x=70
- *   SYSTEM      t=0.893  the lower serpentine bend at x=330
+ *   INTENT      t=0.515  beside the brainstem neck oval   (253,242)
+ *   INTERACTION t=0.737  beside the upper S-curve bend    (286,396)
+ *   SYSTEM      t=0.886  beside the lower S-curve bend    (274,494)
  */
 const MARKERS = [
-  { label: "INTENT", at: 0.551, top: 16.35 },
-  { label: "INTERACTION", at: 0.74, top: 51.73 },
-  { label: "SYSTEM", at: 0.893, top: 76.25 },
+  { label: "INTENT", at: 0.515, left: 66.19, top: 32.43 },
+  { label: "INTERACTION", at: 0.737, left: 72.38, top: 53.51 },
+  { label: "SYSTEM", at: 0.886, left: 69.52, top: 66.76 },
 ] as const;
 
-const NODE_AT = 0.96;
+const NODE_AT = 0.985;
 
 const LINE = {
   strokeLinecap: "round",
@@ -81,10 +63,8 @@ export function NeuralPathway({ className }: { className?: string }) {
     const host = root.current;
     if (!path || !host) return;
 
-    // The drawing is paced by the section it sits in. Deriving the trigger
-    // from the DOM instead of taking a ref prop keeps the parent free of
-    // client-side state, so it can stay a server component like the rest of
-    // the page's sections.
+    // Paced by the section it sits in. Deriving the trigger from the DOM
+    // rather than taking a ref prop keeps this component self-contained.
     const trigger = host.closest("section") ?? host;
     const labels = Array.from(host.querySelectorAll<HTMLElement>("[data-marker]"));
     const node = nodeRef.current;
@@ -125,7 +105,7 @@ export function NeuralPathway({ className }: { className?: string }) {
           trigger,
           start: "top 75%",
           end: "bottom 75%",
-          scrub: 0.6,
+          scrub: 0.5,
           invalidateOnRefresh: true,
         },
         onUpdate: () => apply(playhead.progress),
@@ -142,34 +122,43 @@ export function NeuralPathway({ className }: { className?: string }) {
   return (
     <div ref={root} className={className}>
       {/*
-        The right margin reserves the label gutter, so centring this block in
-        the 40% track centres the drawing *and* its labels rather than pushing
-        the labels past the edge.
+        The right margin reserves the label gutter. The labels are positioned
+        in viewBox percentages, so they sit beside the line itself and track
+        it as the drawing scales between breakpoints.
       */}
-      <div className="relative mr-[96px] w-[188px] sm:mr-[104px] sm:w-[228px] lg:mr-[112px] lg:w-[248px]">
+      <div className="relative mr-[52px] w-[232px] sm:mr-[60px] sm:w-[300px] lg:w-[340px]">
         <svg
-          viewBox="22 0 334 672"
+          viewBox="0 0 420 740"
           fill="none"
           aria-hidden="true"
           className="block h-auto w-full overflow-visible"
         >
-          {/* Blueprint base track: the route reads as planned before it is drawn. */}
-          <path d={PATH_D} {...LINE} stroke="rgba(34,211,238,0.14)" strokeWidth={1.25} />
+          {/* Guide track: the route reads as planned before it is drawn. */}
+          <path d={PATH_D} {...LINE} stroke="rgba(56,189,248,0.14)" strokeWidth={2.5} />
           <path
             ref={pathRef}
             d={PATH_D}
             {...LINE}
-            stroke="#22d3ee"
-            strokeWidth={2}
-            style={{ filter: "drop-shadow(0 0 10px rgba(34,211,238,0.6))" }}
+            stroke="#38bdf8"
+            strokeWidth={3}
+            style={{ filter: "drop-shadow(0 0 10px rgba(56,189,248,0.75))" }}
+          />
+          {/* Origin node, lit from the outset: the signal's source. */}
+          <circle
+            cx="126"
+            cy="104"
+            r="3.5"
+            fill="#38bdf8"
+            style={{ filter: "drop-shadow(0 0 6px rgba(56,189,248,0.85))" }}
           />
           <g
             ref={nodeRef}
             data-lit="true"
             className="opacity-25 transition-opacity duration-500 data-[lit=true]:animate-pulse data-[lit=true]:opacity-100"
+            style={{ filter: "drop-shadow(0 0 10px rgba(56,189,248,0.75))" }}
           >
-            <circle cx="150" cy="640" r="8" {...LINE} stroke="#22d3ee" strokeWidth={1.5} />
-            <circle cx="150" cy="640" r="3" fill="#22d3ee" stroke="none" />
+            <circle cx="162" cy="695" r="8" {...LINE} stroke="#38bdf8" strokeWidth={1.5} />
+            <circle cx="162" cy="695" r="3" fill="#38bdf8" stroke="none" />
           </g>
         </svg>
 
@@ -179,16 +168,16 @@ export function NeuralPathway({ className }: { className?: string }) {
             data-marker
             data-at={m.at}
             data-lit="true"
-            style={{ top: `${m.top}%` }}
+            style={{ left: `${m.left}%`, top: `${m.top}%` }}
             className={[
               // The rail is pointer-events-none so it can never intercept a
               // click; the labels opt back in so they stay selectable text.
-              "pointer-events-auto absolute left-full ml-3 -translate-y-1/2 whitespace-nowrap",
-              "font-mono text-[9px] uppercase tracking-[0.22em] sm:text-[10px]",
+              "pointer-events-auto absolute -translate-y-1/2 whitespace-nowrap",
+              "font-mono text-[10px] font-semibold uppercase tracking-[0.22em] sm:text-xs",
               "translate-x-2 text-white/30 opacity-15",
               "transition-all duration-500 ease-out",
               "data-[lit=true]:translate-x-0 data-[lit=true]:text-cyan-300 data-[lit=true]:opacity-100",
-              "data-[lit=true]:drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]",
+              "data-[lit=true]:drop-shadow-[0_0_6px_rgba(56,189,248,0.7)]",
             ].join(" ")}
           >
             {m.label}

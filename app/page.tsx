@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import { AboutPreview } from "@/components/about/AboutPreview";
 import { ContactPreview } from "@/components/contact/ContactPreview";
+import { EditorialTransition } from "@/components/editorial/EditorialTransition";
 import { ExperiencePreview } from "@/components/experience/ExperiencePreview";
 import { Hero } from "@/components/hero/Hero";
 import { ProjectsPreview } from "@/components/projects/ProjectsPreview";
@@ -26,12 +27,19 @@ export default function Home() {
       <div className="relative isolate overflow-hidden">
         <CyberpunkRain />
         <EvolvingJourney />
+        {/*
+          Cyber rain covers exactly three sections and no more:
+          01 Hero -> 02 Editorial Transition -> 03 About Me.
+          SkillsPreview was the third section and now sits outside the
+          wrapper, so the rain never extends past About Me.
+        */}
         <div className="relative z-10">
           <Hero />
+          <EditorialTransition />
           <AboutPreview />
-          <SkillsPreview />
         </div>
       </div>
+      <SkillsPreview />
       <ExperiencePreview />
       <Showcase />
       <ProjectsPreview />

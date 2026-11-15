@@ -43,14 +43,18 @@ const PATH_D =
  * `left`/`top` are the label coordinates as percentages of the 560x680
  * viewBox, so they track the drawing at every breakpoint.
  *
- *   INTENT      beside the brainstem neck oval  bend ~(313,298)
- *   INTERACTION beside the upper S-curve bend   bend ~(352,484)
- *   SYSTEM      beside the lower S-curve bend   bend ~(332,582)
+ * `bend` is a point ON the stroke, not the label's own position, so the 2D
+ * search below resolves to a near-zero distance and lands on the exact
+ * contact length rather than merely the closest approach to some text.
+ *
+ *   INTENT      neck oval loop          bend (312,300)
+ *   INTERACTION upper-right S-curve     bend (352,484)
+ *   SYSTEM      lower-right S-curve     bend (332,582)
  */
 const MARKERS = [
-  { label: "INTENT", anchor: [336, 302], left: 60.0, top: 44.41 },
-  { label: "INTERACTION", anchor: [372, 484], left: 66.43, top: 71.18 },
-  { label: "SYSTEM", anchor: [352, 582], left: 62.86, top: 85.59 },
+  { label: "INTENT", bend: [312, 300], left: 60.0, top: 44.41 },
+  { label: "INTERACTION", bend: [352, 484], left: 66.43, top: 71.18 },
+  { label: "SYSTEM", bend: [332, 582], left: 62.86, top: 85.59 },
 ] as const;
 
 /**
@@ -66,52 +70,102 @@ const MARKERS = [
  * which together put the keyword at full brightness as the tip arrives
  * rather than after it has gone.
  */
-const LEAD_IN = 0.035; // ~119 path units of early ignition
-const WALK_STEP = 4; // px between samples along the path
-const WALK_FROM = 0.2; // skip the crown; every anchor sits below it
-const NODE_AT = 0.98;
+const CONTACT = 6; // px of contact tolerance before the bend
+const WALK_STEP = 2; // px between samples along the path
+const WALK_FROM = 0.45; // skip the crown; every bend sits below it
+const NODE_TAIL = 4; // node lights within 4px of the end
+const VIEWBOX_W = 560;
 
+/**
+ * `vector-effect: non-scaling-stroke` is deliberately NOT here any more.
+ *
+ * It was the reason the tip kept running past the keywords. Dash lengths are
+ * applied in whatever space the stroke is computed in, and non-scaling-stroke
+ * moves that space to the viewport - while getTotalLength(), which is what
+ * strokeDasharray is set from, returns user units. The two disagree by
+ * exactly the render scale, so the drawn tip sat at `progress / scale`
+ * instead of `progress`: 1.21x ahead at desktop and 2.59x on a small phone,
+ * with the line reaching full length at ~0.82 of the scroll range and then
+ * sitting complete. The 0.035 lead-in added last turn only cancelled a third
+ * of that.
+ *
+ * Dropping it makes the dash unambiguously user-space, which is the same
+ * space the checkpoints are measured in. The rendered stroke weight is then
+ * restored exactly by syncStrokeWidth() below, so nothing changes visually.
+ */
 const LINE = {
   strokeLinecap: "round",
   strokeLinejoin: "round",
   fill: "none",
-  vectorEffect: "non-scaling-stroke",
 } as const;
+
+/**
+ * Authored stroke weights, in rendered pixels. Held in user units at runtime
+ * as `weight * (viewBoxWidth / renderedWidth)` so they look identical to the
+ * non-scaling-stroke behaviour they replace, at every breakpoint.
+ */
+const STROKE = { guide: 2.5, active: 3.2, ring: 1.75 } as const;
 
 export function NeuralPathway({ className }: { className?: string }) {
   const root = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const guideRef = useRef<SVGPathElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const nodeRef = useRef<SVGGElement>(null);
+  const ringRef = useRef<SVGCircleElement>(null);
 
   useEffect(() => {
     const path = pathRef.current;
     const host = root.current;
-    if (!path || !host) return;
+    const svg = svgRef.current;
+    // Captured now rather than read in cleanup, where they may already be
+    // detached.
+    const guide = guideRef.current;
+    const ring = ringRef.current;
+    if (!path || !host || !svg) return;
 
     // Paced by the section it sits in. Deriving the trigger from the DOM
     // rather than taking a ref prop keeps this component self-contained.
     const trigger = host.closest("section") ?? host;
     const node = nodeRef.current;
-    const length = path.getTotalLength();
+    const totalLength = path.getTotalLength();
 
     /**
-     * Where each keyword's bend actually falls along the stroke, measured
-     * here rather than hard-coded. getPointAtLength walks the same
-     * arc-length parameterisation that strokeDashoffset is driven by, so a
-     * checkpoint cannot drift from the tip it is meant to track - and if the
-     * geometry is ever edited the thresholds re-derive themselves instead of
-     * silently pointing at the wrong bend.
+     * Restores the weight non-scaling-stroke used to give for free, without
+     * its dash-space side effect: hold each stroke in user units scaled by
+     * the inverse of the render scale, so it lands on the same number of
+     * device pixels it did before. Re-run on resize because the scale moves
+     * with the box.
+     */
+    const syncStrokeWidth = () => {
+      const rendered = svg.getBoundingClientRect().width;
+      if (!rendered) return;
+      const k = VIEWBOX_W / rendered; // user units per rendered pixel
+      path.style.strokeWidth = String(STROKE.active * k);
+      if (guide) guide.style.strokeWidth = String(STROKE.guide * k);
+      if (ring) ring.style.strokeWidth = String(STROKE.ring * k);
+    };
+    syncStrokeWidth();
+    const resize = new ResizeObserver(syncStrokeWidth);
+    resize.observe(svg);
+
+    /**
+     * Exact contact length for each keyword, by 2D distance rather than a
+     * guessed percentage: walk the path in 2px steps from past the crown and
+     * keep the sample that minimises hypot(pt - bend). getPointAtLength uses
+     * the same arc-length parameterisation strokeDashoffset is driven by, so
+     * a checkpoint cannot drift from the tip it tracks, and editing the
+     * geometry re-derives the thresholds instead of silently pointing at the
+     * wrong bend.
      *
-     * One walk serves all three anchors: ~680 samples at 4px, a few
-     * milliseconds once at mount, nothing on the scroll path.
+     * One walk serves all three bends: ~930 samples, a few milliseconds once
+     * at mount, nothing on the scroll path.
      */
     const best = MARKERS.map(() => ({ len: 0, dist: Infinity }));
-    for (let len = length * WALK_FROM; len <= length; len += WALK_STEP) {
-      const p = path.getPointAtLength(len);
+    for (let len = totalLength * WALK_FROM; len <= totalLength; len += WALK_STEP) {
+      const pt = path.getPointAtLength(len);
       for (let i = 0; i < MARKERS.length; i += 1) {
-        const dx = p.x - MARKERS[i].anchor[0];
-        const dy = p.y - MARKERS[i].anchor[1];
-        const dist = dx * dx + dy * dy;
+        const dist = Math.hypot(pt.x - MARKERS[i].bend[0], pt.y - MARKERS[i].bend[1]);
         if (dist < best[i].dist) {
           best[i].dist = dist;
           best[i].len = len;
@@ -119,17 +173,18 @@ export function NeuralPathway({ className }: { className?: string }) {
       }
     }
 
-    // Pull ignition forward by the lead-in, and never let a later keyword
-    // resolve to an earlier threshold than the one before it.
+    // Ignition the instant the tip touches the bend, less a few px of
+    // contact tolerance; never let a later keyword resolve to an earlier
+    // threshold than the one before it.
     let floor = 0;
     const milestones: { el: HTMLElement; at: number }[] = [];
     MARKERS.forEach((m, i) => {
-      const at = Math.max(floor, best[i].len / length - LEAD_IN);
+      const at = Math.max(floor, best[i].len - CONTACT);
       floor = at;
       const el = host.querySelector<HTMLElement>(`[data-marker="${m.label}"]`);
       if (!el) return;
       // Reflected onto the element so the measured value is inspectable.
-      el.dataset.at = at.toFixed(4);
+      el.dataset.at = at.toFixed(1);
       milestones.push({ el, at });
     });
 
@@ -140,39 +195,49 @@ export function NeuralPathway({ className }: { className?: string }) {
      *
      * Every write is guarded against writing a value that is already there.
      * The dash offset only changes once it moves a visible amount, and a
-     * data-lit attribute is only touched when it actually flips. That matters
-     * now the scrub is 1:1: this runs on every scroll tick instead of a
-     * smoothed subset, and re-setting an attribute that drives a
-     * `data-[lit=true]:` selector invalidates style for that element even
+     * data-active attribute is only touched when it actually flips. That
+     * matters now the scrub is 1:1: this runs on every scroll tick instead
+     * of a smoothed subset, and re-setting an attribute that drives a
+     * `data-[active=true]:` selector invalidates style for that element even
      * when the value is identical.
+     *
+     * The milestones are compared against the length read back off the
+     * element itself rather than against `progress`. The two are equivalent
+     * arithmetic today, but reading the live value means the keywords are
+     * driven by the exact number the renderer is using - they cannot drift
+     * from the stroke even if the offset is ever computed differently.
      */
     let lastOffset = -1;
     const apply = (progress: number) => {
-      const offset = Math.round(length * (1 - progress) * 100) / 100;
+      const offset = Math.round(totalLength * (1 - progress) * 100) / 100;
       if (offset !== lastOffset) {
         lastOffset = offset;
         path.style.strokeDashoffset = String(offset);
       }
+
+      const currentOffset = parseFloat(path.style.strokeDashoffset || String(totalLength));
+      const drawnLength = totalLength - currentOffset;
+
       for (const ms of milestones) {
-        const lit = progress >= ms.at ? "true" : "false";
-        if (ms.el.dataset.lit !== lit) ms.el.dataset.lit = lit;
+        const active = drawnLength >= ms.at ? "true" : "false";
+        if (ms.el.dataset.active !== active) ms.el.dataset.active = active;
       }
       if (node) {
-        const lit = progress >= NODE_AT ? "true" : "false";
-        if (node.dataset.lit !== lit) node.dataset.lit = lit;
+        const active = drawnLength >= totalLength - NODE_TAIL ? "true" : "false";
+        if (node.dataset.active !== active) node.dataset.active = active;
       }
     };
 
     // Reduced motion gets the finished diagram, never a blank frame.
     if (prefersReducedMotion()) {
       apply(1);
-      return;
+      return () => resize.disconnect();
     }
 
     // The dash is armed here, not in the markup. If this effect never runs the
     // stroke has no dash array and renders complete, so the drawing cannot be
     // stranded invisible by a JS or GSAP failure.
-    path.style.strokeDasharray = String(length);
+    path.style.strokeDasharray = String(totalLength);
     apply(0);
 
     const gsap = motionEngine();
@@ -180,6 +245,10 @@ export function NeuralPathway({ className }: { className?: string }) {
     const ctx = gsap.context(() => {
       gsap.to(playhead, {
         progress: 1,
+        /**
+         * Linear, so the drawn length is exactly proportional to scroll.
+         * Anything else would put the tip ahead of the checkpoints again.
+         */
         ease: "none",
         scrollTrigger: {
           trigger,
@@ -194,16 +263,30 @@ export function NeuralPathway({ className }: { className?: string }) {
            * smooth; GSAP now just follows it exactly.
            */
           scrub: true,
-          invalidateOnRefresh: true,
+          /**
+           * `invalidateOnRefresh` is deliberately absent. It re-reads a
+           * tween's start value from the target on every refresh, and the
+           * target here is a plain playhead object. A refresh landing while
+           * the playhead sat mid-flight - and refresh fires on window load,
+           * on fonts.ready and on an rAF after mount - would re-base the
+           * tween from that value, so scroll progress p rendered as
+           * `mid + (1 - mid) * p` and the tip ran ahead of the checkpoints
+           * for the rest of the page's life. Start and end positions are
+           * recalculated on refresh regardless of this flag.
+           */
         },
         onUpdate: () => apply(playhead.progress),
       });
     }, host);
 
     return () => {
+      resize.disconnect();
       ctx.revert();
       path.style.strokeDasharray = "";
       path.style.strokeDashoffset = "";
+      path.style.strokeWidth = "";
+      if (guide) guide.style.strokeWidth = "";
+      if (ring) ring.style.strokeWidth = "";
     };
   }, []);
 
@@ -225,6 +308,7 @@ export function NeuralPathway({ className }: { className?: string }) {
       */}
       <div className="relative mr-[56px] w-full max-w-[428px] max-h-[520px] sm:mr-8 lg:mr-5 lg:max-w-[461px] lg:max-h-[560px]">
         <svg
+          ref={svgRef}
           viewBox="0 0 560 680"
           preserveAspectRatio="xMidYMid meet"
           fill="none"
@@ -232,13 +316,19 @@ export function NeuralPathway({ className }: { className?: string }) {
           className="block h-auto w-full overflow-visible"
         >
           {/* Guide track: the route reads as planned before it is drawn. */}
-          <path d={PATH_D} {...LINE} stroke="rgba(56,189,248,0.14)" strokeWidth={2.5} />
+          <path
+            ref={guideRef}
+            d={PATH_D}
+            {...LINE}
+            stroke="rgba(56,189,248,0.14)"
+            strokeWidth={STROKE.guide}
+          />
           <path
             ref={pathRef}
             d={PATH_D}
             {...LINE}
             stroke="#38bdf8"
-            strokeWidth={3.2}
+            strokeWidth={STROKE.active}
             style={{ filter: "drop-shadow(0 0 11px rgba(56,189,248,0.78))" }}
           />
           {/* Origin node, lit from the outset: the signal's source. */}
@@ -251,11 +341,19 @@ export function NeuralPathway({ className }: { className?: string }) {
           />
           <g
             ref={nodeRef}
-            data-lit="true"
-            className="opacity-25 transition-opacity duration-150 ease-out data-[lit=true]:animate-pulse data-[lit=true]:opacity-100"
+            data-active="true"
+            className="opacity-25 transition-opacity duration-150 ease-out data-[active=true]:animate-pulse data-[active=true]:opacity-100"
             style={{ filter: "drop-shadow(0 0 11px rgba(56,189,248,0.78))" }}
           >
-            <circle cx="182" cy="662" r="9" {...LINE} stroke="#38bdf8" strokeWidth={1.75} />
+            <circle
+              ref={ringRef}
+              cx="182"
+              cy="662"
+              r="9"
+              {...LINE}
+              stroke="#38bdf8"
+              strokeWidth={STROKE.ring}
+            />
             <circle cx="182" cy="662" r="3.5" fill="#38bdf8" stroke="none" />
           </g>
         </svg>
@@ -264,26 +362,22 @@ export function NeuralPathway({ className }: { className?: string }) {
           <span
             key={m.label}
             data-marker={m.label}
-            data-lit="true"
+            data-active="true"
             style={{ left: `${m.left}%`, top: `${m.top}%` }}
             className={[
               // The rail is pointer-events-none so it can never intercept a
               // click; the labels opt back in so they stay selectable text.
               "pointer-events-auto absolute -translate-y-1/2 whitespace-nowrap",
               "font-mono text-xs font-bold uppercase tracking-[0.24em] sm:text-sm lg:text-[15px]",
-              "translate-x-2 text-white/30 opacity-15",
-              // 150ms, so the glow is up almost as soon as the threshold
-              // flips; paired with LEAD_IN this is what lands the keyword at
-              // full brightness as the tip arrives rather than behind it.
-              //
-              // The four named properties are exactly the ones that differ
-              // between the dim and lit states, so this is visually identical
-              // to `transition-all` while not asking the browser to watch
-              // every animatable property on an element that is re-evaluated
-              // on each scroll tick.
-              "transition-[color,opacity,transform,filter] duration-150 ease-out",
-              "data-[lit=true]:translate-x-0 data-[lit=true]:text-cyan-300 data-[lit=true]:opacity-100",
-              "data-[lit=true]:drop-shadow-[0_0_8px_rgba(34,211,238,0.75)]",
+              // Dim blueprint state. origin-left so the scale grows the word
+              // rightwards off a fixed left edge, keeping it pinned to the
+              // bend it labels instead of drifting as it snaps in.
+              "origin-left translate-x-2 scale-95 text-cyan-200/40 opacity-25",
+              "transition-all duration-150 ease-out",
+              // Cyber snap on contact.
+              "data-[active=true]:translate-x-0 data-[active=true]:scale-100",
+              "data-[active=true]:text-cyan-300 data-[active=true]:opacity-100",
+              "data-[active=true]:drop-shadow-[0_0_10px_rgba(34,211,238,0.85)]",
             ].join(" ")}
           >
             {m.label}

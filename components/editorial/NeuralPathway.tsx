@@ -34,23 +34,42 @@ const PATH_D =
   "C 332 612, 182 598, 182 628 L 182 662 ";
 
 /**
- * Checkpoints measured on that geometry rather than chosen by feel, so a
- * label lights exactly as the stroke reaches the feature it names. Each
- * `at` is the arc-length fraction of the nearest path point to the anchor;
- * `left`/`top` are the specified label coordinates as percentages of the
- * 560x680 viewBox, so they track the drawing at every breakpoint.
+ * `anchor` is the point in viewBox space the label annotates - the bend the
+ * stroke tip has to reach for the keyword to mean anything. The checkpoint
+ * is not written down here: it is measured at runtime against the browser's
+ * own arc-length parameterisation (see MILESTONE SYNC below), because that
+ * is the same parameterisation that drives strokeDashoffset.
  *
- *   INTENT      t=0.5817  beside the brainstem neck oval  (313,298)
- *   INTERACTION t=0.7923  beside the upper S-curve bend   (352,484)
- *   SYSTEM      t=0.9415  beside the lower S-curve bend   (332,582)
+ * `left`/`top` are the label coordinates as percentages of the 560x680
+ * viewBox, so they track the drawing at every breakpoint.
+ *
+ *   INTENT      beside the brainstem neck oval  bend ~(313,298)
+ *   INTERACTION beside the upper S-curve bend   bend ~(352,484)
+ *   SYSTEM      beside the lower S-curve bend   bend ~(332,582)
  */
 const MARKERS = [
-  { label: "INTENT", at: 0.5817, left: 60.00, top: 44.41 },
-  { label: "INTERACTION", at: 0.7923, left: 66.43, top: 71.18 },
-  { label: "SYSTEM", at: 0.9415, left: 62.86, top: 85.59 },
+  { label: "INTENT", anchor: [336, 302], left: 60.0, top: 44.41 },
+  { label: "INTERACTION", anchor: [372, 484], left: 66.43, top: 71.18 },
+  { label: "SYSTEM", anchor: [352, 582], left: 62.86, top: 85.59 },
 ] as const;
 
-const NODE_AT = 0.985;
+/**
+ * MILESTONE SYNC
+ *
+ * The thresholds were never the problem - measured against the finished
+ * geometry they were accurate to a fraction of a path unit. What made the
+ * keywords read as late was the fade itself: at `scrub: true` the tip keeps
+ * moving while the label is still ramping up, and even on a slow scroll a
+ * 200ms fade let it run ~200 units past the bend before the glow finished.
+ *
+ * So ignition is pulled forward by a small lead-in and the fade shortened,
+ * which together put the keyword at full brightness as the tip arrives
+ * rather than after it has gone.
+ */
+const LEAD_IN = 0.035; // ~119 path units of early ignition
+const WALK_STEP = 4; // px between samples along the path
+const WALK_FROM = 0.2; // skip the crown; every anchor sits below it
+const NODE_AT = 0.98;
 
 const LINE = {
   strokeLinecap: "round",
@@ -72,9 +91,47 @@ export function NeuralPathway({ className }: { className?: string }) {
     // Paced by the section it sits in. Deriving the trigger from the DOM
     // rather than taking a ref prop keeps this component self-contained.
     const trigger = host.closest("section") ?? host;
-    const labels = Array.from(host.querySelectorAll<HTMLElement>("[data-marker]"));
     const node = nodeRef.current;
     const length = path.getTotalLength();
+
+    /**
+     * Where each keyword's bend actually falls along the stroke, measured
+     * here rather than hard-coded. getPointAtLength walks the same
+     * arc-length parameterisation that strokeDashoffset is driven by, so a
+     * checkpoint cannot drift from the tip it is meant to track - and if the
+     * geometry is ever edited the thresholds re-derive themselves instead of
+     * silently pointing at the wrong bend.
+     *
+     * One walk serves all three anchors: ~680 samples at 4px, a few
+     * milliseconds once at mount, nothing on the scroll path.
+     */
+    const best = MARKERS.map(() => ({ len: 0, dist: Infinity }));
+    for (let len = length * WALK_FROM; len <= length; len += WALK_STEP) {
+      const p = path.getPointAtLength(len);
+      for (let i = 0; i < MARKERS.length; i += 1) {
+        const dx = p.x - MARKERS[i].anchor[0];
+        const dy = p.y - MARKERS[i].anchor[1];
+        const dist = dx * dx + dy * dy;
+        if (dist < best[i].dist) {
+          best[i].dist = dist;
+          best[i].len = len;
+        }
+      }
+    }
+
+    // Pull ignition forward by the lead-in, and never let a later keyword
+    // resolve to an earlier threshold than the one before it.
+    let floor = 0;
+    const milestones: { el: HTMLElement; at: number }[] = [];
+    MARKERS.forEach((m, i) => {
+      const at = Math.max(floor, best[i].len / length - LEAD_IN);
+      floor = at;
+      const el = host.querySelector<HTMLElement>(`[data-marker="${m.label}"]`);
+      if (!el) return;
+      // Reflected onto the element so the measured value is inspectable.
+      el.dataset.at = at.toFixed(4);
+      milestones.push({ el, at });
+    });
 
     /**
      * Writes straight to the DOM: one style assignment plus a few dataset
@@ -96,9 +153,9 @@ export function NeuralPathway({ className }: { className?: string }) {
         lastOffset = offset;
         path.style.strokeDashoffset = String(offset);
       }
-      for (const el of labels) {
-        const lit = progress >= Number(el.dataset.at) ? "true" : "false";
-        if (el.dataset.lit !== lit) el.dataset.lit = lit;
+      for (const ms of milestones) {
+        const lit = progress >= ms.at ? "true" : "false";
+        if (ms.el.dataset.lit !== lit) ms.el.dataset.lit = lit;
       }
       if (node) {
         const lit = progress >= NODE_AT ? "true" : "false";
@@ -195,7 +252,7 @@ export function NeuralPathway({ className }: { className?: string }) {
           <g
             ref={nodeRef}
             data-lit="true"
-            className="opacity-25 transition-opacity duration-200 ease-out data-[lit=true]:animate-pulse data-[lit=true]:opacity-100"
+            className="opacity-25 transition-opacity duration-150 ease-out data-[lit=true]:animate-pulse data-[lit=true]:opacity-100"
             style={{ filter: "drop-shadow(0 0 11px rgba(56,189,248,0.78))" }}
           >
             <circle cx="182" cy="662" r="9" {...LINE} stroke="#38bdf8" strokeWidth={1.75} />
@@ -206,8 +263,7 @@ export function NeuralPathway({ className }: { className?: string }) {
         {MARKERS.map((m) => (
           <span
             key={m.label}
-            data-marker
-            data-at={m.at}
+            data-marker={m.label}
             data-lit="true"
             style={{ left: `${m.left}%`, top: `${m.top}%` }}
             className={[
@@ -216,12 +272,16 @@ export function NeuralPathway({ className }: { className?: string }) {
               "pointer-events-auto absolute -translate-y-1/2 whitespace-nowrap",
               "font-mono text-xs font-bold uppercase tracking-[0.24em] sm:text-sm lg:text-[15px]",
               "translate-x-2 text-white/30 opacity-15",
-              // Named properties, not `transition-all`: `all` makes the
-              // browser watch every animatable property on an element that
-              // gets re-evaluated on each scroll tick. 200ms so the keyword
-              // snaps on as the stroke reaches it instead of fading in half
-              // a second behind the line.
-              "transition-[color,opacity,transform,filter] duration-200 ease-out",
+              // 150ms, so the glow is up almost as soon as the threshold
+              // flips; paired with LEAD_IN this is what lands the keyword at
+              // full brightness as the tip arrives rather than behind it.
+              //
+              // The four named properties are exactly the ones that differ
+              // between the dim and lit states, so this is visually identical
+              // to `transition-all` while not asking the browser to watch
+              // every animatable property on an element that is re-evaluated
+              // on each scroll tick.
+              "transition-[color,opacity,transform,filter] duration-150 ease-out",
               "data-[lit=true]:translate-x-0 data-[lit=true]:text-cyan-300 data-[lit=true]:opacity-100",
               "data-[lit=true]:drop-shadow-[0_0_8px_rgba(34,211,238,0.75)]",
             ].join(" ")}

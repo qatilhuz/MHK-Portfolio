@@ -70,6 +70,20 @@ const MARKERS = [
  * which together put the keyword at full brightness as the tip arrives
  * rather than after it has gone.
  */
+/**
+ * How much faster the line draws per pixel scrolled, relative to the
+ * original `top 85%` -> `bottom 65%` window. The start moment is unchanged;
+ * the travel is divided by this, so 1.25 means the path completes across
+ * 80% of the scroll distance it used to need.
+ *
+ * Expressed as a speed rather than a new `end` keyword because no fixed
+ * percentage can hold 1.25x: `end: "bottom e%"` gives a travel of
+ * `(0.85 - e)V + H`, which depends on the section height, so the same
+ * literal lands anywhere between 1.14x and 1.21x as H moves with the
+ * breakpoint and the text. The pixel form below is exact everywhere.
+ */
+const DRAW_SPEED = 1.25;
+
 const CONTACT = 6; // px of contact tolerance before the bend
 const WALK_STEP = 2; // px between samples along the path
 const WALK_FROM = 0.45; // skip the crown; every bend sits below it
@@ -253,7 +267,18 @@ export function NeuralPathway({ className }: { className?: string }) {
         scrollTrigger: {
           trigger,
           start: "top 85%",
-          end: "bottom 65%",
+          /**
+           * Same entry point, 20% less travel.
+           *
+           * `top 85%` starts at `topDoc - 0.85V` and `bottom 65%` ended at
+           * `topDoc + H - 0.65V`, so the original window was exactly
+           * `H + 0.20V` pixels. Dividing that by DRAW_SPEED keeps the start
+           * frame identical and finishes the path sooner, which is the whole
+           * ask. Function form so it is re-evaluated on every refresh and
+           * stays correct across resizes and breakpoints.
+           */
+          end: () =>
+            `+=${Math.max(1, Math.round((trigger.offsetHeight + 0.2 * window.innerHeight) / DRAW_SPEED))}`,
           /**
            * 1:1 with the scrollbar, no catch-up. The previous `scrub: 0.5`
            * was a second smoothing pass stacked on top of Lenis, which

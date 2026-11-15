@@ -148,8 +148,12 @@ export function EditorialTransition() {
       />
 
       <div className="mx-auto flex w-full max-w-[1440px] flex-col px-6 sm:px-12 lg:flex-row lg:items-stretch lg:px-16">
-        {/* ---- 60% : typography ---- */}
-        <div className="flex min-h-[90vh] w-full flex-col justify-between py-16 lg:min-h-screen lg:w-[60%] lg:py-24">
+        {/* ---- 52% : typography ----
+          The split is 52/48 rather than 60/40 so the diagram column has room
+          to grow horizontally. Height is deliberately capped tighter than
+          before (85/90vh, py-12/16 against 90/100vh, py-16/24): the brain is
+          bigger, so the section must not also get taller. */}
+        <div className="flex min-h-[85vh] w-full flex-col justify-between py-12 lg:min-h-[90vh] lg:w-[52%] lg:py-16">
           <div className="max-w-2xl">
             <h2 className="text-foreground">
               {/*
@@ -188,10 +192,10 @@ export function EditorialTransition() {
           </p>
         </div>
 
-        {/* ---- 40% : the drawing ----
+        {/* ---- 48% : the drawing ----
           Stacks below the typography under lg, which is what guarantees it can
           never overlap the text; no width reservation or hiding needed. */}
-        <div className="flex w-full items-center justify-center pb-16 lg:w-[40%] lg:pb-0 lg:pl-8">
+        <div className="flex w-full items-center justify-center pb-12 lg:w-[48%] lg:pb-0 lg:pl-6">
           <NeuralPathway className="pointer-events-none flex w-full items-center justify-center" />
         </div>
       </div>

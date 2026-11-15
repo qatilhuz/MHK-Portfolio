@@ -56,14 +56,14 @@ export function EditorialTransition() {
           {
             yPercent: 0,
             opacity: 1,
-            duration: 0.9,
-            stagger: 0.12,
+            duration: 0.55,
+            stagger: 0.065,
             ease: "power3.out",
             force3D: true,
             overwrite: "auto",
             scrollTrigger: {
               trigger: node,
-              start: "top 78%",
+              start: "top 88%",
               toggleActions: "play none none reverse",
               invalidateOnRefresh: true,
             },
@@ -78,14 +78,14 @@ export function EditorialTransition() {
           { scaleX: 0 },
           {
             scaleX: 1,
-            duration: 0.9,
+            duration: 0.5,
             ease: "power3.out",
-            delay: 0.35,
+            delay: 0.3,
             transformOrigin: "left center",
             force3D: true,
             scrollTrigger: {
               trigger: node,
-              start: "top 78%",
+              start: "top 88%",
               toggleActions: "play none none reverse",
               invalidateOnRefresh: true,
             },
@@ -101,7 +101,7 @@ export function EditorialTransition() {
           {
             opacity: 1,
             y: 0,
-            duration: 0.7,
+            duration: 0.45,
             ease: "power2.out",
             force3D: true,
             scrollTrigger: {

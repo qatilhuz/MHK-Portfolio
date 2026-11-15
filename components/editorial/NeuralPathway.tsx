@@ -80,13 +80,30 @@ export function NeuralPathway({ className }: { className?: string }) {
      * Writes straight to the DOM: one style assignment plus a few dataset
      * flips per frame. No React state is touched while scrolling, so a scrub
      * frame never schedules a render.
+     *
+     * Every write is guarded against writing a value that is already there.
+     * The dash offset only changes once it moves a visible amount, and a
+     * data-lit attribute is only touched when it actually flips. That matters
+     * now the scrub is 1:1: this runs on every scroll tick instead of a
+     * smoothed subset, and re-setting an attribute that drives a
+     * `data-[lit=true]:` selector invalidates style for that element even
+     * when the value is identical.
      */
+    let lastOffset = -1;
     const apply = (progress: number) => {
-      path.style.strokeDashoffset = String(length * (1 - progress));
-      for (const el of labels) {
-        el.dataset.lit = progress >= Number(el.dataset.at) ? "true" : "false";
+      const offset = Math.round(length * (1 - progress) * 100) / 100;
+      if (offset !== lastOffset) {
+        lastOffset = offset;
+        path.style.strokeDashoffset = String(offset);
       }
-      if (node) node.dataset.lit = progress >= NODE_AT ? "true" : "false";
+      for (const el of labels) {
+        const lit = progress >= Number(el.dataset.at) ? "true" : "false";
+        if (el.dataset.lit !== lit) el.dataset.lit = lit;
+      }
+      if (node) {
+        const lit = progress >= NODE_AT ? "true" : "false";
+        if (node.dataset.lit !== lit) node.dataset.lit = lit;
+      }
     };
 
     // Reduced motion gets the finished diagram, never a blank frame.
@@ -109,9 +126,17 @@ export function NeuralPathway({ className }: { className?: string }) {
         ease: "none",
         scrollTrigger: {
           trigger,
-          start: "top 75%",
-          end: "bottom 75%",
-          scrub: 0.5,
+          start: "top 85%",
+          end: "bottom 65%",
+          /**
+           * 1:1 with the scrollbar, no catch-up. The previous `scrub: 0.5`
+           * was a second smoothing pass stacked on top of Lenis, which
+           * already eases the scroll position (lerp 0.07) before
+           * ScrollTrigger ever reads it. Two smoothers in series is what the
+           * half-second trailing lag actually was. Lenis keeps the motion
+           * smooth; GSAP now just follows it exactly.
+           */
+          scrub: true,
           invalidateOnRefresh: true,
         },
         onUpdate: () => apply(playhead.progress),
@@ -170,7 +195,7 @@ export function NeuralPathway({ className }: { className?: string }) {
           <g
             ref={nodeRef}
             data-lit="true"
-            className="opacity-25 transition-opacity duration-500 data-[lit=true]:animate-pulse data-[lit=true]:opacity-100"
+            className="opacity-25 transition-opacity duration-200 ease-out data-[lit=true]:animate-pulse data-[lit=true]:opacity-100"
             style={{ filter: "drop-shadow(0 0 11px rgba(56,189,248,0.78))" }}
           >
             <circle cx="182" cy="662" r="9" {...LINE} stroke="#38bdf8" strokeWidth={1.75} />
@@ -191,7 +216,12 @@ export function NeuralPathway({ className }: { className?: string }) {
               "pointer-events-auto absolute -translate-y-1/2 whitespace-nowrap",
               "font-mono text-xs font-bold uppercase tracking-[0.24em] sm:text-sm lg:text-[15px]",
               "translate-x-2 text-white/30 opacity-15",
-              "transition-all duration-500 ease-out",
+              // Named properties, not `transition-all`: `all` makes the
+              // browser watch every animatable property on an element that
+              // gets re-evaluated on each scroll tick. 200ms so the keyword
+              // snaps on as the stroke reaches it instead of fading in half
+              // a second behind the line.
+              "transition-[color,opacity,transform,filter] duration-200 ease-out",
               "data-[lit=true]:translate-x-0 data-[lit=true]:text-cyan-300 data-[lit=true]:opacity-100",
               "data-[lit=true]:drop-shadow-[0_0_8px_rgba(34,211,238,0.75)]",
             ].join(" ")}

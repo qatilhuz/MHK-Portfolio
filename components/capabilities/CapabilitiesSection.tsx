@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
 
 /**
@@ -12,32 +13,59 @@ import { motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
  * When the deck is complete the pin releases and the page continues into
  * Section 04.
  *
- * WHY PINNING WORKS HERE (this was verified, not assumed). GSAP pins with
- * `position: fixed`, which silently collapses if ANY ancestor establishes a
- * containing block - transform, filter, perspective, backdrop-filter,
- * will-change or contain. The chain above this section is:
+ * WHY THIS SECTION USED TO VANISH THE INSTANT IT PINNED, AND WHY IT NO LONGER
+ * DOES. This is the whole reason for `pinType: "transform"` below, so it is
+ * worth writing down properly.
  *
- *   html / body (overflow-x: clip)
- *     -> body > SmoothScroll > SiteChrome > main
- *       -> div.relative.isolate.overflow-hidden   <- rain wrapper
- *         -> div.relative.z-10
- *           -> this section
+ * GSAP's default pin (`pinType: "fixed"`) switches the element to
+ * `position: fixed` and gives it a `top` measured against the viewport. That
+ * only works if the viewport is actually the element's containing block. The
+ * real ancestor chain here is:
  *
- * None of those create a containing block. `isolate` makes a stacking context
- * but not a containing block, and `overflow` alone never clips a fixed
- * descendant. The `overflow-x: clip` on html/body matters too: `clip` is the
- * one value that does NOT force the other axis to compute to `auto`, so the
- * body never becomes a scroll container - which is the usual reason pinning
- * and sticky break on a page like this.
+ *   html / body  (overflow-x: clip)
+ *     div[data-arcade-spatial-root].relative.isolate   <- SiteChrome
+ *       div.relative.z-[1].flex
+ *         main#main-content.flex-1
+ *           div.relative.isolate.overflow-hidden       <- cyber rain wrapper
+ *             div.relative.z-10
+ *               section#capabilities
  *
- * Lenis drives the real window scroll rather than a transform track, and
- * SmoothScroll already wires `lenis.on("scroll", ScrollTrigger.update)`, so
- * the pin stays locked to the smoothed position instead of fighting it.
+ * and app/globals.css carries, unconditionally and on every page:
+ *
+ *   [data-arcade-spatial-root] {
+ *     transform-origin: 50% 50%;
+ *     backface-visibility: hidden;
+ *     transform-style: preserve-3d;    <- the culprit
+ *   }
+ *
+ * `transform-style: preserve-3d` establishes a 3D rendering context, and in
+ * Blink/WebKit that makes the element a containing block for fixed-position
+ * descendants - exactly like `transform`, `perspective` or `contain: paint`.
+ * So the moment the pin engaged, the section's `top: 0` stopped meaning "the
+ * top of the viewport" and started meaning "the top of the spatial root",
+ * which is the top of the document. The section was duly teleported a couple
+ * of viewports above the scroll position and disappeared. `position: sticky`,
+ * used by the previous build of this section, is immune to that - which is
+ * why the bug only appeared when the pin was introduced.
+ *
+ * The fix is `pinType: "transform"`: GSAP leaves the element in normal flow
+ * and translates it to hold it still instead of taking it out of flow. No
+ * containing block can interfere, so this is immune to that CSS rule and to
+ * any future transform/filter/contain added anywhere up the chain. It is the
+ * same mechanism GSAP uses by default on touch devices. The alternative -
+ * deleting `preserve-3d` from globals.css - would reach outside this section
+ * into the arcade's zoom transition for no extra benefit.
+ *
+ * Lenis drives the real window scroll and SmoothScroll already wires
+ * `lenis.on("scroll", ScrollTrigger.update)`, so the pin tracks the smoothed
+ * position instead of fighting it.
  *
  * RAIN COVERAGE. `pinSpacing: true` leaves a spacer the height of the pinned
  * runway inside the rain wrapper, so the wrapper grows by the full 320% and
  * the rain canvas - `absolute inset-0` of that wrapper - stretches over the
- * entire runway on its own, then stops exactly where Section 04 begins.
+ * entire runway on its own, then stops exactly where Section 04 begins. With
+ * transform pinning the section also stays inside that spacer at all times,
+ * so the wrapper's `overflow-hidden` has nothing to clip.
  */
 
 type Capability = {
@@ -177,6 +205,14 @@ export function CapabilitiesSection() {
             end: "+=320%",
             pin: true,
             pinSpacing: true,
+            // See the note at the top of this file. An ancestor
+            // (`[data-arcade-spatial-root]`) sets `transform-style:
+            // preserve-3d`, which makes it the containing block for
+            // fixed-position descendants - so the default `pinType: "fixed"`
+            // resolved this section's `top` against the document instead of
+            // the viewport and threw it off-screen. Transform pinning keeps
+            // the element in flow and is immune to that.
+            pinType: "transform",
             scrub: 0.5,
             anticipatePin: 1,
           },
@@ -221,7 +257,20 @@ export function CapabilitiesSection() {
       });
     }, section);
 
+    /**
+     * Re-measure once the section is actually on the page. A pinned trigger
+     * caches start/end from getBoundingClientRect() at creation time, and
+     * everything above this section settles *after* that: the two lazy R3F
+     * canvases in the rain wrapper mount with `ssr: false`, and the hero
+     * fonts land later still. Measuring through a layout that is still
+     * moving is how a pin ends up starting at the wrong scroll position.
+     * One frame later is enough, and it is cancelled on unmount so a fast
+     * route change cannot refresh against a torn-down tree.
+     */
+    const refreshFrame = requestAnimationFrame(() => ScrollTrigger.refresh());
+
     return () => {
+      cancelAnimationFrame(refreshFrame);
       mm?.revert();
       ctx.revert();
     };
@@ -232,7 +281,15 @@ export function CapabilitiesSection() {
       ref={sectionRef}
       id="capabilities"
       aria-labelledby="capabilities-heading"
-      className="relative isolate w-full motion-safe:lg:flex motion-safe:lg:h-screen motion-safe:lg:items-center motion-safe:lg:overflow-hidden"
+      /*
+        `z-20` is explicit rather than auto. The rain canvas sits at z-0 of
+        the wrapper and this section's own vignette sits at -z-10; pinning
+        rewrites the element's transform and stacking, and an auto z-index
+        here is the difference between "above the rain" and "behind it" the
+        moment that happens. `w-full` keeps the width from collapsing when
+        GSAP measures the element for the pin spacer.
+      */
+      className="relative isolate z-20 w-full motion-safe:lg:flex motion-safe:lg:h-screen motion-safe:lg:items-center motion-safe:lg:overflow-hidden"
     >
       {/*
         Atmospheric tint only, fully translucent, so the shared cyber rain

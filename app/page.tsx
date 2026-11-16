@@ -31,10 +31,10 @@ export default function Home() {
         {/*
           Cyber rain covers exactly three sections and no more:
           01 Hero -> 02 Editorial Transition -> 03 Capabilities.
-          About Me used to be the third and now sits outside the wrapper,
-          where its bg-transparent surface falls through to the page
-          background - the same dark surface Skills and everything below it
-          already render on. The rain never extends past Capabilities.
+          Everything from Selected Work down sits outside the wrapper on the
+          page background - About Me's bg-transparent surface falls through
+          to the same dark surface Skills and everything below it already
+          render on. The rain never extends past Capabilities.
         */}
         <div className="relative z-10">
           <Hero />
@@ -42,11 +42,17 @@ export default function Home() {
           <CapabilitiesSection />
         </div>
       </div>
+      {/*
+        Selected Work / "Built to Work" (ProjectsPreview -> CinemaReel) opens
+        the page below the rain, directly after Capabilities and above About
+        Me. It already paints its own `bg-background`, so it needs nothing
+        from the wrapper it sits beneath.
+      */}
+      <ProjectsPreview />
       <AboutPreview />
       <SkillsPreview />
       <ExperiencePreview />
       <Showcase />
-      <ProjectsPreview />
       <TerminalSection />
       <ArcadeSection />
       <AvatarSection />

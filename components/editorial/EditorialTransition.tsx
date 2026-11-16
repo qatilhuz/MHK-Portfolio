@@ -60,13 +60,14 @@ const ACCENT = "text-[#22d3ee] [text-shadow:0_0_0.1em_rgba(34,211,238,0.45)]";
 const INK = "text-white";
 
 /**
- * Applied to the masked WRAPPER of lines 2 and 4, never to
+ * Applied to the masked WRAPPER of each line, never to
  * .editorial-heading-line itself: the entrance tween already animates
  * yPercent on that element, and two tweens writing different components of
  * one transform matrix fight each other. Shifting the parent keeps the two
  * animations on separate elements and separate matrices.
  */
-const SHIFT = "editorial-shift-line will-change-transform";
+const GLIDE_LEFT = "editorial-line-left will-change-transform";
+const GLIDE_RIGHT = "editorial-line-right will-change-transform";
 
 export function EditorialTransition() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -108,31 +109,62 @@ export function EditorialTransition() {
       }
 
       /**
-       * Slow forward glide on lines 2 and 4, tied to scroll across the whole
-       * section. Function-based so the distance re-solves on resize, with
-       * invalidateOnRefresh to make that actually happen; x only, so it stays
-       * a compositor-level translate3d with no layout or paint per frame.
+       * Opposing glide: lines 2 and 4 forward, lines 1 and 3 backward, at
+       * one shared distance so the two groups always separate symmetrically.
+       *
+       * The cap is not simply 4.2vw. Lines 1 and 3 travel LEFT, into the
+       * container's own padding, and between 1440px and 1760px that padding
+       * is only 64px - a flat 64px shift would set them exactly on the
+       * viewport edge. Measuring the heading's real left offset and holding
+       * 12px of it back means the shift can never reach the edge at any
+       * width, and because the same number drives both directions the motion
+       * stays mirror-symmetric while it scales down.
        */
-      const shift = gsap.utils.toArray<HTMLElement>(".editorial-shift-line");
-      if (shift.length) {
-        gsap.fromTo(
-          shift,
-          { x: 0 },
-          {
-            x: () => Math.min(window.innerWidth * 0.055, 88),
-            ease: "none",
-            force3D: true,
-            overwrite: "auto",
-            scrollTrigger: {
-              trigger: node,
-              start: "top 85%",
-              end: "bottom 15%",
-              scrub: 0.8,
-              invalidateOnRefresh: true,
-            },
-          },
-        );
-      }
+      const heading = node.querySelector<HTMLElement>("h2");
+      const getShiftDistance = () => {
+        const gutter = heading ? heading.getBoundingClientRect().left : 0;
+        return Math.min(window.innerWidth * 0.042, 64, Math.max(0, gutter - 12));
+      };
+
+      const headingGlideTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: node,
+          // Later than the entrance (top 88%) so the lines settle in column
+          // before they start to separate.
+          start: "top 72%",
+          end: "bottom 15%",
+          // Inertial lag behind the scrollbar - this is the ~0.6-0.8s the
+          // drift trails by, on top of the hold below.
+          scrub: 1.1,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      // Dead time at the head of the window: the column holds still for the
+      // first ~18% of the scroll pass before anything moves.
+      headingGlideTl.to({}, { duration: 0.22 });
+      headingGlideTl.addLabel("glide");
+
+      /**
+       * fromTo, not to, even though only the end value varies. The trigger
+       * sets invalidateOnRefresh so the function-based distance re-solves on
+       * resize, and invalidate() on a plain `to` re-reads the start from
+       * whatever x the element happens to hold at that moment - a refresh
+       * landing mid-glide would re-base the tween from there and the lines
+       * would never return to the column. An explicit from pins it at 0.
+       */
+      headingGlideTl.fromTo(
+        ".editorial-line-right",
+        { x: 0 },
+        { x: () => getShiftDistance(), ease: "none", duration: 1, force3D: true },
+        "glide",
+      );
+      headingGlideTl.fromTo(
+        ".editorial-line-left",
+        { x: 0 },
+        { x: () => -getShiftDistance(), ease: "none", duration: 1, force3D: true },
+        "glide",
+      );
 
       const rule = node.querySelector<HTMLElement>("[data-editorial-rule]");
       if (rule) {
@@ -238,16 +270,16 @@ export function EditorialTransition() {
                 space nodes stop the four block lines concatenating into
                 "WHATPEOPLE" in textContent and in the accessible name.
               */}
-              <span className={MASK}>
+              <span className={`${MASK} ${GLIDE_LEFT}`}>
                 <span className={`${LINE} ${INK}`}>FROM WHAT</span>
               </span>{" "}
-              <span className={`${MASK} ${SHIFT}`}>
+              <span className={`${MASK} ${GLIDE_RIGHT}`}>
                 <span className={`${LINE} ${ACCENT}`}>PEOPLE NEED</span>
               </span>{" "}
-              <span className={MASK}>
+              <span className={`${MASK} ${GLIDE_LEFT}`}>
                 <span className={`${LINE} ${INK}`}>TO WHAT</span>
               </span>{" "}
-              <span className={`${MASK} ${SHIFT}`}>
+              <span className={`${MASK} ${GLIDE_RIGHT}`}>
                 <span className={`${LINE} ${ACCENT}`}>FEELS RIGHT.</span>
               </span>
             </h2>
@@ -261,7 +293,7 @@ export function EditorialTransition() {
 
           <p
             data-editorial-meta
-            className="mt-16 max-w-[260px] font-mono text-[11px] leading-[1.55] tracking-wide text-white/55 sm:text-xs"
+            className="mt-16 max-w-[340px] font-mono text-sm leading-[1.6] tracking-wide text-white/55 sm:text-[15px]"
           >
             I connect human intent, product behavior and the systems underneath.
           </p>

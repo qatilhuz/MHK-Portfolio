@@ -355,11 +355,22 @@ export function NeuralPathway({ className }: { className?: string }) {
 
         The right margin reserves the label gutter. Sized by measurement, not
         by feel: INTERACTION is the longest label and starts furthest right
-        (x=372 of 560), and at 15px with 0.24em tracking it needs ~142px.
-        These gutters keep at least 15px of clearance between the end of
-        every label and the column edge from 320px through 1920px.
+        (x=372 of 560), so its width has to fit in the 33.6% of the box to
+        its right plus this margin.
+
+        Re-solved for the larger labels. Monospace advance is 0.60em and CSS
+        letter-spacing adds after every character, so the label measures
+        11 * (0.60 + tracking) * fontSize: 147px at 18px/0.14em against 139px
+        at the old 15px/0.24em. The lg gutter goes 20px -> 40px to absorb it.
+        Raising the gutter only buys back 0.66px of clearance per pixel,
+        because a wider margin also narrows the box the label is positioned
+        inside - which is why the tracking eases off as the size grows rather
+        than the margin carrying the whole increase on its own.
+
+        Worst case across 320px-2560px is 8px to the container edge and 32px
+        to the actual viewport edge, so nothing clips anywhere.
       */}
-      <div className="relative mr-[56px] w-full max-w-[428px] max-h-[520px] sm:mr-8 lg:mr-5 lg:max-w-[461px] lg:max-h-[560px]">
+      <div className="relative mr-[56px] w-full max-w-[428px] max-h-[520px] sm:mr-8 lg:mr-10 lg:max-w-[461px] lg:max-h-[560px]">
         <svg
           ref={svgRef}
           viewBox="0 0 560 680"
@@ -421,7 +432,12 @@ export function NeuralPathway({ className }: { className?: string }) {
               // The rail is pointer-events-none so it can never intercept a
               // click; the labels opt back in so they stay selectable text.
               "pointer-events-auto absolute -translate-y-1/2 whitespace-nowrap",
-              "font-mono text-xs font-bold uppercase tracking-[0.24em] sm:text-sm lg:text-[15px]",
+              // Sizes up ~20% (12/14/15 -> 14/17/18). Tracking eases off at
+              // lg because absolute letter gaps scale with the type: 0.24em
+              // at 15px and 0.14em at 18px are 3.6px and 2.5px, so the word
+              // keeps its spaced blueprint read without the extra width
+              // forcing the diagram to shrink to pay for it.
+              "font-mono text-[14px] font-bold uppercase tracking-[0.18em] sm:text-[17px] lg:text-[18px] lg:tracking-[0.14em]",
               // Dim blueprint state. origin-left so the scale grows the word
               // rightwards off a fixed left edge, keeping it pinned to the
               // bend it labels instead of drifting as it snaps in.

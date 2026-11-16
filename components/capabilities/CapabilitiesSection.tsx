@@ -61,7 +61,7 @@ import { motionEngine, prefersReducedMotion } from "@/lib/motion/engine";
  * position instead of fighting it.
  *
  * RAIN COVERAGE. `pinSpacing: true` leaves a spacer the height of the pinned
- * runway inside the rain wrapper, so the wrapper grows by the full 320% and
+ * runway inside the rain wrapper, so the wrapper grows by the full 175% and
  * the rain canvas - `absolute inset-0` of that wrapper - stretches over the
  * entire runway on its own, then stops exactly where Section 04 begins. With
  * transform pinning the section also stays inside that spacer at all times,
@@ -149,6 +149,17 @@ const CARD_SURFACE = [
 const CARD_STAGE_POSITION =
   "motion-safe:lg:absolute motion-safe:lg:inset-0 motion-safe:lg:m-auto motion-safe:lg:h-fit motion-safe:lg:max-w-[540px]";
 
+/**
+ * How far below its resting place a card waits before it rises, in px.
+ *
+ * Fixed rather than viewport-relative on purpose: the travel distance is
+ * what sets how fast the move reads, and tying it to vh would make the
+ * animation feel slower on a tall monitor than a short one for the same
+ * amount of scrolling. 220 clears the ~250px card almost exactly, so each
+ * one enters from just under the stage instead of from off-screen.
+ */
+const CARD_ENTRY_Y = 220;
+
 export function CapabilitiesSection() {
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -175,8 +186,18 @@ export function CapabilitiesSection() {
         const [card01, card02, card03, card04, card05] = cards;
 
         /**
-         * Initial states. Card 01 rests on the stage; 02-05 wait one and a
-         * bit viewports below it, clipped away by the section's overflow.
+         * Initial states. Card 01 rests on the stage; 02-05 wait just below
+         * it - CARD_ENTRY_Y, not a viewport-and-a-bit.
+         *
+         * The old `y: "115vh"` was the main source of dead scroll: more than
+         * half of each card's tween was spent crossing empty space nobody
+         * could see, so the runway had to be enormous to give the visible
+         * part of the move any room. Starting 220px out means the entire
+         * tween is on-screen travel. They are held at `opacity: 0` because
+         * at that distance they would otherwise be plainly visible stacked
+         * under the stage, and each one snaps in over a quarter of its rise
+         * so it is solid for the remaining three quarters rather than
+         * ghosting over the card beneath it.
          *
          * Both the resting tilt and the travel are written by GSAP rather
          * than by CSS classes. A single element must have a single transform
@@ -186,23 +207,23 @@ export function CapabilitiesSection() {
          */
         cards.forEach((card, i) => {
           gsap.set(card, {
-            y: i === 0 ? 0 : "115vh",
+            y: i === 0 ? 0 : CARD_ENTRY_Y,
             scale: 1,
             rotation: CAPABILITIES[i].rotation,
-            opacity: 1,
+            opacity: i === 0 ? 1 : 0,
           });
         });
 
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: section,
-            // The section is exactly h-screen, so "+=320%" - which GSAP
+            // The section is exactly h-screen, so "+=175%" - which GSAP
             // resolves against the TRIGGER's height, not the viewport's -
-            // is an unambiguous 320vh of runway. Over the 4.6 timeline
-            // units below that is ~70vh per overlap: unhurried, and every
-            // card gets a long readable beat on top.
+            // is an unambiguous 175vh of runway. Over the 3.49 timeline
+            // units below that is 50vh per unit: a card lands every 39vh,
+            // down from 70vh, with nothing idle between them.
             start: "top top",
-            end: "+=320%",
+            end: "+=175%",
             pin: true,
             pinSpacing: true,
             // See the note at the top of this file. An ancestor
@@ -213,36 +234,54 @@ export function CapabilitiesSection() {
             // the viewport and threw it off-screen. Transform pinning keeps
             // the element in flow and is immune to that.
             pinType: "transform",
-            scrub: 0.5,
+            scrub: 0.35,
             anticipatePin: 1,
           },
         });
 
-        // A beat on lock-up so card 01 is clearly readable before anything
-        // starts moving.
-        tl.to({}, { duration: 0.25 });
+        /**
+         * No lead-in tween. Card 02 starts at t=0, so the first pixel of
+         * scroll after the pin engages already moves it - there is nothing
+         * to wait through.
+         *
+         * Each following step is positioned at `"stepN-=0.22"`. GSAP resolves
+         * that by creating the label at the timeline's CURRENT duration and
+         * then subtracting (gsap-core `_parsePosition`: `i > 1` recurses on
+         * the bare label, and an unknown label is written at
+         * `clippedDuration`). So every step begins 0.22 before the previous
+         * one finishes, and the next card is already rising as the one below
+         * it settles - back-to-back rather than one-then-pause-then-next.
+         *
+         * Timeline: 0 / 0.78 / 1.56 / 2.34, last tween ending at 3.34, plus
+         * 0.15 of settle = 3.49 units across 175vh. One unit is 50vh, so a
+         * card lands every 39vh with 8vh of stillness before the release.
+         */
 
-        // 02 over 01.
+        // 02 over 01 - immediate.
         tl.to(card01, { scale: 0.95, y: -14, opacity: 0.65, duration: 1, ease: "power2.out" }, "step2")
-          .to(card02, { y: 0, duration: 1, ease: "power2.out" }, "step2");
+          .to(card02, { y: 0, duration: 1, ease: "power2.out" }, "step2")
+          .to(card02, { opacity: 1, duration: 0.25, ease: "power1.out" }, "step2");
 
         // 03 over 02.
-        tl.to(card01, { scale: 0.91, y: -26, opacity: 0.35, duration: 1, ease: "power2.out" }, "step3")
-          .to(card02, { scale: 0.95, y: -14, opacity: 0.65, duration: 1, ease: "power2.out" }, "step3")
-          .to(card03, { y: 0, duration: 1, ease: "power2.out" }, "step3");
+        tl.to(card01, { scale: 0.91, y: -26, opacity: 0.35, duration: 1, ease: "power2.out" }, "step3-=0.22")
+          .to(card02, { scale: 0.95, y: -14, opacity: 0.65, duration: 1, ease: "power2.out" }, "step3-=0.22")
+          .to(card03, { y: 0, duration: 1, ease: "power2.out" }, "step3-=0.22")
+          .to(card03, { opacity: 1, duration: 0.25, ease: "power1.out" }, "step3-=0.22");
 
         // 04 over 03.
-        tl.to(card02, { scale: 0.91, y: -26, opacity: 0.35, duration: 1, ease: "power2.out" }, "step4")
-          .to(card03, { scale: 0.95, y: -14, opacity: 0.65, duration: 1, ease: "power2.out" }, "step4")
-          .to(card04, { y: 0, duration: 1, ease: "power2.out" }, "step4");
+        tl.to(card02, { scale: 0.91, y: -26, opacity: 0.35, duration: 1, ease: "power2.out" }, "step4-=0.22")
+          .to(card03, { scale: 0.95, y: -14, opacity: 0.65, duration: 1, ease: "power2.out" }, "step4-=0.22")
+          .to(card04, { y: 0, duration: 1, ease: "power2.out" }, "step4-=0.22")
+          .to(card04, { opacity: 1, duration: 0.25, ease: "power1.out" }, "step4-=0.22");
 
         // 05 over 04.
-        tl.to(card03, { scale: 0.91, y: -26, opacity: 0.35, duration: 1, ease: "power2.out" }, "step5")
-          .to(card04, { scale: 0.95, y: -14, opacity: 0.65, duration: 1, ease: "power2.out" }, "step5")
-          .to(card05, { y: 0, duration: 1, ease: "power2.out" }, "step5");
+        tl.to(card03, { scale: 0.91, y: -26, opacity: 0.35, duration: 1, ease: "power2.out" }, "step5-=0.22")
+          .to(card04, { scale: 0.95, y: -14, opacity: 0.65, duration: 1, ease: "power2.out" }, "step5-=0.22")
+          .to(card05, { y: 0, duration: 1, ease: "power2.out" }, "step5-=0.22")
+          .to(card05, { opacity: 1, duration: 0.25, ease: "power1.out" }, "step5-=0.22");
 
-        // Hold on the completed deck before the viewport unlocks.
-        tl.to({}, { duration: 0.35 });
+        // Brief settle on the completed deck before the viewport unlocks.
+        tl.to({}, { duration: 0.15 });
 
         return () => {
           gsap.set(cards, { clearProps: "all" });
@@ -316,9 +355,27 @@ export function CapabilitiesSection() {
             section-heading scale and the spans carry the weight and the
             white/cyan split.
           */}
+          {/*
+            THE SIZE LIVES ON THE SPANS, NOT THE <h2>. app/globals.css sets
+            `h2 { font-size: clamp(1.5rem, 2.4vw, 2rem) }` outside any cascade
+            layer, and Tailwind emits utilities inside `@layer utilities` -
+            unlayered beats layered regardless of specificity, so any
+            `text-*` put on the <h2> itself is silently discarded. The spans
+            are not <h2> elements, so nothing competes with them.
+
+            The bump is the real clamp scaled by 1.125 (+12.5%, mid-band of
+            the ~10-15% ask): 24-32px becomes 27-36px. Sizing off the shipped
+            value matters - a literal `lg:text-[3.35rem]` would have been
+            +67% here, because the heading was never `text-5xl` to begin
+            with. At +12.5% the longest word, EXPERIENCE, measures 215px
+            against a 494px column at 1440 and 163px against 345px at 1024,
+            and the line count is unchanged, so nothing clips or reflows.
+          */}
           <h2 id="capabilities-heading" className="mt-4 text-balance">
-            <span className="font-bold text-white">THE EXPERIENCE PEOPLE SEE.</span>{" "}
-            <span className="font-bold text-[#22d3ee] [text-shadow:0_0_0.5em_rgba(34,211,238,0.35)]">
+            <span className="text-[clamp(1.6875rem,2.7vw,2.25rem)] font-bold leading-[1.06] text-white">
+              THE EXPERIENCE PEOPLE SEE.
+            </span>{" "}
+            <span className="text-[clamp(1.6875rem,2.7vw,2.25rem)] font-bold leading-[1.06] text-[#22d3ee] [text-shadow:0_0_0.5em_rgba(34,211,238,0.35)]">
               THE SYSTEMS THAT MAKE IT WORK.
             </span>
           </h2>

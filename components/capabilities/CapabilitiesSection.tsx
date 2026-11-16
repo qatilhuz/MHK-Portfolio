@@ -236,6 +236,21 @@ export function CapabilitiesSection() {
             pinType: "transform",
             scrub: 0.35,
             anticipatePin: 1,
+            /**
+             * This section must be measured before anything below it.
+             *
+             * `pinSpacing` inserts 175vh of spacer here, so every start/end
+             * further down the page depends on this trigger having been
+             * refreshed first. ScrollTrigger will not sort its triggers at
+             * all unless at least one declares a priority (`"refreshPriority"
+             * in vars` sets the internal `_sort` flag), and without a sort it
+             * refreshes in creation order - which is inverted here, because
+             * the reel below builds its triggers in a layout effect while
+             * this one builds in a passive effect.
+             *
+             * 2 against the reel's 1: higher refreshes first.
+             */
+            refreshPriority: 2,
           },
         });
 

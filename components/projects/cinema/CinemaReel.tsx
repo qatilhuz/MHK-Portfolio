@@ -32,10 +32,40 @@ const TAIL = 0.5; // the last frame holds instead of flying out
  *
  * ScrollTrigger lerps the animation toward the scroll position over this many
  * seconds, so a flick of the wheel resolves as a glide rather than a jump.
- * All three triggers share the value — mismatched scrubs are what make a
- * composed scene feel like separate animations sliding against each other.
+ * Every trigger in the section shares the value — mismatched scrubs are what
+ * make a composed scene feel like separate animations sliding against each
+ * other.
+ *
+ * Tightened from 1.5. Lenis is already smoothing the scroll itself (lerp
+ * 0.07), so a long scrub is a second smoother stacked on the first: the reel
+ * kept coasting after the wheel had stopped, which reads as the section
+ * lagging rather than gliding. 0.6 keeps the inertia without the drift.
  */
-const SCRUB = 1.5;
+const SCRUB = 0.6;
+
+/**
+ * Refresh order, and why this section needs to declare one.
+ *
+ * ScrollTrigger only sorts its triggers if at least one of them sets
+ * `refreshPriority` — `"refreshPriority" in vars` is what flips its internal
+ * `_sort` flag, and `_refreshAll` runs `_sort && ScrollTrigger.sort()`.
+ * With no priorities anywhere on the page it never sorts at all and simply
+ * refreshes in CREATION order.
+ *
+ * Creation order here is inverted. This component builds its triggers from
+ * `useGSAP`, which runs in a LAYOUT effect, while CapabilitiesSection
+ * directly above builds its pinned trigger in a passive `useEffect`. React
+ * flushes every layout effect before any passive effect, so the reel was
+ * measuring itself before the pinned section above it existed — i.e. before
+ * its 175vh `.pin-spacer` had been inserted. Every start/end in here landed
+ * a pin-spacer too high, which is why the reel woke up while the visitor was
+ * still inside Section 03.
+ *
+ * Capabilities takes 2, this section takes 1: higher refreshes first
+ * (the comparator is `(refreshPriority || 0) * -1e6 + _sortY`), so the pin
+ * spacing above is always measured before anything down here is positioned.
+ */
+const REFRESH_PRIORITY = 1;
 
 /**
  * A hundredth of a degree of Z rotation, held constant across every pose.
@@ -195,6 +225,7 @@ export function CinemaReel({
           trigger: section,
           start: "top 55%",
           end: "bottom bottom",
+          refreshPriority: REFRESH_PRIORITY,
           onToggle: (self) => {
             gsap.to(skip, {
               autoAlpha: self.isActive ? 1 : 0,
@@ -212,6 +243,7 @@ export function CinemaReel({
         trigger: section,
         start: "top bottom+=20%",
         once: true,
+        refreshPriority: REFRESH_PRIORITY,
         onEnter: () => setArmed(true),
       });
 
@@ -260,6 +292,7 @@ export function CinemaReel({
         trigger: section,
         start: "top bottom",
         end: "bottom top",
+        refreshPriority: REFRESH_PRIORITY,
         onToggle: (self) =>
           gsap.set(accelerated, {
             willChange: self.isActive ? "transform, opacity" : "auto",
@@ -273,6 +306,7 @@ export function CinemaReel({
           end: "bottom bottom",
           scrub: SCRUB,
           invalidateOnRefresh: true,
+          refreshPriority: REFRESH_PRIORITY,
           onUpdate: (self) => {
             setProgress?.(self.progress);
             reportActive(self.progress);
@@ -290,6 +324,7 @@ export function CinemaReel({
             end: "top top",
             scrub: SCRUB,
             invalidateOnRefresh: true,
+            refreshPriority: REFRESH_PRIORITY,
           },
         });
         intro.fromTo(
@@ -377,6 +412,7 @@ export function CinemaReel({
             end: "bottom bottom",
             scrub: SCRUB,
             invalidateOnRefresh: true,
+            refreshPriority: REFRESH_PRIORITY,
           }) as const;
 
         // The glow is a plain gradient with no detail to resample, so it can
@@ -414,6 +450,40 @@ export function CinemaReel({
           );
         }
       }
+
+      /**
+       * Re-measure once the page above this section has finished assembling.
+       *
+       * The priorities above fix the ORDER triggers are measured in; this
+       * fixes the MOMENT. Section 03's pinned trigger is created in a passive
+       * effect that has not run yet at this point in the commit, so its
+       * `.pin-spacer` does not exist while the code above is executing. One
+       * frame later it does, and a sorted refresh re-derives every start and
+       * end in this section against the real document height.
+       *
+       * `sort()` is redundant now that a priority is declared - `_refreshAll`
+       * calls it itself - but it is cheap and it states the dependency out
+       * loud. Both the frame and the font callback are guarded, because
+       * `useGSAP` reverts and rebuilds this whole block whenever the category
+       * tab changes, and a refresh fired after that revert would measure a
+       * tree that no longer exists.
+       */
+      let disposed = false;
+      const frame = requestAnimationFrame(() => {
+        if (disposed) return;
+        ScrollTrigger.sort();
+        ScrollTrigger.refresh();
+      });
+      document.fonts?.ready
+        .then(() => {
+          if (!disposed) ScrollTrigger.refresh();
+        })
+        .catch(() => undefined);
+
+      return () => {
+        disposed = true;
+        cancelAnimationFrame(frame);
+      };
     },
     {
       scope: sectionRef,

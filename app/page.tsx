@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import { AboutPreview } from "@/components/about/AboutPreview";
+import { CapabilitiesSection } from "@/components/capabilities/CapabilitiesSection";
 import { ContactPreview } from "@/components/contact/ContactPreview";
 import { EditorialTransition } from "@/components/editorial/EditorialTransition";
 import { ExperiencePreview } from "@/components/experience/ExperiencePreview";
@@ -29,16 +30,19 @@ export default function Home() {
         <EvolvingJourney />
         {/*
           Cyber rain covers exactly three sections and no more:
-          01 Hero -> 02 Editorial Transition -> 03 About Me.
-          SkillsPreview was the third section and now sits outside the
-          wrapper, so the rain never extends past About Me.
+          01 Hero -> 02 Editorial Transition -> 03 Capabilities.
+          About Me used to be the third and now sits outside the wrapper,
+          where its bg-transparent surface falls through to the page
+          background - the same dark surface Skills and everything below it
+          already render on. The rain never extends past Capabilities.
         */}
         <div className="relative z-10">
           <Hero />
           <EditorialTransition />
-          <AboutPreview />
+          <CapabilitiesSection />
         </div>
       </div>
+      <AboutPreview />
       <SkillsPreview />
       <ExperiencePreview />
       <Showcase />
